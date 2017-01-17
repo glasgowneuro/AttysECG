@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="tech.glasgowneuro.attysecg">
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher_attys_transp"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <activity android:name="tech.glasgowneuro.attysecg.AttysECG">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Accepts URIs that begin with "http://www.example.com/gizmos” -->
+                <data android:scheme="http"
+                    android:host="www.attys.tech" />
+                <data android:scheme="example"
+                    android:host="attysplot" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="tech.glasgowneuro.attysecg.PrefsActivity"
+            android:theme="@android:style/Theme.Black.NoTitleBar" />
+        <activity
+            android:name="tech.glasgowneuro.attys2sciencejournal.ADC1Settings"
+            android:excludeFromRecents="true" android:launchMode="singleInstance"
+            android:taskAffinity="" android:theme="@style/Theme.AppCompat.Light.Dialog.Alert" />
+        <activity
+            android:name="tech.glasgowneuro.attys2sciencejournal.ADC2Settings"
+            android:excludeFromRecents="true" android:launchMode="singleInstance"
+            android:taskAffinity="" android:theme="@style/Theme.AppCompat.Light.Dialog.Alert" />
+        <!--
+     ATTENTION: This was auto-generated to add Google Play services to your project for
+     App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information.
+        -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+    </application>
+
+</manifest>

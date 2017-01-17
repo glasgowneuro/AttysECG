@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/toggleRec"
+        android:icon="@drawable/ic_action_rec"
+        android:title="rec"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:title="Channels"
+        app:showAsAction="ifRoom|withText">
+
+        <menu>
+
+            <item
+                android:checked="true"
+                android:title="Info displays">
+
+                <menu>
+                    <item
+                        android:id="@+id/largeStatusOff"
+                        android:title="off" />
+                    <item
+                        android:id="@+id/largeStatusAC"
+                        android:title="peak-peak" />
+                    <item
+                        android:id="@+id/largeStatusDC"
+                        android:title="DC" />
+                    <item
+                        android:id="@+id/largeStatusBPM"
+                        android:title="ECG/bpm" />
+                </menu>
+            </item>
+
+            <group android:checkableBehavior="all">
+                <item
+                    android:id="@+id/showCh1"
+                    android:checked="true"
+                    android:title="ADC 1" />
+                <item
+                    android:id="@+id/Ch1toggleDC"
+                    android:checked="true"
+                    android:title="ADC 1 DC filter" />
+                <item
+                    android:id="@+id/Ch1invert"
+                    android:checked="false"
+                    android:title="ADC 1 invert" />
+                <item
+                    android:id="@+id/Ch1notch"
+                    android:checked="false"
+                    android:title="ADC 1 mains filter" />
+            </group>
+
+            <item
+                android:checked="true"
+                android:title="ADC 1 gain">
+
+                <menu>
+                    <item
+                        android:id="@+id/Ch1gain1"
+                        android:title="1" />
+                    <item
+                        android:id="@+id/Ch1gain2"
+                        android:title="2" />
+                    <item
+                        android:id="@+id/Ch1gain5"
+                        android:title="5" />
+                    <item
+                        android:id="@+id/Ch1gain10"
+                        android:title="10" />
+                    <item
+                        android:id="@+id/Ch1gain20"
+                        android:title="20" />
+                    <item
+                        android:id="@+id/Ch1gain50"
+                        android:title="50" />
+                    <item
+                        android:id="@+id/Ch1gain100"
+                        android:title="100" />
+                    <item
+                        android:id="@+id/Ch1gain200"
+                        android:title="200" />
+                    <item
+                        android:id="@+id/Ch1gain500"
+                        android:title="500" />
+                </menu>
+
+            </item>
+
+            <group android:checkableBehavior="all">
+                <item
+                    android:id="@+id/showCh2"
+                    android:checked="true"
+                    android:title="ADC 2" />
+                <item
+                    android:id="@+id/Ch2toggleDC"
+                    android:checked="true"
+                    android:title="ADC 2 DC filter" />
+                <item
+                    android:id="@+id/Ch2invert"
+                    android:checked="false"
+                    android:title="ADC 2 invert" />
+                <item
+                    android:id="@+id/Ch2notch"
+                    android:checked="false"
+                    android:title="ADC 2 mains filter" />
+            </group>
+
+            <item
+                android:checked="true"
+                android:title="ADC 2 gain">
+
+                <menu>
+                    <item
+                        android:id="@+id/Ch2gain1"
+                        android:title="1" />
+                    <item
+                        android:id="@+id/Ch2gain2"
+                        android:title="2" />
+                    <item
+                        android:id="@+id/Ch2gain5"
+                        android:title="5" />
+                    <item
+                        android:id="@+id/Ch2gain10"
+                        android:title="10" />
+                    <item
+                        android:id="@+id/Ch2gain20"
+                        android:title="20" />
+                    <item
+                        android:id="@+id/Ch2gain50"
+                        android:title="50" />
+                    <item
+                        android:id="@+id/Ch2gain100"
+                        android:title="100" />
+                    <item
+                        android:id="@+id/Ch2gain200"
+                        android:title="200" />
+                    <item
+                        android:id="@+id/Ch2gain500"
+                        android:title="500" />
+                </menu>
+            </item>
+            <group android:checkableBehavior="all">
+                <item
+                    android:id="@+id/showaccelerometer"
+                    android:title="Accelerometer" />
+                <item
+                    android:id="@+id/showmagnetometer"
+                    android:title="Magnetometer" />
+            </group>
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/preferences"
+        android:title="Preferences"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/enterFilename"
+        android:title="Enter Filename" />
+
+    <item
+        android:id="@+id/filebrowser"
+        android:title="File Browser"
+        app:showAsAction="never" />
+
+</menu>
+

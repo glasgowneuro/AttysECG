@@ -1,0 +1,4 @@
+include ':app'
+
+include ':AttysScope'
+project(':AttysScope').projectDir = file('../../AttysScope/')
