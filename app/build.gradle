@@ -8,8 +8,8 @@ android {
         applicationId "tech.glasgowneuro.attysecg"
         minSdkVersion 16
         targetSdkVersion 25
-        versionCode 4
-        versionName "1.0.3"
+        versionCode 1
+        versionName "1.0.0"
     }
     buildTypes {
         release {
@@ -18,6 +18,15 @@ android {
         }
     }
 
+    sourceSets {
+        main {
+            res.srcDirs = ['src/main/res', 'src/main/res/menu']
+            String attyscomm = '../../AttysComm/app/src/main/'
+            java {
+                srcDir attyscomm + '/java'
+            }
+        }
+    }
 }
 
 dependencies {
@@ -31,7 +40,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.0.0'
     compile group: 'uk.me.berndporr', name:'iirj', version: '1.0'
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
-    compile project(':AttysScope')
 }
 
 dependencies {
