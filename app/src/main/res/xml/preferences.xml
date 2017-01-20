@@ -3,36 +3,10 @@
     <ListPreference
         android:entries="@array/gainOptions"
         android:entryValues="@array/gainValues"
-        android:key="ch1_gainpref"
-        android:summary="ADC Channel 1 full scale range in Volts"
-        android:defaultValue="1"
-        android:title="ADC 1 range" />
-    <ListPreference
-        android:entries="@array/gainOptions"
-        android:entryValues="@array/gainValues"
-        android:key="ch2_gainpref"
-        android:summary="ADC Channel 2 full scanel range in Volts"
-        android:defaultValue="1"
-        android:title="ADC 2 range" />
-    <ListPreference
-        android:entries="@array/currentOptions"
-        android:entryValues="@array/currentValues"
-        android:key="ch2_current"
-        android:summary="ADC channel 2 current towards ground for resistance measurements"
-        android:defaultValue="-1"
-        android:title="ADC 2 current" />
-    <CheckBoxPreference
-        android:key="ECG_mode"
-        android:defaultValue="false"
-        android:summary="Ch1+ and Ch2 internally connected for ECG Einthoven I,II"
-        android:title="Connect Ch1+ with Ch2" />
-    <ListPreference
-        android:entries="@array/accOptions"
-        android:entryValues="@array/accValues"
-        android:summary="Full scale range of the accelerometer"
-        android:key="accFullscale"
-        android:defaultValue="1"
-        android:title="Accelerometer full scale" />
+        android:key="gainpref"
+        android:summary="Full scale range in Volts"
+        android:defaultValue="0"
+        android:title="ADC range" />
     <ListPreference
         android:entries="@array/textDataFileSeparatorOptions"
         android:entryValues="@array/textDataFileSeparatorValues"
