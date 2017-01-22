@@ -7,7 +7,7 @@
     android:layout_height="fill_parent">
 
     <TextView
-        android:text="---"
+        android:text=""
         android:id="@+id/bpmTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

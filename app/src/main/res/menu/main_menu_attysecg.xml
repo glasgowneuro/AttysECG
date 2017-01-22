@@ -51,74 +51,22 @@
 
             <item
                 android:checked="true"
-                android:title="ADC 1 gain">
+                android:title="gain">
 
                 <menu>
-                    <item
-                        android:id="@+id/Ch1gain1"
-                        android:title="1" />
-                    <item
-                        android:id="@+id/Ch1gain2"
-                        android:title="2" />
-                    <item
-                        android:id="@+id/Ch1gain5"
-                        android:title="5" />
-                    <item
-                        android:id="@+id/Ch1gain10"
-                        android:title="10" />
-                    <item
-                        android:id="@+id/Ch1gain20"
-                        android:title="20" />
-                    <item
-                        android:id="@+id/Ch1gain50"
-                        android:title="50" />
-                    <item
-                        android:id="@+id/Ch1gain100"
-                        android:title="100" />
                     <item
                         android:id="@+id/Ch1gain200"
-                        android:title="200" />
+                        android:title="low" />
                     <item
                         android:id="@+id/Ch1gain500"
-                        android:title="500" />
+                        android:title="standard" />
+                    <item
+                        android:id="@+id/Ch1gain1000"
+                        android:title="high" />
                 </menu>
 
             </item>
 
-            <item
-                android:checked="true"
-                android:title="ADC 2 gain">
-
-                <menu>
-                    <item
-                        android:id="@+id/Ch2gain1"
-                        android:title="1" />
-                    <item
-                        android:id="@+id/Ch2gain2"
-                        android:title="2" />
-                    <item
-                        android:id="@+id/Ch2gain5"
-                        android:title="5" />
-                    <item
-                        android:id="@+id/Ch2gain10"
-                        android:title="10" />
-                    <item
-                        android:id="@+id/Ch2gain20"
-                        android:title="20" />
-                    <item
-                        android:id="@+id/Ch2gain50"
-                        android:title="50" />
-                    <item
-                        android:id="@+id/Ch2gain100"
-                        android:title="100" />
-                    <item
-                        android:id="@+id/Ch2gain200"
-                        android:title="200" />
-                    <item
-                        android:id="@+id/Ch2gain500"
-                        android:title="500" />
-                </menu>
-            </item>
             <group android:checkableBehavior="all">
                 <item
                     android:id="@+id/showaccelerometer"

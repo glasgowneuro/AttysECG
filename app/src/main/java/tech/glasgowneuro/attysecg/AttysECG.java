@@ -42,7 +42,6 @@ import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -87,7 +86,7 @@ public class AttysECG extends AppCompatActivity {
 
     private Highpass highpass_II = null;
     private Highpass highpass_III = null;
-    private float gain;
+    private float gain = 500;
     private Butterworth iirNotch_II = null;
     private Butterworth iirNotch_III = null;
     private double notchBW = 2.5; // Hz
@@ -99,7 +98,7 @@ public class AttysECG extends AppCompatActivity {
     private boolean showCh1 = true;
     private boolean showCh2 = true;
 
-    private float ch1Div = 1;
+    private float tick = 1;
     private float ch2Div = 1;
 
     private float magTick = 1000.0E-6F; //1000uT
@@ -279,7 +278,7 @@ public class AttysECG extends AppCompatActivity {
 
         private void annotatePlot() {
             String small = "";
-            small = small + "".format("%1.04fV/div (X%d), ", ch1Div, (int) gain);
+            small = small + "".format("%1.04fV/div", tick);
             if (attysComm.isRecording()) {
                 small = small + " !!RECORDING to:" + dataFilename;
             }
@@ -355,6 +354,9 @@ public class AttysECG extends AppCompatActivity {
                 float[] tmpMax = new float[nCh];
                 float[] tmpTick = new float[nCh];
                 String[] tmpLabels = new String[nCh];
+
+                float max = attysComm.getADCFullScaleRange(0) / gain;
+
                 int n = attysComm.getNumSamplesAvilable();
                 if (realtimePlotView != null) {
                     if (!realtimePlotView.startAddSamples(n)) return;
@@ -369,7 +371,6 @@ public class AttysECG extends AppCompatActivity {
                             timestamp++;
 
                             float II = sample[AttysComm.INDEX_Analogue_channel_1];
-                            II = II * gain;
                             II = highpass_II.filter(II);
                             if (iirNotch_II != null) {
                                 II = (float) iirNotch_II.filter((double) II);
@@ -377,10 +378,9 @@ public class AttysECG extends AppCompatActivity {
                             doAnalysis(II);
 
                             float III = sample[AttysComm.INDEX_Analogue_channel_2];
-                            III = III * gain;
-                            III = highpass_III.filter(II);
+                            III = highpass_III.filter(III);
                             if (iirNotch_III != null) {
-                                II = (float) iirNotch_III.filter((double) III);
+                                III = (float) iirNotch_III.filter((double) III);
                             }
 
                             float I = II - III;
@@ -392,37 +392,25 @@ public class AttysECG extends AppCompatActivity {
                             int nRealChN = 0;
                             if (showCh1) {
                                 if (attysComm != null) {
-                                    tmpMin[nRealChN] = -attysComm.getADCFullScaleRange(0);
-                                    tmpMax[nRealChN] = attysComm.getADCFullScaleRange(0);
-                                    ch1Div = 1.0F / gain;
-                                    if (attysComm.getADCFullScaleRange(0) < 1) {
-                                        ch1Div = ch1Div / 10;
-                                    }
-                                    tmpTick[nRealChN] = ch1Div * gain;
+                                    tmpMin[nRealChN] = -max;
+                                    tmpMax[nRealChN] = max;
+                                    tmpTick[nRealChN] = tick;
                                     tmpLabels[nRealChN] = labels[0];
                                     actualChannelIdx[nRealChN] = 0;
                                     tmpSample[nRealChN++] = I;
                                 }
                                 if (attysComm != null) {
-                                    tmpMin[nRealChN] = -attysComm.getADCFullScaleRange(0);
-                                    tmpMax[nRealChN] = attysComm.getADCFullScaleRange(0);
-                                    ch1Div = 1.0F / gain;
-                                    if (attysComm.getADCFullScaleRange(0) < 1) {
-                                        ch1Div = ch1Div / 10;
-                                    }
-                                    tmpTick[nRealChN] = ch1Div * gain;
+                                    tmpMin[nRealChN] = -max;
+                                    tmpMax[nRealChN] = max;
+                                    tmpTick[nRealChN] = tick;
                                     tmpLabels[nRealChN] = labels[1];
                                     actualChannelIdx[nRealChN] = 1;
                                     tmpSample[nRealChN++] = II;
                                 }
                                 if (attysComm != null) {
-                                    tmpMin[nRealChN] = -attysComm.getADCFullScaleRange(0);
-                                    tmpMax[nRealChN] = attysComm.getADCFullScaleRange(0);
-                                    ch1Div = 1.0F / gain;
-                                    if (attysComm.getADCFullScaleRange(0) < 1) {
-                                        ch1Div = ch1Div / 10;
-                                    }
-                                    tmpTick[nRealChN] = ch1Div * gain;
+                                    tmpMin[nRealChN] = -max;
+                                    tmpMax[nRealChN] = max;
+                                    tmpTick[nRealChN] = tick;
                                     tmpLabels[nRealChN] = labels[2];
                                     actualChannelIdx[nRealChN] = 2;
                                     tmpSample[nRealChN++] = III;
@@ -430,37 +418,25 @@ public class AttysECG extends AppCompatActivity {
                             }
                             if (showCh2) {
                                 if (attysComm != null) {
-                                    tmpMin[nRealChN] = -attysComm.getADCFullScaleRange(0);
-                                    tmpMax[nRealChN] = attysComm.getADCFullScaleRange(0);
-                                    ch1Div = 1.0F / gain;
-                                    if (attysComm.getADCFullScaleRange(0) < 1) {
-                                        ch1Div = ch1Div / 10;
-                                    }
-                                    tmpTick[nRealChN] = ch1Div * gain;
+                                    tmpMin[nRealChN] = -max;
+                                    tmpMax[nRealChN] = max;
+                                    tmpTick[nRealChN] = tick;
                                     tmpLabels[nRealChN] = labels[3];
                                     actualChannelIdx[nRealChN] = 3;
                                     tmpSample[nRealChN++] = aVR;
                                 }
                                 if (attysComm != null) {
-                                    tmpMin[nRealChN] = -attysComm.getADCFullScaleRange(0);
-                                    tmpMax[nRealChN] = attysComm.getADCFullScaleRange(0);
-                                    ch1Div = 1.0F / gain;
-                                    if (attysComm.getADCFullScaleRange(0) < 1) {
-                                        ch1Div = ch1Div / 10;
-                                    }
-                                    tmpTick[nRealChN] = ch1Div * gain;
+                                    tmpMin[nRealChN] = -max;
+                                    tmpMax[nRealChN] = max;
+                                    tmpTick[nRealChN] = tick;
                                     tmpLabels[nRealChN] = labels[4];
                                     actualChannelIdx[nRealChN] = 4;
                                     tmpSample[nRealChN++] = aVL;
                                 }
                                 if (attysComm != null) {
-                                    tmpMin[nRealChN] = -attysComm.getADCFullScaleRange(0);
-                                    tmpMax[nRealChN] = attysComm.getADCFullScaleRange(0);
-                                    ch1Div = 1.0F / gain;
-                                    if (attysComm.getADCFullScaleRange(0) < 1) {
-                                        ch1Div = ch1Div / 10;
-                                    }
-                                    tmpTick[nRealChN] = ch1Div * gain;
+                                    tmpMin[nRealChN] = -max;
+                                    tmpMax[nRealChN] = max;
+                                    tmpTick[nRealChN] = tick;
                                     tmpLabels[nRealChN] = labels[5];
                                     actualChannelIdx[nRealChN] = 5;
                                     tmpSample[nRealChN++] = aVF;
@@ -561,6 +537,7 @@ public class AttysECG extends AppCompatActivity {
         super.onResume();
 
         updatePlotTask.resetAnalysis();
+        tick = 1.0F / gain /10;
 
     }
 
@@ -837,7 +814,7 @@ public class AttysECG extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main_menu_attysplot, menu);
+        getMenuInflater().inflate(R.menu.main_menu_attysecg, menu);
 
         return true;
     }
@@ -900,6 +877,21 @@ public class AttysECG extends AppCompatActivity {
             case R.id.showCh2:
                 showCh2 = !showCh2;
                 item.setChecked(showCh2);
+                return true;
+
+            case R.id.Ch1gain200:
+                gain = 200;
+                tick = 1.0F / gain /10;
+                return true;
+
+            case R.id.Ch1gain500:
+                gain = 500;
+                tick = 1.0F / gain /10;
+                return true;
+
+            case R.id.Ch1gain1000:
+                gain = 1000;
+                tick = 1.0F / gain /10;
                 return true;
 
             case R.id.showaccelerometer:
@@ -997,10 +989,10 @@ public class AttysECG extends AppCompatActivity {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
         mux = AttysComm.ADC_MUX_ECG_EINTHOVEN;
-        byte gain = (byte) (Integer.parseInt(prefs.getString("gainpref", "0")));
-        attysComm.setAdc1_gain_index(gain);
+        byte adcgain = (byte) (Integer.parseInt(prefs.getString("gainpref", "0")));
+        attysComm.setAdc1_gain_index(adcgain);
         attysComm.setAdc0_mux_index(mux);
-        attysComm.setAdc2_gain_index(gain);
+        attysComm.setAdc2_gain_index(adcgain);
         attysComm.setAdc1_mux_index(mux);
 
         byte data_separator = (byte) (Integer.parseInt(prefs.getString("data_separator", "0")));
