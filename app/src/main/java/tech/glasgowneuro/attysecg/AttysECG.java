@@ -42,9 +42,12 @@ import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -71,6 +74,7 @@ public class AttysECG extends AppCompatActivity {
 
     private RealtimePlotView realtimePlotView = null;
     private InfoView infoView = null;
+    XYPlotFragment plotFragment = null;
 
     private BluetoothAdapter BA;
     private AttysComm attysComm = null;
@@ -263,7 +267,7 @@ public class AttysECG extends AppCompatActivity {
 
             scaling_factor = 1;
 
-            annotatePlot("---------------");
+            annotatePlot();
         }
 
         UpdatePlotTask() {
@@ -273,7 +277,7 @@ public class AttysECG extends AppCompatActivity {
             ecgDetNotch.bandStop(notchOrder, attysComm.getSamplingRateInHz(), powerlineHz, notchBW);
         }
 
-        private void annotatePlot(String largeText) {
+        private void annotatePlot() {
             String small = "";
             small = small + "".format("%1.04fV/div (X%d), ", ch1Div, (int) gain);
             if (attysComm.isRecording()) {
@@ -281,7 +285,7 @@ public class AttysECG extends AppCompatActivity {
             }
             if (infoView != null) {
                 if (attysComm != null) {
-                    infoView.drawText(largeText, small);
+                    infoView.drawText(small);
                 }
             }
         }
@@ -318,7 +322,9 @@ public class AttysECG extends AppCompatActivity {
                         Arrays.sort(sortBuffer);
                         int filtBPM = sortBuffer[1];
                         if (filtBPM > 0) {
-                            annotatePlot(String.format("%03d BPM", (int) filtBPM));
+                            if (plotFragment != null) {
+                                plotFragment.addValue(filtBPM);
+                            }
                         }
                     }
                     t2 = timestamp;
@@ -499,6 +505,7 @@ public class AttysECG extends AppCompatActivity {
         startActivity(startMain);
     }
 
+
     /**
      * Called when the activity is first created.
      */
@@ -518,7 +525,7 @@ public class AttysECG extends AppCompatActivity {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
         }
 
-        setContentView(R.layout.activity_plot_window);
+        setContentView(R.layout.main_activity_layout);
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
@@ -896,7 +903,40 @@ public class AttysECG extends AppCompatActivity {
                 return true;
 
             case R.id.showaccelerometer:
+
                 showAcc = !showAcc;
+                if (showAcc) {
+                    /**
+                    FrameLayout frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
+                    ViewGroup.LayoutParams params = frameLayout.getLayoutParams();
+                    params.width = params.width / 2;
+                    int width = params.width / 2;
+                    int height = params.width / 2;
+                    frameLayout.setLayoutParams(params);
+                    frameLayout.requestLayout();
+
+                    frameLayout = (FrameLayout) findViewById(R.id.fragment_plot_container);
+                    params = frameLayout.getLayoutParams();
+                    params.width = width / 2;
+                    params.height = height;
+                    frameLayout.setLayoutParams(params);
+                    frameLayout.requestLayout();
+                     **/
+
+                    // Create a new Fragment to be placed in the activity layout
+                    plotFragment = new XYPlotFragment();
+                    // Add the fragment to the 'fragment_container' FrameLayout
+                    Log.d(TAG, "Adding fragment");
+                    getSupportFragmentManager().beginTransaction()
+                            .add(R.id.fragment_plot_container, plotFragment, "plotFragment").commit();
+                } else {
+                    // Add the fragment to the 'fragment_container' FrameLayout
+                    getSupportFragmentManager().beginTransaction()
+                            .remove(plotFragment).commit();
+                    plotFragment = null;
+                    Log.d(TAG, "Removed fragment");
+                }
+
                 item.setChecked(showAcc);
                 return true;
 
@@ -926,7 +966,7 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.largeStatusOff:
                 dataAnalysis = DataAnalysis.NONE;
-                updatePlotTask.annotatePlot("");
+                updatePlotTask.annotatePlot();
                 ygapForInfo = 0;
                 return true;
 

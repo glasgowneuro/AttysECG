@@ -9,7 +9,7 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:title="Channels"
+        android:title="MENU"
         app:showAsAction="ifRoom|withText">
 
         <menu>
@@ -38,15 +38,11 @@
                 <item
                     android:id="@+id/showCh1"
                     android:checked="true"
-                    android:title="ADC 1" />
+                    android:title="Einthoven" />
                 <item
-                    android:id="@+id/Ch1toggleDC"
+                    android:id="@+id/showCh2"
                     android:checked="true"
-                    android:title="ADC 1 DC filter" />
-                <item
-                    android:id="@+id/Ch1invert"
-                    android:checked="false"
-                    android:title="ADC 1 invert" />
+                    android:title="Augmented leads" />
                 <item
                     android:id="@+id/Ch1notch"
                     android:checked="false"
@@ -88,25 +84,6 @@
                 </menu>
 
             </item>
-
-            <group android:checkableBehavior="all">
-                <item
-                    android:id="@+id/showCh2"
-                    android:checked="true"
-                    android:title="ADC 2" />
-                <item
-                    android:id="@+id/Ch2toggleDC"
-                    android:checked="true"
-                    android:title="ADC 2 DC filter" />
-                <item
-                    android:id="@+id/Ch2invert"
-                    android:checked="false"
-                    android:title="ADC 2 invert" />
-                <item
-                    android:id="@+id/Ch2notch"
-                    android:checked="false"
-                    android:title="ADC 2 mains filter" />
-            </group>
 
             <item
                 android:checked="true"
