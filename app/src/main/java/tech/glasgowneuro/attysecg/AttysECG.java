@@ -906,22 +906,15 @@ public class AttysECG extends AppCompatActivity {
 
                 showAcc = !showAcc;
                 if (showAcc) {
-                    /**
                     FrameLayout frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
-                    ViewGroup.LayoutParams params = frameLayout.getLayoutParams();
-                    params.width = params.width / 2;
-                    int width = params.width / 2;
-                    int height = params.width / 2;
-                    frameLayout.setLayoutParams(params);
-                    frameLayout.requestLayout();
+                    frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT, 1.0f));
 
                     frameLayout = (FrameLayout) findViewById(R.id.fragment_plot_container);
-                    params = frameLayout.getLayoutParams();
-                    params.width = width / 2;
-                    params.height = height;
-                    frameLayout.setLayoutParams(params);
-                    frameLayout.requestLayout();
-                     **/
+                    frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT, 1.5f));
 
                     // Create a new Fragment to be placed in the activity layout
                     plotFragment = new XYPlotFragment();
@@ -934,6 +927,10 @@ public class AttysECG extends AppCompatActivity {
                     getSupportFragmentManager().beginTransaction()
                             .remove(plotFragment).commit();
                     plotFragment = null;
+                    FrameLayout frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
+                    frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT, 0.0f));
                     Log.d(TAG, "Removed fragment");
                 }
 
