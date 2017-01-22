@@ -73,7 +73,7 @@ public class AttysECG extends AppCompatActivity {
 
     private RealtimePlotView realtimePlotView = null;
     private InfoView infoView = null;
-    XYPlotFragment plotFragment = null;
+    HeartratePlotFragment plotFragment = null;
 
     private BluetoothAdapter BA;
     private AttysComm attysComm = null;
@@ -93,28 +93,21 @@ public class AttysECG extends AppCompatActivity {
     private int notchOrder = 2;
     private float powerlineHz = 50;
 
-    private boolean showAcc = false;
-    private boolean showMag = false;
-    private boolean showCh1 = true;
-    private boolean showCh2 = true;
+    private boolean showEinthoven = true;
+    private boolean showAugmented = true;
 
-    private float tick = 1;
-    private float ch2Div = 1;
-
-    private float magTick = 1000.0E-6F; //1000uT
-
-    private float accTick = AttysComm.oneG; // 1G
+    private float ytick = 0;
 
     private int[] actualChannelIdx;
 
-    public enum DataAnalysis {
+    public enum PlotWindowContent {
         NONE,
-        ECG
+        BPM
     }
 
     int ygapForInfo = 0;
 
-    private DataAnalysis dataAnalysis = DataAnalysis.NONE;
+    private PlotWindowContent plotWindowContent = PlotWindowContent.NONE;
 
     // debugging the ECG detector, commented out for production
     //double ecgDetOut;
@@ -278,7 +271,7 @@ public class AttysECG extends AppCompatActivity {
 
         private void annotatePlot() {
             String small = "";
-            small = small + "".format("%1.04fV/div", tick);
+            small = small + "".format("x = 1sec/div, y = %1.04fV/div", ytick);
             if (attysComm.isRecording()) {
                 small = small + " !!RECORDING to:" + dataFilename;
             }
@@ -356,6 +349,8 @@ public class AttysECG extends AppCompatActivity {
                 String[] tmpLabels = new String[nCh];
 
                 float max = attysComm.getADCFullScaleRange(0) / gain;
+                ytick = 1.0F / gain / 10;
+                annotatePlot();
 
                 int n = attysComm.getNumSamplesAvilable();
                 if (realtimePlotView != null) {
@@ -390,11 +385,11 @@ public class AttysECG extends AppCompatActivity {
                             float aVF = (II + III) / 2;
 
                             int nRealChN = 0;
-                            if (showCh1) {
+                            if (showEinthoven) {
                                 if (attysComm != null) {
                                     tmpMin[nRealChN] = -max;
                                     tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = tick;
+                                    tmpTick[nRealChN] = ytick;
                                     tmpLabels[nRealChN] = labels[0];
                                     actualChannelIdx[nRealChN] = 0;
                                     tmpSample[nRealChN++] = I;
@@ -402,7 +397,7 @@ public class AttysECG extends AppCompatActivity {
                                 if (attysComm != null) {
                                     tmpMin[nRealChN] = -max;
                                     tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = tick;
+                                    tmpTick[nRealChN] = ytick;
                                     tmpLabels[nRealChN] = labels[1];
                                     actualChannelIdx[nRealChN] = 1;
                                     tmpSample[nRealChN++] = II;
@@ -410,17 +405,17 @@ public class AttysECG extends AppCompatActivity {
                                 if (attysComm != null) {
                                     tmpMin[nRealChN] = -max;
                                     tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = tick;
+                                    tmpTick[nRealChN] = ytick;
                                     tmpLabels[nRealChN] = labels[2];
                                     actualChannelIdx[nRealChN] = 2;
                                     tmpSample[nRealChN++] = III;
                                 }
                             }
-                            if (showCh2) {
+                            if (showAugmented) {
                                 if (attysComm != null) {
                                     tmpMin[nRealChN] = -max;
                                     tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = tick;
+                                    tmpTick[nRealChN] = ytick;
                                     tmpLabels[nRealChN] = labels[3];
                                     actualChannelIdx[nRealChN] = 3;
                                     tmpSample[nRealChN++] = aVR;
@@ -428,7 +423,7 @@ public class AttysECG extends AppCompatActivity {
                                 if (attysComm != null) {
                                     tmpMin[nRealChN] = -max;
                                     tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = tick;
+                                    tmpTick[nRealChN] = ytick;
                                     tmpLabels[nRealChN] = labels[4];
                                     actualChannelIdx[nRealChN] = 4;
                                     tmpSample[nRealChN++] = aVL;
@@ -436,7 +431,7 @@ public class AttysECG extends AppCompatActivity {
                                 if (attysComm != null) {
                                     tmpMin[nRealChN] = -max;
                                     tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = tick;
+                                    tmpTick[nRealChN] = ytick;
                                     tmpLabels[nRealChN] = labels[5];
                                     actualChannelIdx[nRealChN] = 5;
                                     tmpSample[nRealChN++] = aVF;
@@ -537,8 +532,6 @@ public class AttysECG extends AppCompatActivity {
         super.onResume();
 
         updatePlotTask.resetAnalysis();
-        tick = 1.0F / gain /10;
-
     }
 
 
@@ -869,76 +862,33 @@ public class AttysECG extends AppCompatActivity {
                 }
                 return true;
 
-            case R.id.showCh1:
-                showCh1 = !showCh1;
-                item.setChecked(showCh1);
+            case R.id.showEinthoven:
+                showEinthoven = !showEinthoven;
+                item.setChecked(showEinthoven);
                 return true;
 
-            case R.id.showCh2:
-                showCh2 = !showCh2;
-                item.setChecked(showCh2);
+            case R.id.showAugmented:
+                showAugmented = !showAugmented;
+                item.setChecked(showAugmented);
                 return true;
 
             case R.id.Ch1gain200:
                 gain = 200;
-                tick = 1.0F / gain /10;
                 return true;
 
             case R.id.Ch1gain500:
                 gain = 500;
-                tick = 1.0F / gain /10;
                 return true;
 
             case R.id.Ch1gain1000:
                 gain = 1000;
-                tick = 1.0F / gain /10;
-                return true;
-
-            case R.id.showaccelerometer:
-
-                showAcc = !showAcc;
-                if (showAcc) {
-                    FrameLayout frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
-                    frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.MATCH_PARENT, 1.0f));
-
-                    frameLayout = (FrameLayout) findViewById(R.id.fragment_plot_container);
-                    frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.MATCH_PARENT, 1.5f));
-
-                    // Create a new Fragment to be placed in the activity layout
-                    plotFragment = new XYPlotFragment();
-                    // Add the fragment to the 'fragment_container' FrameLayout
-                    Log.d(TAG, "Adding fragment");
-                    getSupportFragmentManager().beginTransaction()
-                            .add(R.id.fragment_plot_container, plotFragment, "plotFragment").commit();
-                } else {
-                    // Add the fragment to the 'fragment_container' FrameLayout
-                    getSupportFragmentManager().beginTransaction()
-                            .remove(plotFragment).commit();
-                    plotFragment = null;
-                    FrameLayout frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
-                    frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.MATCH_PARENT, 0.0f));
-                    Log.d(TAG, "Removed fragment");
-                }
-
-                item.setChecked(showAcc);
-                return true;
-
-            case R.id.showmagnetometer:
-                showMag = !showMag;
-                item.setChecked(showMag);
                 return true;
 
             case R.id.enterFilename:
                 enterFilename();
                 return true;
 
-            case R.id.Ch1notch:
+            case R.id.notch:
                 if (iirNotch_II == null) {
                     iirNotch_II = new Butterworth();
                     iirNotch_III = new Butterworth();
@@ -953,15 +903,36 @@ public class AttysECG extends AppCompatActivity {
                 item.setChecked(iirNotch_II != null);
                 return true;
 
-            case R.id.largeStatusOff:
-                dataAnalysis = DataAnalysis.NONE;
-                updatePlotTask.annotatePlot();
-                ygapForInfo = 0;
+            case R.id.plotWindowBPM:
+
+                removePlotWindow();
+
+                FrameLayout frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
+                frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT, 1.0f));
+
+                frameLayout = (FrameLayout) findViewById(R.id.fragment_plot_container);
+                frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT, 1.5f));
+
+                // Create a new Fragment to be placed in the activity layout
+                plotFragment = new HeartratePlotFragment();
+                // Add the fragment to the 'fragment_container' FrameLayout
+                Log.d(TAG, "Adding fragment");
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.fragment_plot_container, plotFragment, "plotFragment").commit();
+                plotWindowContent = PlotWindowContent.BPM;
                 return true;
 
-            case R.id.largeStatusBPM:
-                dataAnalysis = DataAnalysis.ECG;
-                updatePlotTask.resetAnalysis();
+            case R.id.plotWindowOff:
+                removePlotWindow();
+                frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
+                frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT, 0.0f));
+                Log.d(TAG, "Removed fragment");
                 return true;
 
             case R.id.filebrowser:
@@ -973,6 +944,15 @@ public class AttysECG extends AppCompatActivity {
                 // Invoke the superclass to handle it.
                 return super.onOptionsItemSelected(item);
 
+        }
+    }
+
+
+    private void removePlotWindow() {
+        if (plotFragment != null) {
+            getSupportFragmentManager().beginTransaction()
+                    .remove(plotFragment).commit();
+            plotFragment = null;
         }
     }
 

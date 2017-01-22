@@ -18,9 +18,9 @@ import com.androidplot.xy.XYPlot;
  * Created by bp1 on 20/01/17.
  */
 
-public class XYPlotFragment extends Fragment {
+public class HeartratePlotFragment extends Fragment {
 
-    String TAG = "XYPlotFragment";
+    String TAG = "HeartratePlotFragment";
 
     private static final int HISTORY_SIZE = 60;
 
@@ -52,7 +52,7 @@ public class XYPlotFragment extends Fragment {
         bpmPlot = (XYPlot) view.findViewById(R.id.bpmPlotView);
         bpmText = (TextView) view.findViewById(R.id.bpmTextView);
 
-        bpmHistorySeries = new SimpleXYSeries("BPM");
+        bpmHistorySeries = new SimpleXYSeries("Heart rate / beats per minute");
         if (bpmHistorySeries == null) {
             Log.e(TAG, "bpmHistorySeries == null");
         }
@@ -64,8 +64,8 @@ public class XYPlotFragment extends Fragment {
                 new LineAndPointFormatter(
                         Color.rgb(100, 255, 255), null, null, null));
         bpmPlot.setDomainStepValue(HISTORY_SIZE / 10);
-        bpmPlot.setDomainLabel("Sample Index");
-        bpmPlot.setRangeLabel("rate (BPM)");
+        bpmPlot.setDomainLabel("Heartbeat #");
+        bpmPlot.setRangeLabel("rate/BPM");
 
         return view;
 

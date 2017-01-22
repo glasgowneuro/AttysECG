@@ -9,44 +9,35 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:title="MENU"
+        android:title="ECG"
         app:showAsAction="ifRoom|withText">
 
         <menu>
 
-            <item
-                android:checked="true"
-                android:title="Info displays">
-
+            <item android:title="ECG analysis">
                 <menu>
                     <item
-                        android:id="@+id/largeStatusOff"
+                        android:id="@+id/plotWindowOff"
                         android:title="off" />
                     <item
-                        android:id="@+id/largeStatusAC"
-                        android:title="peak-peak" />
-                    <item
-                        android:id="@+id/largeStatusDC"
-                        android:title="DC" />
-                    <item
-                        android:id="@+id/largeStatusBPM"
-                        android:title="ECG/bpm" />
+                        android:id="@+id/plotWindowBPM"
+                        android:title="heart rate" />
                 </menu>
             </item>
 
             <group android:checkableBehavior="all">
                 <item
-                    android:id="@+id/showCh1"
+                    android:id="@+id/showEinthoven"
                     android:checked="true"
-                    android:title="Einthoven" />
+                    android:title="Show Einthoven" />
                 <item
-                    android:id="@+id/showCh2"
+                    android:id="@+id/showAugmented"
                     android:checked="true"
-                    android:title="Augmented leads" />
+                    android:title="Show Augmented leads" />
                 <item
-                    android:id="@+id/Ch1notch"
+                    android:id="@+id/notch"
                     android:checked="false"
-                    android:title="ADC 1 mains filter" />
+                    android:title="Enable mains filter" />
             </group>
 
             <item
@@ -66,15 +57,6 @@
                 </menu>
 
             </item>
-
-            <group android:checkableBehavior="all">
-                <item
-                    android:id="@+id/showaccelerometer"
-                    android:title="Accelerometer" />
-                <item
-                    android:id="@+id/showmagnetometer"
-                    android:title="Magnetometer" />
-            </group>
         </menu>
     </item>
 
