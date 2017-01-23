@@ -73,7 +73,8 @@ public class AttysECG extends AppCompatActivity {
 
     private RealtimePlotView realtimePlotView = null;
     private InfoView infoView = null;
-    HeartratePlotFragment plotFragment = null;
+    private HeartratePlotFragment plotFragment = null;
+    private VectorPlotFragment vectorPlotFragment = null;
 
     private BluetoothAdapter BA;
     private AttysComm attysComm = null;
@@ -102,7 +103,8 @@ public class AttysECG extends AppCompatActivity {
 
     public enum PlotWindowContent {
         NONE,
-        BPM
+        BPM,
+        VECTOR
     }
 
     int ygapForInfo = 0;
@@ -389,6 +391,10 @@ public class AttysECG extends AppCompatActivity {
                             float aVL = II/2 - III;
                             float aVF = II/2 + III/2;
 
+                            if (vectorPlotFragment != null) {
+                                vectorPlotFragment.addValue(I,aVF);
+                            }
+
                             int nRealChN = 0;
                             if (showEinthoven) {
                                 if (attysComm != null) {
@@ -463,6 +469,9 @@ public class AttysECG extends AppCompatActivity {
                     }
                     if (realtimePlotView != null) {
                         realtimePlotView.stopAddSamples();
+                    }
+                    if (vectorPlotFragment != null) {
+                        vectorPlotFragment.redraw();
                     }
                 }
             }
@@ -910,34 +919,34 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.plotWindowBPM:
 
-                removePlotWindow();
-
-                FrameLayout frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
-                frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT, 1.0f));
-
-                frameLayout = (FrameLayout) findViewById(R.id.fragment_plot_container);
-                frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT, 1.5f));
-
+                deletePlotWindow();
                 // Create a new Fragment to be placed in the activity layout
                 plotFragment = new HeartratePlotFragment();
                 // Add the fragment to the 'fragment_container' FrameLayout
                 Log.d(TAG, "Adding fragment");
                 getSupportFragmentManager().beginTransaction()
-                        .add(R.id.fragment_plot_container, plotFragment, "plotFragment").commit();
+                        .add(R.id.fragment_plot_container, plotFragment, "plotFragment")
+                        .commit();
+                showPlotFragment();
                 plotWindowContent = PlotWindowContent.BPM;
                 return true;
 
+            case R.id.plotWindowVector:
+
+                deletePlotWindow();
+                vectorPlotFragment = new VectorPlotFragment();
+                vectorPlotFragment.setHistorySize(attysComm.getSamplingRateInHz()/2);
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.fragment_plot_container, vectorPlotFragment, "vectorPlotFragment")
+                        .commit();
+
+                showPlotFragment();
+                plotWindowContent = PlotWindowContent.VECTOR;
+                return true;
+
             case R.id.plotWindowOff:
-                removePlotWindow();
-                frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
-                frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT, 0.0f));
-                Log.d(TAG, "Removed fragment");
+                hidePlotFragment();
+                deletePlotWindow();
                 return true;
 
             case R.id.filebrowser:
@@ -953,11 +962,37 @@ public class AttysECG extends AppCompatActivity {
     }
 
 
-    private void removePlotWindow() {
+    private void showPlotFragment() {
+        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
+        frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT, 1.0f));
+
+        frameLayout = (FrameLayout) findViewById(R.id.fragment_plot_container);
+        frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT, 1.5f));
+
+    }
+
+    private void hidePlotFragment() {
+        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
+        frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT, 0.0f));
+    }
+
+
+    private void deletePlotWindow() {
         if (plotFragment != null) {
             getSupportFragmentManager().beginTransaction()
                     .remove(plotFragment).commit();
             plotFragment = null;
+        }
+        if (vectorPlotFragment != null) {
+            getSupportFragmentManager().beginTransaction()
+                    .remove(vectorPlotFragment).commit();
+            vectorPlotFragment = null;
         }
     }
 

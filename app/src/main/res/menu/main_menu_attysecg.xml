@@ -21,7 +21,10 @@
                         android:title="off" />
                     <item
                         android:id="@+id/plotWindowBPM"
-                        android:title="heart rate" />
+                        android:title="Heart rate" />
+                    <item
+                        android:id="@+id/plotWindowVector"
+                        android:title="Vector ECG" />
                 </menu>
             </item>
 
