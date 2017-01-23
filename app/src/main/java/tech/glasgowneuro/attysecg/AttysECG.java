@@ -378,11 +378,16 @@ public class AttysECG extends AppCompatActivity {
                                 III = (float) iirNotch_III.filter((double) III);
                             }
 
+                            // https://pdfs.semanticscholar.org/8160/8b62b6efb007d112b438655dd2c897759fb1.pdf
+                            // Corrected Formula for the Calculation of the Electrical Heart Axis
+                            // Dragutin Novosel, Georg Noll1, Thomas F. Lüscher1
+
+                            // I-II+III = 0
                             float I = II - III;
 
-                            float aVR = (I + II) / 2;
-                            float aVL = (I - III) / 2;
-                            float aVF = (II + III) / 2;
+                            float aVR = III/2 - II;
+                            float aVL = II/2 - III;
+                            float aVF = II/2 + III/2;
 
                             int nRealChN = 0;
                             if (showEinthoven) {
