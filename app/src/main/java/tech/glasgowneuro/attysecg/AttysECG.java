@@ -888,14 +888,23 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.Ch1gain200:
                 gain = 200;
+                if (vectorPlotFragment != null) {
+                    vectorPlotFragment.setGain(gain);
+                }
                 return true;
 
             case R.id.Ch1gain500:
                 gain = 500;
+                if (vectorPlotFragment != null) {
+                    vectorPlotFragment.setGain(gain);
+                }
                 return true;
 
             case R.id.Ch1gain1000:
                 gain = 1000;
+                if (vectorPlotFragment != null) {
+                    vectorPlotFragment.setGain(gain);
+                }
                 return true;
 
             case R.id.enterFilename:
@@ -936,6 +945,7 @@ public class AttysECG extends AppCompatActivity {
                 deletePlotWindow();
                 vectorPlotFragment = new VectorPlotFragment();
                 vectorPlotFragment.setHistorySize(attysComm.getSamplingRateInHz()/2);
+                vectorPlotFragment.setGain(gain);
                 getSupportFragmentManager().beginTransaction()
                         .add(R.id.fragment_plot_container, vectorPlotFragment, "vectorPlotFragment")
                         .commit();
