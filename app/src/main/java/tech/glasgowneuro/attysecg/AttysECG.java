@@ -55,6 +55,7 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -73,7 +74,7 @@ public class AttysECG extends AppCompatActivity {
 
     private RealtimePlotView realtimePlotView = null;
     private InfoView infoView = null;
-    private HeartratePlotFragment plotFragment = null;
+    private HeartratePlotFragment heartratePlotFragment = null;
     private VectorPlotFragment vectorPlotFragment = null;
 
     private BluetoothAdapter BA;
@@ -96,6 +97,7 @@ public class AttysECG extends AppCompatActivity {
 
     private boolean showEinthoven = true;
     private boolean showAugmented = true;
+    private float filtBPM = 0;
 
     private float ytick = 0;
 
@@ -134,6 +136,100 @@ public class AttysECG extends AppCompatActivity {
     private File attysdir = null;
 
     ProgressDialog progress = null;
+
+
+
+    private class DataRecorder {
+        /////////////////////////////////////////////////////////////
+        // saving data into a file
+
+        private PrintWriter textdataFileStream = null;
+        private File textdataFile = null;
+        private byte data_separator = AttysComm.DATA_SEPARATOR_TAB;
+        float samplingInterval = 0;
+        float bpm = 0;
+
+        // starts the recording
+        public java.io.FileNotFoundException startRec(File file) {
+            samplingInterval = 1.0F / attysComm.getSamplingRateInHz();
+            try {
+                textdataFileStream = new PrintWriter(file);
+                textdataFile = file;
+                messageListener.haveMessage(AttysComm.MESSAGE_STARTED_RECORDING);
+            } catch (java.io.FileNotFoundException e) {
+                textdataFileStream = null;
+                textdataFile = null;
+                return e;
+            }
+            return null;
+        }
+
+        // stops it
+        public void stopRec() {
+            if (textdataFileStream != null) {
+                textdataFileStream.close();
+                messageListener.haveMessage(AttysComm.MESSAGE_STOPPED_RECORDING);
+                textdataFileStream = null;
+                textdataFile = null;
+            }
+        }
+
+        // are we recording?
+        public boolean isRecording() {
+            return (textdataFileStream != null);
+        }
+
+        public File getFile() {
+            return textdataFile;
+        }
+
+        public void setDataSeparator(byte s) {
+            data_separator = s;
+        }
+
+        public byte getDataSeparator() {
+            return data_separator;
+        }
+
+        public void setBPM(float _bpm) {
+            bpm = _bpm;
+        }
+
+        private void saveData(float I, float II, float III,
+                              float aVR, float aVL, float aVF) {
+
+            if (textdataFileStream == null) return;
+
+            char s = ' ';
+            switch (data_separator) {
+                case AttysComm.DATA_SEPARATOR_SPACE:
+                    s = ' ';
+                    break;
+                case AttysComm.DATA_SEPARATOR_COMMA:
+                    s = ',';
+                    break;
+                case AttysComm.DATA_SEPARATOR_TAB:
+                    s = 9;
+                    break;
+            }
+            float t = timestamp + samplingInterval;
+            String tmp = String.format("%f%c", t, s);
+            tmp = tmp + String.format("%f%c", I, s);
+            tmp = tmp + String.format("%f%c", II, s);
+            tmp = tmp + String.format("%f%c", III, s);
+            tmp = tmp + String.format("%f%c", aVR, s);
+            tmp = tmp + String.format("%f%c", aVL, s);
+            tmp = tmp + String.format("%f%c", aVF, s);
+            tmp = tmp + String.format("%f", bpm);
+            bpm = 0;
+
+            if (textdataFileStream != null) {
+                textdataFileStream.format("%s\n", tmp);
+            }
+        }
+    }
+
+    DataRecorder dataRecorder = new DataRecorder();
 
     Handler handler = new Handler() {
         @Override
@@ -239,8 +335,8 @@ public class AttysECG extends AppCompatActivity {
         private int doNotDetect = 0;
         private float[] analysisBuffer;
         private int analysisPtr = 0;
-        private int[] hrBuffer = new int[3];
-        private int[] sortBuffer = new int[3];
+        private float[] hrBuffer = new float[3];
+        private float[] sortBuffer = new float[3];
         private Butterworth ecgDetector = new Butterworth();
         private Butterworth ecgDetNotch = new Butterworth();
         private String m_unit = "";
@@ -311,13 +407,14 @@ public class AttysECG extends AppCompatActivity {
                     if ((bpm > 30) && (bpm < 300)) {
                         hrBuffer[2] = hrBuffer[1];
                         hrBuffer[1] = hrBuffer[0];
-                        hrBuffer[0] = (int) bpm;
+                        hrBuffer[0] = bpm;
                         System.arraycopy(hrBuffer, 0, sortBuffer, 0, hrBuffer.length);
                         Arrays.sort(sortBuffer);
-                        int filtBPM = sortBuffer[1];
+                        filtBPM = sortBuffer[1];
                         if (filtBPM > 0) {
-                            if (plotFragment != null) {
-                                plotFragment.addValue(filtBPM);
+                            dataRecorder.setBPM(filtBPM);
+                            if (heartratePlotFragment != null) {
+                                heartratePlotFragment.addValue(filtBPM);
                             }
                         }
                     }
@@ -394,6 +491,8 @@ public class AttysECG extends AppCompatActivity {
                             if (vectorPlotFragment != null) {
                                 vectorPlotFragment.addValue(I,aVF);
                             }
+
+                            dataRecorder.saveData(I,II,III,aVR,aVL,aVF);
 
                             int nRealChN = 0;
                             if (showEinthoven) {
@@ -838,9 +937,9 @@ public class AttysECG extends AppCompatActivity {
                 return true;
 
             case R.id.toggleRec:
-                if (attysComm.isRecording()) {
-                    File file = attysComm.getFile();
-                    attysComm.stopRec();
+                if (dataRecorder.isRecording()) {
+                    File file = dataRecorder.getFile();
+                    dataRecorder.stopRec();
                     if (file != null) {
                         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                         Uri contentUri = Uri.fromFile(file);
@@ -850,21 +949,21 @@ public class AttysECG extends AppCompatActivity {
                 } else {
                     if (dataFilename != null) {
                         File file = new File(attysdir, dataFilename.trim());
-                        attysComm.setDataSeparator(dataSeparator);
+                        dataRecorder.setDataSeparator(dataSeparator);
                         if (file.exists()) {
                             Toast.makeText(getApplicationContext(),
                                     "File exists already. Enter a different one.",
                                     Toast.LENGTH_LONG).show();
                             return true;
                         }
-                        java.io.FileNotFoundException e = attysComm.startRec(file);
+                        java.io.FileNotFoundException e = dataRecorder.startRec(file);
                         if (e != null) {
                             if (Log.isLoggable(TAG, Log.DEBUG)) {
                                 Log.d(TAG, "Could not open data file: " + e.getMessage());
                             }
                             return true;
                         }
-                        if (attysComm.isRecording()) {
+                        if (dataRecorder.isRecording()) {
                             if (Log.isLoggable(TAG, Log.DEBUG)) {
                                 Log.d(TAG, "Saving to " + file.getAbsolutePath());
                             }
@@ -930,11 +1029,11 @@ public class AttysECG extends AppCompatActivity {
 
                 deletePlotWindow();
                 // Create a new Fragment to be placed in the activity layout
-                plotFragment = new HeartratePlotFragment();
+                heartratePlotFragment = new HeartratePlotFragment();
                 // Add the fragment to the 'fragment_container' FrameLayout
                 Log.d(TAG, "Adding fragment");
                 getSupportFragmentManager().beginTransaction()
-                        .add(R.id.fragment_plot_container, plotFragment, "plotFragment")
+                        .add(R.id.fragment_plot_container, heartratePlotFragment, "heartratePlotFragment")
                         .commit();
                 showPlotFragment();
                 plotWindowContent = PlotWindowContent.BPM;
@@ -994,10 +1093,10 @@ public class AttysECG extends AppCompatActivity {
 
 
     private void deletePlotWindow() {
-        if (plotFragment != null) {
+        if (heartratePlotFragment != null) {
             getSupportFragmentManager().beginTransaction()
-                    .remove(plotFragment).commit();
-            plotFragment = null;
+                    .remove(heartratePlotFragment).commit();
+            heartratePlotFragment = null;
         }
         if (vectorPlotFragment != null) {
             getSupportFragmentManager().beginTransaction()
