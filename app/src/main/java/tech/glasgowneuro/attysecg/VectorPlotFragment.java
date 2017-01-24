@@ -22,7 +22,7 @@ public class VectorPlotFragment extends Fragment {
     String TAG = "VectorPlotFragment";
 
     private int history_size = 250;
-    private float gain = 500;
+    private float range = 1;
 
     private SimpleXYSeries vectorHistorySeries = null;
 
@@ -35,12 +35,11 @@ public class VectorPlotFragment extends Fragment {
     }
 
     void setGain(float _gain) {
-        gain = _gain * 1.5F;
+        range = 750/_gain;
         setScale();
     }
 
     void setScale() {
-        float range = 1000/gain;
         if (vectorPlot != null) {
             vectorPlot.setRangeBoundaries(range, -range, BoundaryMode.FIXED);
             vectorPlot.setDomainBoundaries(-range, range, BoundaryMode.FIXED);
@@ -106,7 +105,7 @@ public class VectorPlotFragment extends Fragment {
         }
 
         // add the latest history sample:
-        vectorHistorySeries.addLast(x * gain, y * gain);
+        vectorHistorySeries.addLast(x * 1000, y * 1000);
     }
 
 
