@@ -52,6 +52,7 @@
         </FrameLayout>
 
         <FrameLayout
+            android:background="@android:color/black"
             android:layout_width="0dp"
             android:layout_weight="0"
             android:id="@+id/fragment_plot_container"

@@ -451,7 +451,10 @@ public class AttysECG extends AppCompatActivity {
                 ytick = 1.0F / gain / 10;
                 annotatePlot();
 
-                int n = attysComm.getNumSamplesAvilable();
+                int n = 0;
+                if (attysComm != null) {
+                    n = attysComm.getNumSamplesAvilable();
+                }
                 if (realtimePlotView != null) {
                     if (!realtimePlotView.startAddSamples(n)) return;
                     for (int i = 0; ((i < n) && (attysComm != null)); i++) {
@@ -1031,7 +1034,9 @@ public class AttysECG extends AppCompatActivity {
                 // Create a new Fragment to be placed in the activity layout
                 heartratePlotFragment = new HeartratePlotFragment();
                 // Add the fragment to the 'fragment_container' FrameLayout
-                Log.d(TAG, "Adding fragment");
+                if (Log.isLoggable(TAG, Log.DEBUG)) {
+                    Log.d(TAG, "Adding heartrate fragment");
+                }
                 getSupportFragmentManager().beginTransaction()
                         .add(R.id.fragment_plot_container, heartratePlotFragment, "heartratePlotFragment")
                         .commit();

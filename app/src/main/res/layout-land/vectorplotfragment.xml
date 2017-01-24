@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ap="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+
+    <android.support.percent.PercentFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <com.androidplot.xy.XYPlot
+            android:layout_gravity="center_vertical"
+            app:layout_aspectRatio="100%"
+            app:layout_widthPercent="100%"
+            app:layout_marginTopPercent="0%"
+            app:layout_marginLeftPercent="0%"
+            android:id="@+id/vectorPlotView"
+            style="@style/APDefacto.Dark"
+            ap:domainTitle="domain"
+            ap:lineLabelRotationBottom="-45"
+            ap:lineLabels="left|bottom"
+            ap:rangeTitle="range"
+            ap:title="Vector ECG" />
+
+    </android.support.percent.PercentFrameLayout>
+
+</LinearLayout>

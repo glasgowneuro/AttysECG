@@ -1,20 +1,25 @@
 package tech.glasgowneuro.attysecg;
 
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 
+import com.androidplot.ui.SizeMetric;
+import com.androidplot.ui.SizeMode;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.SimpleXYSeries;
 import com.androidplot.xy.XYPlot;
 
 /**
- * Created by bp1 on 23/01/17.
+ * Created by Bernd Porr on 23/01/17.
+ * Vector ECG
  */
 
 public class VectorPlotFragment extends Fragment {
@@ -35,7 +40,7 @@ public class VectorPlotFragment extends Fragment {
     }
 
     void setGain(float _gain) {
-        range = 750/_gain;
+        range = 750 / _gain;
         setScale();
     }
 
@@ -54,7 +59,9 @@ public class VectorPlotFragment extends Fragment {
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
-        Log.d(TAG, "onCreate, creating Fragment");
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "onCreate, creating Fragment");
+        }
 
         if (container == null) {
             return null;
@@ -62,17 +69,24 @@ public class VectorPlotFragment extends Fragment {
 
         view = inflater.inflate(R.layout.vectorplotfragment, container, false);
         if (view == null) {
-            Log.e(TAG,"view == NULL!");
+            if (Log.isLoggable(TAG, Log.ERROR)) {
+                Log.e(TAG, "view == NULL!");
+            }
         }
+
         // setup the APR Levels plot:
         vectorPlot = (XYPlot) view.findViewById(R.id.vectorPlotView);
         if (vectorPlot == null) {
-            Log.e(TAG,"vectorPlot == null");
+            if (Log.isLoggable(TAG, Log.ERROR)) {
+                Log.e(TAG, "vectorPlot == null");
+            }
         }
 
         vectorHistorySeries = new SimpleXYSeries("");
         if (vectorHistorySeries == null) {
-            Log.e(TAG, "vectorHistorySeries == null");
+            if (Log.isLoggable(TAG, Log.ERROR)) {
+                Log.e(TAG, "vectorHistorySeries == null");
+            }
         }
 
         setScale();
@@ -87,7 +101,9 @@ public class VectorPlotFragment extends Fragment {
 
     }
 
+
     public synchronized void redraw() {
+
         if (vectorPlot != null) {
             vectorPlot.redraw();
         }
@@ -96,7 +112,9 @@ public class VectorPlotFragment extends Fragment {
     public synchronized void addValue(final float x, final float y) {
 
         if (vectorHistorySeries == null) {
-            // Log.d(TAG, "vectorHistorySeries == null");
+            if (Log.isLoggable(TAG, Log.VERBOSE)) {
+                Log.v(TAG, "vectorHistorySeries == null");
+            }
             return;
         }
         // get rid the oldest sample in history:

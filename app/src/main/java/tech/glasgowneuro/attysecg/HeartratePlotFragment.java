@@ -15,7 +15,10 @@ import com.androidplot.xy.SimpleXYSeries;
 import com.androidplot.xy.XYPlot;
 
 /**
- * Created by bp1 on 20/01/17.
+ * Created by Bernd Porr on 20/01/17.
+ *
+ * Heartrate Plot
+ *
  */
 
 public class HeartratePlotFragment extends Fragment {
@@ -54,7 +57,9 @@ public class HeartratePlotFragment extends Fragment {
 
         bpmHistorySeries = new SimpleXYSeries("Heart rate / beats per minute");
         if (bpmHistorySeries == null) {
-            Log.e(TAG, "bpmHistorySeries == null");
+            if (Log.isLoggable(TAG, Log.ERROR)) {
+                Log.e(TAG, "bpmHistorySeries == null");
+            }
         }
         bpmHistorySeries.useImplicitXVals();
 
@@ -85,7 +90,9 @@ public class HeartratePlotFragment extends Fragment {
         }
 
         if (bpmHistorySeries == null) {
-            Log.d(TAG, "bpmHistorySeries == null");
+            if (Log.isLoggable(TAG, Log.VERBOSE)) {
+                Log.v(TAG, "bpmHistorySeries == null");
+            }
             return;
         }
         // get rid the oldest sample in history:
