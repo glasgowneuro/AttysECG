@@ -1,8 +1,10 @@
 package tech.glasgowneuro.attysecg;
 
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,13 +14,13 @@ import android.widget.TextView;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.SimpleXYSeries;
+import com.androidplot.xy.StepMode;
 import com.androidplot.xy.XYPlot;
 
 /**
  * Created by Bernd Porr on 20/01/17.
- *
+ * <p>
  * Heartrate Plot
- *
  */
 
 public class HeartratePlotFragment extends Fragment {
@@ -68,9 +70,25 @@ public class HeartratePlotFragment extends Fragment {
         bpmPlot.addSeries(bpmHistorySeries,
                 new LineAndPointFormatter(
                         Color.rgb(100, 255, 255), null, null, null));
-        bpmPlot.setDomainStepValue(HISTORY_SIZE / 10);
         bpmPlot.setDomainLabel("Heartbeat #");
-        bpmPlot.setRangeLabel("rate/BPM");
+        bpmPlot.setRangeLabel("");
+
+        DisplayMetrics metrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        int width = metrics.widthPixels;
+        int height = metrics.heightPixels;
+        if ((height > 1000) && (width > 1000)) {
+            bpmPlot.setDomainStep(StepMode.INCREMENT_BY_VAL, 25);
+            bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 25);
+        } else {
+            bpmPlot.setDomainStep(StepMode.INCREMENT_BY_VAL, 50);
+            bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 50);
+        }
+
+        Paint paint = new Paint();
+        paint.setColor(Color.argb(128, 0, 255, 0));
+        bpmPlot.getGraph().setDomainGridLinePaint(paint);
+        bpmPlot.getGraph().setRangeGridLinePaint(paint);
 
         return view;
 

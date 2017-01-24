@@ -1,6 +1,7 @@
 package tech.glasgowneuro.attysecg;
 
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -15,6 +16,7 @@ import com.androidplot.ui.SizeMode;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.SimpleXYSeries;
+import com.androidplot.xy.StepMode;
 import com.androidplot.xy.XYPlot;
 
 /**
@@ -96,6 +98,11 @@ public class VectorPlotFragment extends Fragment {
         //vectorPlot.setDomainStepValue(2 / 10);
         vectorPlot.setDomainLabel("I/mV");
         vectorPlot.setRangeLabel("aVF/mV");
+
+        Paint paint = new Paint();
+        paint.setColor(Color.argb(128, 0, 255, 0));
+        vectorPlot.getGraph().setDomainGridLinePaint(paint);
+        vectorPlot.getGraph().setRangeGridLinePaint(paint);
 
         return view;
 

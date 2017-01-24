@@ -8,6 +8,8 @@
 
     <TextView
         android:text=""
+        android:textColor="#00FFFF"
+        android:gravity="end"
         android:id="@+id/bpmTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -18,7 +20,7 @@
         android:id="@+id/bpmPlotView"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        ap:title="Heart rate"
+        ap:title="Heart rate (BPM)"
         ap:rangeTitle="range"
         ap:domainTitle="domain"
         ap:lineLabels="left|bottom"
