@@ -84,7 +84,6 @@ public class InfoView extends SurfaceView implements SurfaceHolder.Callback {
         Surface surface = holder.getSurface();
         int width = getWidth();
         int yLarge = 0;
-        int xLarge = 0;
         if (surface.isValid()) {
             int txtDiv = 25;
             Rect bounds = new Rect();

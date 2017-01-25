@@ -2,21 +2,15 @@ package tech.glasgowneuro.attysecg;
 
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-
-import com.androidplot.ui.SizeMetric;
-import com.androidplot.ui.SizeMode;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.SimpleXYSeries;
-import com.androidplot.xy.StepMode;
 import com.androidplot.xy.XYPlot;
 
 /**

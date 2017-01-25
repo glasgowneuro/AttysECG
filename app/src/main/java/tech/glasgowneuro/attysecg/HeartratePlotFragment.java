@@ -51,7 +51,7 @@ public class HeartratePlotFragment extends Fragment {
             return null;
         }
 
-        view = inflater.inflate(R.layout.xyplotfragment, container, false);
+        view = inflater.inflate(R.layout.heartrateplotfragment, container, false);
 
         // setup the APR Levels plot:
         bpmPlot = (XYPlot) view.findViewById(R.id.bpmPlotView);

@@ -34,6 +34,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -103,15 +104,7 @@ public class AttysECG extends AppCompatActivity {
 
     private int[] actualChannelIdx;
 
-    public enum PlotWindowContent {
-        NONE,
-        BPM,
-        VECTOR
-    }
-
     int ygapForInfo = 0;
-
-    private PlotWindowContent plotWindowContent = PlotWindowContent.NONE;
 
     // debugging the ECG detector, commented out for production
     //double ecgDetOut;
@@ -136,7 +129,6 @@ public class AttysECG extends AppCompatActivity {
     private File attysdir = null;
 
     ProgressDialog progress = null;
-
 
 
     private class DataRecorder {
@@ -242,7 +234,9 @@ public class AttysECG extends AppCompatActivity {
                         attysComm.cancel();
                     }
                     try {
-                        attysComm.join();
+                        if (attysComm != null) {
+                            attysComm.join();
+                        }
                     } catch (Exception ee) {
                     }
                     progress.dismiss();
@@ -369,8 +363,8 @@ public class AttysECG extends AppCompatActivity {
 
         private void annotatePlot() {
             String small = "";
-            small = small + "".format("x = 1sec/div, y = %1.04fV/div", ytick);
-            if (attysComm.isRecording()) {
+            small = small + "".format("1 sec/div, %1.01f mV/div, HR = %d BPM", ytick * 1000, ((int) filtBPM));
+            if (dataRecorder.isRecording()) {
                 small = small + " !!RECORDING to:" + dataFilename;
             }
             if (infoView != null) {
@@ -487,15 +481,15 @@ public class AttysECG extends AppCompatActivity {
                             // I-II+III = 0
                             float I = II - III;
 
-                            float aVR = III/2 - II;
-                            float aVL = II/2 - III;
-                            float aVF = II/2 + III/2;
+                            float aVR = III / 2 - II;
+                            float aVL = II / 2 - III;
+                            float aVF = II / 2 + III / 2;
 
                             if (vectorPlotFragment != null) {
-                                vectorPlotFragment.addValue(I,aVF);
+                                vectorPlotFragment.addValue(I, aVF);
                             }
 
-                            dataRecorder.saveData(I,II,III,aVR,aVL,aVF);
+                            dataRecorder.saveData(I, II, III, aVR, aVL, aVF);
 
                             int nRealChN = 0;
                             if (showEinthoven) {
@@ -1038,24 +1032,26 @@ public class AttysECG extends AppCompatActivity {
                     Log.d(TAG, "Adding heartrate fragment");
                 }
                 getSupportFragmentManager().beginTransaction()
-                        .add(R.id.fragment_plot_container, heartratePlotFragment, "heartratePlotFragment")
+                        .add(R.id.fragment_plot_container,
+                                heartratePlotFragment,
+                                "heartratePlotFragment")
                         .commit();
                 showPlotFragment();
-                plotWindowContent = PlotWindowContent.BPM;
                 return true;
 
             case R.id.plotWindowVector:
 
                 deletePlotWindow();
                 vectorPlotFragment = new VectorPlotFragment();
-                vectorPlotFragment.setHistorySize(attysComm.getSamplingRateInHz()/2);
+                vectorPlotFragment.setHistorySize(attysComm.getSamplingRateInHz() / 2);
                 vectorPlotFragment.setGain(gain);
                 getSupportFragmentManager().beginTransaction()
-                        .add(R.id.fragment_plot_container, vectorPlotFragment, "vectorPlotFragment")
+                        .add(R.id.fragment_plot_container,
+                                vectorPlotFragment,
+                                "vectorPlotFragment")
                         .commit();
 
                 showPlotFragment();
-                plotWindowContent = PlotWindowContent.VECTOR;
                 return true;
 
             case R.id.plotWindowOff:
@@ -1097,17 +1093,24 @@ public class AttysECG extends AppCompatActivity {
     }
 
 
-    private void deletePlotWindow() {
-        if (heartratePlotFragment != null) {
-            getSupportFragmentManager().beginTransaction()
-                    .remove(heartratePlotFragment).commit();
-            heartratePlotFragment = null;
+    private synchronized void deletePlotWindow() {
+        List<Fragment> fragments = getSupportFragmentManager().getFragments();
+        if (fragments != null) {
+            if (!(fragments.isEmpty())) {
+                for (Fragment fragment : fragments) {
+                    if (Log.isLoggable(TAG, Log.DEBUG)) {
+                        if (fragment != null) {
+                            Log.d(TAG, "Removing fragment: " + fragment.getTag());
+                        }
+                    }
+                    if (fragment != null) {
+                        getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+                    }
+                }
+            }
         }
-        if (vectorPlotFragment != null) {
-            getSupportFragmentManager().beginTransaction()
-                    .remove(vectorPlotFragment).commit();
-            vectorPlotFragment = null;
-        }
+        heartratePlotFragment = null;
+        vectorPlotFragment = null;
     }
 
 
