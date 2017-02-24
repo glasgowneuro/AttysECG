@@ -659,7 +659,7 @@ public class AttysECG extends AppCompatActivity {
                 if (ecg_rr_det_ch1.getAmplitude() > ecg_rr_det_ch2.getAmplitude()) {
                     saveBPM(bpm);
                     bpmFromEinthovenLeadNo = "II";
-                    Log.d(TAG,"RR det ch2");
+                    //Log.d(TAG,"RR det ch2");
                 }
             }
         });
@@ -672,7 +672,7 @@ public class AttysECG extends AppCompatActivity {
                 if (ecg_rr_det_ch2.getAmplitude() > ecg_rr_det_ch1.getAmplitude()) {
                     saveBPM(bpm);
                     bpmFromEinthovenLeadNo = "III";
-                    Log.d(TAG,"RR det ch3");
+                    //Log.d(TAG,"RR det ch3");
                 }
             }
         });
