@@ -98,7 +98,11 @@ public class AttysECG extends AppCompatActivity {
 
     private boolean showEinthoven = true;
     private boolean showAugmented = true;
-    private float filtBPM = 0;
+    private float bpm = 0;
+    private String bpmFromEinthovenLeadNo = "II";
+
+    private ECG_rr_det ecg_rr_det_ch1 = null;
+    private ECG_rr_det ecg_rr_det_ch2 = null;
 
     private float ytick = 0;
 
@@ -135,9 +139,14 @@ public class AttysECG extends AppCompatActivity {
         /////////////////////////////////////////////////////////////
         // saving data into a file
 
+        public final static byte DATA_SEPARATOR_TAB = 0;
+        public final static byte DATA_SEPARATOR_COMMA = 1;
+        public final static byte DATA_SEPARATOR_SPACE = 2;
+
+
         private PrintWriter textdataFileStream = null;
         private File textdataFile = null;
-        private byte data_separator = AttysComm.DATA_SEPARATOR_TAB;
+        private byte data_separator = DATA_SEPARATOR_TAB;
         float samplingInterval = 0;
         float bpm = 0;
 
@@ -194,13 +203,13 @@ public class AttysECG extends AppCompatActivity {
 
             char s = ' ';
             switch (data_separator) {
-                case AttysComm.DATA_SEPARATOR_SPACE:
+                case DATA_SEPARATOR_SPACE:
                     s = ' ';
                     break;
-                case AttysComm.DATA_SEPARATOR_COMMA:
+                case DATA_SEPARATOR_COMMA:
                     s = ',';
                     break;
-                case AttysComm.DATA_SEPARATOR_TAB:
+                case DATA_SEPARATOR_TAB:
                     s = 9;
                     break;
             }
@@ -323,29 +332,10 @@ public class AttysECG extends AppCompatActivity {
 
     private class UpdatePlotTask extends TimerTask {
 
-        private int ignoreECGdetector = 1000;
-        private double max, min;
-        private float t2 = 0;
-        private int doNotDetect = 0;
-        private float[] analysisBuffer;
-        private int analysisPtr = 0;
-        private float[] hrBuffer = new float[3];
-        private float[] sortBuffer = new float[3];
-        private Butterworth ecgDetector = new Butterworth();
-        private Butterworth ecgDetNotch = new Butterworth();
         private String m_unit = "";
         private float scaling_factor = 1;
 
         private void resetAnalysis() {
-            max = 0;
-            min = 0;
-            t2 = 0;
-            doNotDetect = 0;
-            ignoreECGdetector = attysComm.getSamplingRateInHz();
-            analysisPtr = 0;
-            hrBuffer[0] = 0;
-            hrBuffer[1] = 0;
-            hrBuffer[2] = 0;
 
             m_unit = AttysComm.CHANNEL_UNITS[AttysComm.INDEX_Analogue_channel_1];
 
@@ -354,67 +344,15 @@ public class AttysECG extends AppCompatActivity {
             annotatePlot();
         }
 
-        UpdatePlotTask() {
-            analysisBuffer = new float[attysComm.getSamplingRateInHz()];
-            // this fakes an R peak so we have a matched filter!
-            ecgDetector.bandPass(2, attysComm.getSamplingRateInHz(), 20, 15);
-            ecgDetNotch.bandStop(notchOrder, attysComm.getSamplingRateInHz(), powerlineHz, notchBW);
-        }
-
         private void annotatePlot() {
             String small = "";
-            small = small + "".format("1 sec/div, %1.01f mV/div, HR = %d BPM", ytick * 1000, ((int) filtBPM));
+            small = small + "".format("1 sec/div, %1.01f mV/div, HR = %d BPM (from %s)", ytick * 1000, ((int) bpm), bpmFromEinthovenLeadNo);
             if (dataRecorder.isRecording()) {
                 small = small + " !!RECORDING to:" + dataFilename;
             }
             if (infoView != null) {
                 if (attysComm != null) {
                     infoView.drawText(small);
-                }
-            }
-        }
-
-        private void doAnalysis(float v) {
-
-            v = v * scaling_factor;
-
-            double h = ecgDetNotch.filter(v * 1000);
-            h = ecgDetector.filter(h);
-            if (ignoreECGdetector > 0) {
-                ignoreECGdetector--;
-                h = 0;
-            }
-            h = h * h;
-            // debugging
-            //ecgDetOut = h;
-            if (h > max) {
-                max = h;
-            }
-            max = max - 0.1 * max / attysComm.getSamplingRateInHz();
-            //Log.d(TAG,"h="+h+",max="+max);
-            if (doNotDetect > 0) {
-                doNotDetect--;
-            } else {
-                if (h > (0.6 * max)) {
-                    float t = (timestamp - t2) / attysComm.getSamplingRateInHz();
-                    float bpm = 1 / t * 60;
-                    if ((bpm > 30) && (bpm < 300)) {
-                        hrBuffer[2] = hrBuffer[1];
-                        hrBuffer[1] = hrBuffer[0];
-                        hrBuffer[0] = bpm;
-                        System.arraycopy(hrBuffer, 0, sortBuffer, 0, hrBuffer.length);
-                        Arrays.sort(sortBuffer);
-                        filtBPM = sortBuffer[1];
-                        if (filtBPM > 0) {
-                            dataRecorder.setBPM(filtBPM);
-                            if (heartratePlotFragment != null) {
-                                heartratePlotFragment.addValue(filtBPM);
-                            }
-                        }
-                    }
-                    t2 = timestamp;
-                    // advoid 1/4 sec
-                    doNotDetect = attysComm.getSamplingRateInHz() / 4;
                 }
             }
         }
@@ -466,12 +404,19 @@ public class AttysECG extends AppCompatActivity {
                             if (iirNotch_II != null) {
                                 II = (float) iirNotch_II.filter((double) II);
                             }
-                            doAnalysis(II);
+
+                            if (ecg_rr_det_ch1 != null) {
+                                ecg_rr_det_ch1.detect(II);
+                            }
 
                             float III = sample[AttysComm.INDEX_Analogue_channel_2];
                             III = highpass_III.filter(III);
                             if (iirNotch_III != null) {
                                 III = (float) iirNotch_III.filter((double) III);
+                            }
+
+                            if (ecg_rr_det_ch2 != null) {
+                                ecg_rr_det_ch2.detect(III);
                             }
 
                             // https://pdfs.semanticscholar.org/8160/8b62b6efb007d112b438655dd2c897759fb1.pdf
@@ -645,6 +590,14 @@ public class AttysECG extends AppCompatActivity {
     }
 
 
+    private void saveBPM(float bpm) {
+        dataRecorder.setBPM(bpm);
+        if (heartratePlotFragment != null) {
+            heartratePlotFragment.addValue(bpm);
+        }
+        this.bpm = bpm;
+    }
+
     public void startDAQ() {
 
         client.connect();
@@ -697,6 +650,32 @@ public class AttysECG extends AppCompatActivity {
         infoView.setZOrderMediaOverlay(true);
 
         attysComm.start();
+
+        ecg_rr_det_ch1 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz);
+
+        ecg_rr_det_ch1.setRrListener(new ECG_rr_det.RRlistener() {
+            @Override
+            public void haveRpeak(long samplenumber, float bpm, double amplitude, double confidence) {
+                if (ecg_rr_det_ch1.getAmplitude() > ecg_rr_det_ch2.getAmplitude()) {
+                    saveBPM(bpm);
+                    bpmFromEinthovenLeadNo = "II";
+                    Log.d(TAG,"RR det ch2");
+                }
+            }
+        });
+
+        ecg_rr_det_ch2 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz);
+
+        ecg_rr_det_ch2.setRrListener(new ECG_rr_det.RRlistener() {
+            @Override
+            public void haveRpeak(long samplenumber, float bpm, double amplitude, double confidence) {
+                if (ecg_rr_det_ch2.getAmplitude() > ecg_rr_det_ch1.getAmplitude()) {
+                    saveBPM(bpm);
+                    bpmFromEinthovenLeadNo = "III";
+                    Log.d(TAG,"RR det ch3");
+                }
+            }
+        });
 
         timer = new Timer();
         updatePlotTask = new UpdatePlotTask();
@@ -817,13 +796,13 @@ public class AttysECG extends AppCompatActivity {
                         dataFilename = dataFilename.replaceAll("[^a-zA-Z0-9.-]", "_");
                         if (!dataFilename.contains(".")) {
                             switch (dataSeparator) {
-                                case AttysComm.DATA_SEPARATOR_COMMA:
+                                case DataRecorder.DATA_SEPARATOR_COMMA:
                                     dataFilename = dataFilename + ".csv";
                                     break;
-                                case AttysComm.DATA_SEPARATOR_SPACE:
+                                case DataRecorder.DATA_SEPARATOR_SPACE:
                                     dataFilename = dataFilename + ".dat";
                                     break;
-                                case AttysComm.DATA_SEPARATOR_TAB:
+                                case DataRecorder.DATA_SEPARATOR_TAB:
                                     dataFilename = dataFilename + ".tsv";
                             }
                         }
@@ -1133,7 +1112,7 @@ public class AttysECG extends AppCompatActivity {
         attysComm.setAdc1_mux_index(mux);
 
         byte data_separator = (byte) (Integer.parseInt(prefs.getString("data_separator", "0")));
-        attysComm.setDataSeparator(data_separator);
+        dataRecorder.setDataSeparator(data_separator);
 
         powerlineHz = Float.parseFloat(prefs.getString("powerline", "50"));
         if (Log.isLoggable(TAG, Log.DEBUG)) {
