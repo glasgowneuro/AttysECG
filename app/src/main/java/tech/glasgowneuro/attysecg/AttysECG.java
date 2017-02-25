@@ -400,23 +400,27 @@ public class AttysECG extends AppCompatActivity {
                             timestamp++;
 
                             float II = sample[AttysComm.INDEX_Analogue_channel_1];
+
                             II = highpass_II.filter(II);
-                            if (iirNotch_II != null) {
-                                II = (float) iirNotch_II.filter((double) II);
-                            }
 
                             if (ecg_rr_det_ch1 != null) {
                                 ecg_rr_det_ch1.detect(II);
                             }
 
-                            float III = sample[AttysComm.INDEX_Analogue_channel_2];
-                            III = highpass_III.filter(III);
-                            if (iirNotch_III != null) {
-                                III = (float) iirNotch_III.filter((double) III);
+                            if (iirNotch_II != null) {
+                                II = (float) iirNotch_II.filter((double) II);
                             }
+
+                            float III = sample[AttysComm.INDEX_Analogue_channel_2];
+
+                            III = highpass_III.filter(III);
 
                             if (ecg_rr_det_ch2 != null) {
                                 ecg_rr_det_ch2.detect(III);
+                            }
+
+                            if (iirNotch_III != null) {
+                                III = (float) iirNotch_III.filter((double) III);
                             }
 
                             // https://pdfs.semanticscholar.org/8160/8b62b6efb007d112b438655dd2c897759fb1.pdf

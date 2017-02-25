@@ -126,6 +126,7 @@ public class HeartratePlotFragment extends Fragment {
                     }
                     bpmPlot.setRangeBoundaries(0, 200, BoundaryMode.FIXED);
                 }
+                bpmPlot.redraw();
             }
         });
         bpmAutoscaleButton.setChecked(true);
@@ -146,6 +147,7 @@ public class HeartratePlotFragment extends Fragment {
             bpmHistorySeries.removeLast();
         }
         bpmFullSeries = new SimpleXYSeries("");
+        bpmPlot.redraw();
     }
 
     public synchronized void addValue(final float v) {

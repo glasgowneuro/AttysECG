@@ -33,7 +33,7 @@ public class ECG_rr_det {
     // amplitude. Realisic values: 0.1 .. 1.0
     // 0.1 = slow recovery after an artefact but no wrong detections
     // 1 = fast recovery after an artefact but possibly wrong detections
-    private final float adaptive_threshold_decay_constant = 0.5F;
+    private final float adaptive_threshold_decay_constant = 0.25F;
 
     // the threshold for the detection is 0.6 times smaller than the amplitude
     private final float threshold_factor = 0.6F;
@@ -43,6 +43,9 @@ public class ECG_rr_det {
 
     // notch order of the powerline filter
     private final int notchOrder = 2;
+
+    // 0.5mV as the thereshold the bandpass filtered ECG is an artefact
+    private double artefact_threshold = 1;
 
     // ignores 1000 samples to let the filter settle
     private int ignoreECGdetector = 1000;
@@ -62,9 +65,11 @@ public class ECG_rr_det {
     // timewindow not to detect an R peak
     private int doNotDetect = 0;
 
+    private int ignoreRRvalue = 2;
+
     // three HR's are stored and a median filter is applied to them
-    private float[] hrBuffer = new float[3];
-    private float[] sortBuffer = new float[3];
+    private float[] hrBuffer;
+    private float[] sortBuffer;
 
     // the R preak detector. This is a matched filter implemented as IIR
     private Butterworth ecgDetector = new Butterworth();
@@ -73,10 +78,10 @@ public class ECG_rr_det {
     private Butterworth ecgDetNotch = new Butterworth();
 
     // sampling rate in Hz
-    private final float samplingRateInHz;
+    private float samplingRateInHz;
 
     // powerline interference
-    private final float powerlineHz;
+    private float powerlineHz;
 
     // heartrate in BPM after median filtering (3 bpm readings)
     private float filtBPM = 0;
@@ -84,11 +89,26 @@ public class ECG_rr_det {
     // heartrate in BPM without median filtering (might have 1/2 bpm readings)
     private float unfiltBPM = 0;
 
+    private int medianFilterSize;
+
+    // constructor
+    // provide the sampling rate, the powerline frequency and the median filter size
+    public ECG_rr_det(float _samplingrateInHz, float _powerlineHz, int _medianFilterSize) {
+        init(_samplingrateInHz, _powerlineHz, _medianFilterSize);
+    }
+
     // constructor
     // provide the sampling rate and the powerline frequency
     public ECG_rr_det(float _samplingrateInHz, float _powerlineHz) {
+        init(_samplingrateInHz, _powerlineHz, 3);
+    }
+
+    private void init(float _samplingrateInHz, float _powerlineHz, int _medianFilterSize) {
         samplingRateInHz = _samplingrateInHz;
         powerlineHz = _powerlineHz;
+        medianFilterSize = _medianFilterSize;
+        hrBuffer = new float[medianFilterSize];
+        sortBuffer = new float[medianFilterSize];
         // this fakes an R peak so we have a matched filter!
         ecgDetector.bandPass(2, samplingRateInHz, 20, 15);
         ecgDetNotch.bandStop(notchOrder, samplingRateInHz, powerlineHz, notchBW);
@@ -134,15 +154,24 @@ public class ECG_rr_det {
     }
 
     // detect r peaks
-    // input: ECG samples at the specified sampling rate
+    // input: ECG samples at the specified sampling rate and in V
     public void detect(float v) {
         double h = ecgDetNotch.filter(v * 1000);
         h = ecgDetector.filter(h);
         if (ignoreECGdetector > 0) {
             ignoreECGdetector--;
-            h = 0;
+            return;
         }
         h = h * h;
+        //Log.d(TAG," "+(int)(10*Math.sqrt(h)));
+        // above 0.5mV
+        if (Math.sqrt(h) > artefact_threshold) {
+            // ignore signal for 1 sec
+            ignoreECGdetector = ((int) samplingRateInHz);
+            //Log.d(TAG,"artefact="+(Math.sqrt(h)));
+            ignoreRRvalue = 2;
+            return;
+        }
         if (h > amplitude) {
             amplitude = h;
         }
@@ -158,18 +187,25 @@ public class ECG_rr_det {
                 float t = (timestamp - t2) / samplingRateInHz;
                 float bpm = 1 / t * 60;
                 //Log.d(TAG,"bpm="+bpm);
-                if ((bpm > 30) && (bpm < 300)) {
-                    hrBuffer[2] = hrBuffer[1];
-                    hrBuffer[1] = hrBuffer[0];
-                    hrBuffer[0] = bpm;
-                    unfiltBPM = bpm;
-                    System.arraycopy(hrBuffer, 0, sortBuffer, 0, hrBuffer.length);
-                    Arrays.sort(sortBuffer);
-                    filtBPM = sortBuffer[1];
-                    if (filtBPM > 0) {
-                        // Log.d(TAG,"h="+h+",amplitude="+amplitude+" bpm="+filtBPM);
-                        rrListener.haveRpeak(timestamp, filtBPM, unfiltBPM, amplitude, h / threshold);
+                if ((bpm > 30) && (bpm < 250)) {
+                    if (ignoreRRvalue > 0) {
+                        ignoreRRvalue--;
+                    } else {
+                        for (int i = 0; i < (medianFilterSize - 1); i++) {
+                            hrBuffer[i + 1] = hrBuffer[i];
+                        }
+                        hrBuffer[0] = bpm;
+                        unfiltBPM = bpm;
+                        System.arraycopy(hrBuffer, 0, sortBuffer, 0, hrBuffer.length);
+                        Arrays.sort(sortBuffer);
+                        filtBPM = sortBuffer[1];
+                        if (filtBPM > 0) {
+                            // Log.d(TAG,"h="+h+",amplitude="+amplitude+" bpm="+filtBPM);
+                            rrListener.haveRpeak(timestamp, filtBPM, unfiltBPM, amplitude, h / threshold);
+                        }
                     }
+                } else {
+                    ignoreRRvalue = 3;
                 }
                 t2 = timestamp;
                 // advoid 1/5 sec
