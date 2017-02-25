@@ -7,7 +7,21 @@ import java.util.Arrays;
 import uk.me.berndporr.iirj.Butterworth;
 
 /**
- * Created by bp1 on 24/02/17.
+ * ECG R-peak detector and heart rate detector
+ * <p>
+ * The detector uses the matched filter approach by creating
+ * an IIR bandpass filter which looks like an R peak and
+ * thus is a recursive matched filter. One could also say
+ * it's a causal wavelet or perhaps just a bandpass filter
+ * which covers the frequency range of the R peak. It's all
+ * the same in different forms!
+ * <p>
+ * As an input the detector just gets the data samples
+ * at a given sampling rate and then it detects the r-peak and
+ * heart rate from it.
+ * <p>
+ * It also has a callback function which is called when
+ * a heartbeat is detected (implemented as a listener).
  */
 
 
@@ -64,8 +78,11 @@ public class ECG_rr_det {
     // powerline interference
     private final float powerlineHz;
 
-    // heartrate in BPM
-    private float filtBPM=0;
+    // heartrate in BPM after median filtering (3 bpm readings)
+    private float filtBPM = 0;
+
+    // heartrate in BPM without median filtering (might have 1/2 bpm readings)
+    private float unfiltBPM = 0;
 
     // constructor
     // provide the sampling rate and the powerline frequency
@@ -73,17 +90,21 @@ public class ECG_rr_det {
         samplingRateInHz = _samplingrateInHz;
         powerlineHz = _powerlineHz;
         // this fakes an R peak so we have a matched filter!
-        ecgDetector.bandPass(2,samplingRateInHz, 20, 15);
+        ecgDetector.bandPass(2, samplingRateInHz, 20, 15);
         ecgDetNotch.bandStop(notchOrder, samplingRateInHz, powerlineHz, notchBW);
         reset();
     }
 
     // this is a callback which is called whenever an R peak is detected
-    // gives back the sample number from last reset, the heartrate in bpm,
+    // gives back the sample number from last reset, the heartrate in bpm (filtered and unfiltered),
     // the amplitude of the R peak in arbitrary units and the confidence of the
     // detection: 1 means just OK, greater than one means more confident
     public interface RRlistener {
-        void haveRpeak(long samplenumber, float bpm, double amplitude, double confidence);
+        void haveRpeak(long samplenumber,
+                       float filtBpm,
+                       float unFiltBpm,
+                       double amplitude,
+                       double confidence);
     }
 
     private RRlistener rrListener = null;
@@ -97,8 +118,8 @@ public class ECG_rr_det {
         amplitude = 0;
         t2 = 0;
         timestamp = 0;
-        doNotDetect = (int)samplingRateInHz;
-        ignoreECGdetector = (int)samplingRateInHz;
+        doNotDetect = (int) samplingRateInHz;
+        ignoreECGdetector = (int) samplingRateInHz;
         hrBuffer[0] = 0;
         hrBuffer[1] = 0;
         hrBuffer[2] = 0;
@@ -106,6 +127,10 @@ public class ECG_rr_det {
 
     float getFiltBPM() {
         return filtBPM;
+    }
+
+    float getUnFiltBPM() {
+        return unfiltBPM;
     }
 
     // detect r peaks
@@ -137,17 +162,18 @@ public class ECG_rr_det {
                     hrBuffer[2] = hrBuffer[1];
                     hrBuffer[1] = hrBuffer[0];
                     hrBuffer[0] = bpm;
+                    unfiltBPM = bpm;
                     System.arraycopy(hrBuffer, 0, sortBuffer, 0, hrBuffer.length);
                     Arrays.sort(sortBuffer);
                     filtBPM = sortBuffer[1];
                     if (filtBPM > 0) {
                         // Log.d(TAG,"h="+h+",amplitude="+amplitude+" bpm="+filtBPM);
-                        rrListener.haveRpeak(timestamp,filtBPM,amplitude,h/threshold);
+                        rrListener.haveRpeak(timestamp, filtBPM, unfiltBPM, amplitude, h / threshold);
                     }
                 }
                 t2 = timestamp;
-                // advoid 1/4 sec
-                doNotDetect = (int)samplingRateInHz / 4;
+                // advoid 1/5 sec
+                doNotDetect = (int) samplingRateInHz / 5;
             }
         }
         timestamp++;

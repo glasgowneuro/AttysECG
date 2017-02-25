@@ -655,7 +655,11 @@ public class AttysECG extends AppCompatActivity {
 
         ecg_rr_det_ch1.setRrListener(new ECG_rr_det.RRlistener() {
             @Override
-            public void haveRpeak(long samplenumber, float bpm, double amplitude, double confidence) {
+            public void haveRpeak(long samplenumber,
+                                  float bpm,
+                                  float unfiltbmp,
+                                  double amplitude,
+                                  double confidence) {
                 if (ecg_rr_det_ch1.getAmplitude() > ecg_rr_det_ch2.getAmplitude()) {
                     saveBPM(bpm);
                     bpmFromEinthovenLeadNo = "II";
@@ -668,7 +672,11 @@ public class AttysECG extends AppCompatActivity {
 
         ecg_rr_det_ch2.setRrListener(new ECG_rr_det.RRlistener() {
             @Override
-            public void haveRpeak(long samplenumber, float bpm, double amplitude, double confidence) {
+            public void haveRpeak(long samplenumber,
+                                  float bpm,
+                                  float unfiltbpm,
+                                  double amplitude,
+                                  double confidence) {
                 if (ecg_rr_det_ch2.getAmplitude() > ecg_rr_det_ch1.getAmplitude()) {
                     saveBPM(bpm);
                     bpmFromEinthovenLeadNo = "III";
