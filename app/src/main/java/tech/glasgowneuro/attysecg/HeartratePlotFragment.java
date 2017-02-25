@@ -9,13 +9,22 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.SimpleXYSeries;
 import com.androidplot.xy.StepMode;
 import com.androidplot.xy.XYPlot;
+
+import org.w3c.dom.Text;
+
+import java.util.Timer;
+
+import uk.me.berndporr.iirj.Butterworth;
 
 /**
  * Created by Bernd Porr on 20/01/17.
@@ -30,10 +39,17 @@ public class HeartratePlotFragment extends Fragment {
     private static final int HISTORY_SIZE = 60;
 
     private SimpleXYSeries bpmHistorySeries = null;
+    private SimpleXYSeries bpmFullSeries = null;
 
     private XYPlot bpmPlot = null;
 
     private TextView bpmText = null;
+
+    private Button bpmResetButton = null;
+
+    private ToggleButton bpmAutoscaleButton = null;
+
+    private TextView bpmStatsView = null;
 
     View view = null;
 
@@ -58,12 +74,9 @@ public class HeartratePlotFragment extends Fragment {
         bpmText = (TextView) view.findViewById(R.id.bpmTextView);
 
         bpmHistorySeries = new SimpleXYSeries("Heart rate / beats per minute");
-        if (bpmHistorySeries == null) {
-            if (Log.isLoggable(TAG, Log.ERROR)) {
-                Log.e(TAG, "bpmHistorySeries == null");
-            }
-        }
         bpmHistorySeries.useImplicitXVals();
+        bpmFullSeries = new SimpleXYSeries("Heart rate / beats per minute");
+        bpmFullSeries.useImplicitXVals();
 
         bpmPlot.setRangeBoundaries(0, 200, BoundaryMode.FIXED);
         bpmPlot.setDomainBoundaries(0, HISTORY_SIZE, BoundaryMode.FIXED);
@@ -79,10 +92,8 @@ public class HeartratePlotFragment extends Fragment {
         int height = metrics.heightPixels;
         if ((height > 1000) && (width > 1000)) {
             bpmPlot.setDomainStep(StepMode.INCREMENT_BY_VAL, 25);
-            bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 25);
         } else {
             bpmPlot.setDomainStep(StepMode.INCREMENT_BY_VAL, 50);
-            bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 50);
         }
 
         Paint paint = new Paint();
@@ -90,8 +101,51 @@ public class HeartratePlotFragment extends Fragment {
         bpmPlot.getGraph().setDomainGridLinePaint(paint);
         bpmPlot.getGraph().setRangeGridLinePaint(paint);
 
+        bpmStatsView = (TextView) view.findViewById(R.id.bpmstats);
+        bpmResetButton = (Button) view.findViewById(R.id.bpmreset);
+        bpmAutoscaleButton = (ToggleButton) view.findViewById(R.id.bpmautoscale);
+
+        bpmAutoscaleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                DisplayMetrics metrics = new DisplayMetrics();
+                getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+                int width = metrics.widthPixels;
+                int height = metrics.heightPixels;
+                if (isChecked) {
+                    if ((height > 1000) && (width > 1000)) {
+                        bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 5);
+                    } else {
+                        bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 20);
+                    }
+                    bpmPlot.setRangeBoundaries(0, 200, BoundaryMode.AUTO);
+                } else {
+                    if ((height > 1000) && (width > 1000)) {
+                        bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 25);
+                    } else {
+                        bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 50);
+                    }
+                    bpmPlot.setRangeBoundaries(0, 200, BoundaryMode.FIXED);
+                }
+            }
+        });
+        bpmAutoscaleButton.setChecked(true);
+
+        bpmResetButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                reset();
+            }
+        });
+
         return view;
 
+    }
+
+    private void reset() {
+        int n = bpmHistorySeries.size();
+        for (int i = 0; i < n; i++) {
+            bpmHistorySeries.removeLast();
+        }
+        bpmFullSeries = new SimpleXYSeries("");
     }
 
     public synchronized void addValue(final float v) {
@@ -113,6 +167,12 @@ public class HeartratePlotFragment extends Fragment {
             }
             return;
         }
+        if (bpmFullSeries == null) {
+            if (Log.isLoggable(TAG, Log.VERBOSE)) {
+                Log.v(TAG, "bpmFullSeries == null");
+            }
+            return;
+        }
         // get rid the oldest sample in history:
         if (bpmHistorySeries.size() > HISTORY_SIZE) {
             bpmHistorySeries.removeFirst();
@@ -120,6 +180,37 @@ public class HeartratePlotFragment extends Fragment {
 
         // add the latest history sample:
         bpmHistorySeries.addLast(null, v);
+        bpmFullSeries.addLast(null, v);
         bpmPlot.redraw();
+
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    float sum = 0;
+                    if (bpmStatsView != null) {
+                        for(int i = 0; i < bpmFullSeries.size(); i++) {
+                            sum = sum + bpmFullSeries.getY(i).floatValue();
+                        }
+                        float avg = sum / (float)(bpmFullSeries.size());
+                        double dev = 0;
+                        for(int i = 0; i < bpmFullSeries.size(); i++) {
+                            dev = dev + Math.pow(bpmFullSeries.getY(i).floatValue()-avg,2);
+                        }
+                        dev = dev / (bpmFullSeries.size()-1);
+                        double rms = 0;
+                        for(int i = 0; i < bpmFullSeries.size()-1; i++) {
+                            rms = rms + Math.pow((bpmFullSeries.getY(i).floatValue()-
+                                    bpmFullSeries.getY(i+1).floatValue()),2);
+                        }
+                        rms = rms / bpmFullSeries.size();
+                        bpmStatsView.setText(String.format("avg = %3.02f BPM, sd = %3.02f, rmssd = %3.02f",
+                                avg,dev,rms));
+                    }
+                }
+            });
+        }
+
+
     }
 }
