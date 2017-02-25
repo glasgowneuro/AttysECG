@@ -17,10 +17,15 @@
     <ListPreference
         android:entries="@array/powerlineOptions"
         android:entryValues="@array/powerlineValues"
-        android:summary="The frequency of your mains AC supply (US: 60Hz, EU: 50Hz, ...)"
+        android:summary="Filter to filter out the mains interference (US: 60Hz, EU: 50Hz, ...)"
         android:key="powerline"
         android:defaultValue="50"
         android:title="Powerline frequency" />
+    <CheckBoxPreference
+        android:key="mainsfilter"
+        android:summary="Notch filter which removes mains interference from the ECG"
+        android:defaultValue="true"
+        android:title="Powerline notch filter" />
     <ListPreference
         android:entries="@array/samplingRateOptions"
         android:entryValues="@array/samplingRateValues"

@@ -850,10 +850,12 @@ public class AttysECG extends AppCompatActivity {
 
         final List files = new ArrayList();
         final String[] list = attysdir.list();
-        for (String file : list) {
-            if (files != null) {
-                if (file != null) {
-                    files.add(file);
+        if (list != null) {
+            for (String file : list) {
+                if (files != null) {
+                    if (file != null) {
+                        files.add(file);
+                    }
                 }
             }
         }
@@ -998,21 +1000,6 @@ public class AttysECG extends AppCompatActivity {
                 enterFilename();
                 return true;
 
-            case R.id.notch:
-                if (iirNotch_II == null) {
-                    iirNotch_II = new Butterworth();
-                    iirNotch_III = new Butterworth();
-                    iirNotch_II.bandStop(notchOrder,
-                            attysComm.getSamplingRateInHz(), powerlineHz, notchBW);
-                    iirNotch_III.bandStop(notchOrder,
-                            attysComm.getSamplingRateInHz(), powerlineHz, notchBW);
-                } else {
-                    iirNotch_II = null;
-                    iirNotch_III = null;
-                }
-                item.setChecked(iirNotch_II != null);
-                return true;
-
             case R.id.plotWindowBPM:
 
                 deletePlotWindow();
@@ -1126,9 +1113,23 @@ public class AttysECG extends AppCompatActivity {
         byte data_separator = (byte) (Integer.parseInt(prefs.getString("data_separator", "0")));
         dataRecorder.setDataSeparator(data_separator);
 
-        powerlineHz = Float.parseFloat(prefs.getString("powerline", "50"));
+        powerlineHz = Float.parseFloat(prefs.getString("powerlineFreq", "50"));
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "powerline=" + powerlineHz);
+        }
+
+        boolean notchOn = prefs.getBoolean("mainsfilter",true);
+
+        if (notchOn) {
+            iirNotch_II = new Butterworth();
+            iirNotch_III = new Butterworth();
+            iirNotch_II.bandStop(notchOrder,
+                    attysComm.getSamplingRateInHz(), powerlineHz, notchBW);
+            iirNotch_III.bandStop(notchOrder,
+                    attysComm.getSamplingRateInHz(), powerlineHz, notchBW);
+        } else {
+            iirNotch_II = null;
+            iirNotch_III = null;
         }
 
         samplingRate = (byte) Integer.parseInt(prefs.getString("samplingrate", "0"));

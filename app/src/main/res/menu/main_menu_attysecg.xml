@@ -37,10 +37,6 @@
                     android:id="@+id/showAugmented"
                     android:checked="true"
                     android:title="Show Augmented leads" />
-                <item
-                    android:id="@+id/notch"
-                    android:checked="false"
-                    android:title="Enable mains filter" />
             </group>
 
             <item

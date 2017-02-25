@@ -19,19 +19,6 @@
         <item>6</item>
     </string-array>
 
-    <string-array name="currentOptions">
-        <item>off</item>
-        <item>0.006 \u00b5A</item>
-        <item>0.022 \u00b5A</item>
-        <item>6.000 \u00b5A</item>
-    </string-array>
-    <string-array name="currentValues">
-        <item>-1</item>
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-    </string-array>
-
     <string-array name="textDataFileSeparatorOptions">
         <item>Space separated values</item>
         <item>Comma separated values</item>
@@ -61,18 +48,6 @@
         <item>1</item>
     </string-array>
 
-    <string-array name="accOptions">
-        <item>2 G</item>
-        <item>4 G</item>
-        <item>8 G</item>
-        <item>16 G</item>
-    </string-array>
-    <string-array name="accValues">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-    </string-array>
 
 
 </resources>

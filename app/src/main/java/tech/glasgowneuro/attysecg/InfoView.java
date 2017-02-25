@@ -44,7 +44,8 @@ public class InfoView extends SurfaceView implements SurfaceHolder.Callback {
         init();
     }
 
-    public void surfaceDestroyed(SurfaceHolder holder) {
+    public void surfaceDestroyed(SurfaceHolder _holder) {
+        holder = null;
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
@@ -81,6 +82,7 @@ public class InfoView extends SurfaceView implements SurfaceHolder.Callback {
 
     public synchronized void drawText(String smallText) {
         if (canvas != null) return;
+        if (holder == null) return;
         Surface surface = holder.getSurface();
         int width = getWidth();
         int yLarge = 0;
@@ -93,6 +95,7 @@ public class InfoView extends SurfaceView implements SurfaceHolder.Callback {
                 txtDiv++;
             } while ((width - (bounds.width() * 10 / 9)) < 0);
             int y2 = bounds.height();
+            if (holder == null) return;
             canvas = holder.lockCanvas();
             if (canvas != null) {
                 Paint paint = new Paint();
@@ -104,6 +107,7 @@ public class InfoView extends SurfaceView implements SurfaceHolder.Callback {
                     Log.d(TAG, "Canvas==null");
                 }
             }
+            if (holder == null) return;
             holder.unlockCanvasAndPost(canvas);
             canvas = null;
             textHeight = y2 + yLarge;
