@@ -240,13 +240,7 @@ public class AttysECG extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(),
                             "Bluetooth connection problem", Toast.LENGTH_SHORT).show();
                     if (attysComm != null) {
-                        attysComm.cancel();
-                    }
-                    try {
-                        if (attysComm != null) {
-                            attysComm.join();
-                        }
-                    } catch (Exception ee) {
+                        attysComm.stop();
                     }
                     progress.dismiss();
                     finish();
@@ -715,12 +709,7 @@ public class AttysECG extends AppCompatActivity {
         }
 
         if (attysComm != null) {
-            attysComm.cancel();
-            try {
-                attysComm.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            attysComm.stop();
             attysComm = null;
             if (Log.isLoggable(TAG, Log.DEBUG)) {
                 Log.d(TAG, "Killed AttysComm");
