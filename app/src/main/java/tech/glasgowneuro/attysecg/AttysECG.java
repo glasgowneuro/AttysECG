@@ -1081,6 +1081,10 @@ public class AttysECG extends AppCompatActivity {
         dataRecorder.setDataSeparator(data_separator);
 
         powerlineHz = Float.parseFloat(prefs.getString("powerlineFreq", "50"));
+        if (powerlineHz > 60) {
+            powerlineHz = 60;
+            Log.e(TAG,"Illegal mains frequency in the prefs.");
+        }
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "powerline=" + powerlineHz);
         }
@@ -1099,8 +1103,11 @@ public class AttysECG extends AppCompatActivity {
             iirNotch_III = null;
         }
 
-        samplingRate = (byte) Integer.parseInt(prefs.getString("samplingrate", "0"));
-        if (samplingRate > 1) samplingRate = 1;
+        samplingRate = (byte) Integer.parseInt(prefs.getString("samplingrate", "1"));
+        if ((samplingRate > AttysComm.ADC_RATE_250HZ)||(samplingRate < AttysComm.ADC_RATE_125HZ)) {
+            samplingRate = AttysComm.ADC_RATE_250HZ;
+            Log.e(TAG,"Illegal samplingrate in the preferences");
+        }
 
         attysComm.setAdc_samplingrate_index(samplingRate);
     }
