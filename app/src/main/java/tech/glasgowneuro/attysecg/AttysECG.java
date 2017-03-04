@@ -284,46 +284,6 @@ public class AttysECG extends AppCompatActivity {
     };
 
 
-    private BluetoothDevice connect2Bluetooth() {
-
-        Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(turnOn, 0);
-
-        BA = BluetoothAdapter.getDefaultAdapter();
-
-        if (BA == null) {
-            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Log.d(TAG, "no bluetooth adapter!");
-            }
-            finish();
-        }
-
-        Set<BluetoothDevice> pairedDevices;
-        pairedDevices = BA.getBondedDevices();
-
-        if (pairedDevices == null) {
-            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Log.d(TAG, "No paired devices available. Exiting.");
-            }
-            finish();
-        }
-
-        for (BluetoothDevice bt : pairedDevices) {
-            String b = bt.getName();
-            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Log.d(TAG, "Paired dev=" + b);
-            }
-            if (b.startsWith("GN-ATTYS")) {
-                if (Log.isLoggable(TAG, Log.DEBUG)) {
-                    Log.d(TAG, "Found an Attys");
-                }
-                return bt;
-            }
-        }
-        return null;
-    }
-
-
     private class UpdatePlotTask extends TimerTask {
 
         private String m_unit = "";
@@ -606,14 +566,25 @@ public class AttysECG extends AppCompatActivity {
         );
         AppIndex.AppIndexApi.start(client, viewAction);
 
-        btAttysDevice = connect2Bluetooth();
+        btAttysDevice = AttysComm.findAttysBtDevice();
         if (btAttysDevice == null) {
-            Context context = getApplicationContext();
-            CharSequence text = "Could not find any paired Attys devices.";
-            int duration = Toast.LENGTH_LONG;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-            finish();
+            new AlertDialog.Builder(this)
+                    .setTitle("No Attys Found")
+                    .setMessage("Visit www.attys.tech for help and you can buy your Attys from there.")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            String url = "http://www.attys.tech";
+                            Intent i = new Intent(Intent.ACTION_VIEW);
+                            i.setData(Uri.parse(url));
+                            startActivity(i);
+                        }
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            finish();
+                        }
+                    })
+                    .show();
         }
 
         attysComm = new AttysComm(btAttysDevice);

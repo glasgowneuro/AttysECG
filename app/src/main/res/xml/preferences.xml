@@ -31,6 +31,6 @@
         android:entryValues="@array/samplingRateValues"
         android:summary="Sampling rate the Attys is acquiring the data and transmitting it"
         android:key="samplingrate"
-        android:defaultValue="125"
+        android:defaultValue="250"
         android:title="Sampling rate" />
 </PreferenceScreen>
