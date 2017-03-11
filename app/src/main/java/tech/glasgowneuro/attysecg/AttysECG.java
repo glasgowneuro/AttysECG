@@ -172,6 +172,12 @@ public class AttysECG extends AppCompatActivity {
                 textdataFileStream.close();
                 messageListener.haveMessage(AttysComm.MESSAGE_STOPPED_RECORDING);
                 textdataFileStream = null;
+                if (textdataFile != null) {
+                    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    Uri contentUri = Uri.fromFile(textdataFile);
+                    mediaScanIntent.setData(contentUri);
+                    sendBroadcast(mediaScanIntent);
+                }
                 textdataFile = null;
             }
         }
