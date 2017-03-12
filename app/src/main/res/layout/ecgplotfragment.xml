@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ap="http://schemas.android.com/apk/res-auto"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Spinner
+            android:id="@+id/ecgplotfragment_maxy"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:spinnerMode="dropdown" />
+
+        <Spinner
+            android:id="@+id/ecgplotfragment_lead"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:spinnerMode="dropdown" />
+
+        <ToggleButton
+            android:id="@+id/ecgplotfragment_record"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.75"
+            android:textOff="freeze"
+            android:textOn="record" />
+
+    </LinearLayout>
+
+
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/ecgPlotView"
+        style="@style/APDefacto.Dark"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        ap:domainTitle="domain"
+        ap:lineLabelRotationBottom="-45"
+        ap:lineLabels="left|bottom"
+        ap:rangeTitle="range"
+        ap:title="" />
+
+</LinearLayout>

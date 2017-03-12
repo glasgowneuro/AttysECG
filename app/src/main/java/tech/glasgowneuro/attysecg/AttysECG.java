@@ -77,6 +77,7 @@ public class AttysECG extends AppCompatActivity {
     private InfoView infoView = null;
     private HeartratePlotFragment heartratePlotFragment = null;
     private VectorPlotFragment vectorPlotFragment = null;
+    private ECGPlotFragment ecgPlotFragment = null;
 
     private BluetoothAdapter BA;
     private AttysComm attysComm = null;
@@ -399,6 +400,10 @@ public class AttysECG extends AppCompatActivity {
                                 vectorPlotFragment.addValue(I, aVF);
                             }
 
+                            if (ecgPlotFragment != null) {
+                                ecgPlotFragment.addValue(I,II,III,aVR,aVL,aVF);
+                            }
+
                             dataRecorder.saveData(I, II, III, aVR, aVL, aVF);
 
                             int nRealChN = 0;
@@ -559,6 +564,9 @@ public class AttysECG extends AppCompatActivity {
         dataRecorder.setBPM(bpm);
         if (heartratePlotFragment != null) {
             heartratePlotFragment.addValue(bpm);
+        }
+        if (ecgPlotFragment != null) {
+            ecgPlotFragment.rDet();
         }
         this.bpm = bpm;
     }
@@ -1005,6 +1013,21 @@ public class AttysECG extends AppCompatActivity {
                 showPlotFragment();
                 return true;
 
+            case R.id.plotWindowECG:
+
+                deletePlotWindow();
+                ecgPlotFragment = new ECGPlotFragment();
+                ecgPlotFragment.setSamplingRate(attysComm.getSamplingRateInHz());
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.fragment_plot_container,
+                                ecgPlotFragment,
+                                "ecgPlotFragment")
+                        .commit();
+
+                showPlotFragment();
+                return true;
+
+
             case R.id.plotWindowOff:
                 hidePlotFragment();
                 deletePlotWindow();
@@ -1062,6 +1085,7 @@ public class AttysECG extends AppCompatActivity {
         }
         heartratePlotFragment = null;
         vectorPlotFragment = null;
+        ecgPlotFragment = null;
     }
 
 

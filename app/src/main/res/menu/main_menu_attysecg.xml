@@ -25,6 +25,9 @@
                     <item
                         android:id="@+id/plotWindowVector"
                         android:title="Vector ECG" />
+                    <item
+                        android:id="@+id/plotWindowECG"
+                        android:title="PQRST inspector" />
                 </menu>
             </item>
 
