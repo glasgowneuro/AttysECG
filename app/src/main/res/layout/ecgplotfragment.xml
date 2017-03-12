@@ -35,6 +35,13 @@
             android:textOff="freeze"
             android:textOn="record" />
 
+        <Button
+            android:layout_height="wrap_content"
+            android:id="@+id/ecgplotfragment_reset"
+            android:layout_width="0dp"
+            android:layout_weight="0.75"
+            android:text="reset" />
+
     </LinearLayout>
 
 
