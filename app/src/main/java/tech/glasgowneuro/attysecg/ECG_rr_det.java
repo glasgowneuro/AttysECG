@@ -1,6 +1,6 @@
 package tech.glasgowneuro.attysecg;
 
-import android.util.Log;
+// import android.util.Log;
 
 import java.util.Arrays;
 

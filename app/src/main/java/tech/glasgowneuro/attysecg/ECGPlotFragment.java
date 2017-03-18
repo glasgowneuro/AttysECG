@@ -20,10 +20,8 @@ import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.PanZoom;
 import com.androidplot.xy.SimpleXYSeries;
-import com.androidplot.xy.XValueMarker;
 import com.androidplot.xy.XYGraphWidget;
 import com.androidplot.xy.XYPlot;
-import com.androidplot.xy.YValueMarker;
 
 /**
  * Plots one PQRST complex in detail

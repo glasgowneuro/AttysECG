@@ -4,7 +4,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,11 +19,6 @@ import com.androidplot.xy.SimpleXYSeries;
 import com.androidplot.xy.StepMode;
 import com.androidplot.xy.XYPlot;
 
-import org.w3c.dom.Text;
-
-import java.util.Timer;
-
-import uk.me.berndporr.iirj.Butterworth;
 
 /**
  * Created by Bernd Porr on 20/01/17.
