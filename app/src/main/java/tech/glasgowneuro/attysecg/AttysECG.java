@@ -43,6 +43,7 @@ import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -831,6 +832,8 @@ public class AttysECG extends AppCompatActivity {
 
         final List files = new ArrayList();
         final String[] list = attysdir.list();
+        if (list == null) return;
+        if (files == null) return;
         if (list != null) {
             for (String file : list) {
                 if (files != null) {
@@ -885,6 +888,14 @@ public class AttysECG extends AppCompatActivity {
                     }
                 })
                 .show();
+
+        if (listview != null) {
+            ViewGroup.LayoutParams layoutParams = listview.getLayoutParams();
+            Screensize screensize = new Screensize(getWindowManager());
+            layoutParams.height = screensize.getHeightInPixels() / 2;
+            listview.setLayoutParams(layoutParams);
+        }
+
     }
 
 
@@ -1035,6 +1046,13 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.filebrowser:
                 shareData();
+                return true;
+
+            case R.id.sourcecode:
+                String url = "https://github.com/glasgowneuro/AttysECG";
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(url));
+                startActivity(i);
                 return true;
 
             default:

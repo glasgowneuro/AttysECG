@@ -76,5 +76,10 @@
         android:title="File Browser"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/sourcecode"
+        android:title="Source code"
+        app:showAsAction="never" />
+
 </menu>
 

@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
+import com.androidplot.xy.PanZoom;
 import com.androidplot.xy.SimpleXYSeries;
 import com.androidplot.xy.XYPlot;
 
@@ -28,6 +29,8 @@ public class VectorPlotFragment extends Fragment {
     private SimpleXYSeries vectorHistorySeries = null;
 
     private XYPlot vectorPlot = null;
+
+    private PanZoom panZoom = null;
 
     View view = null;
 
@@ -98,6 +101,9 @@ public class VectorPlotFragment extends Fragment {
         vectorPlot.getGraph().setDomainGridLinePaint(paint);
         vectorPlot.getGraph().setRangeGridLinePaint(paint);
 
+        panZoom = PanZoom.attach(vectorPlot, PanZoom.Pan.BOTH, PanZoom.Zoom.SCALE);
+        panZoom.setEnabled(true);
+
         return view;
 
     }
@@ -113,9 +119,6 @@ public class VectorPlotFragment extends Fragment {
     public synchronized void addValue(final float x, final float y) {
 
         if (vectorHistorySeries == null) {
-            if (Log.isLoggable(TAG, Log.VERBOSE)) {
-                Log.v(TAG, "vectorHistorySeries == null");
-            }
             return;
         }
         // get rid the oldest sample in history:
