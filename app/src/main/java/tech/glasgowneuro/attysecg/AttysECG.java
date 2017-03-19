@@ -132,12 +132,12 @@ public class AttysECG extends AppCompatActivity {
         private PrintWriter textdataFileStream = null;
         private File textdataFile = null;
         private byte data_separator = DATA_SEPARATOR_TAB;
-        float samplingInterval = 0;
+        long sample = 0;
         float bpm = 0;
 
         // starts the recording
         public java.io.FileNotFoundException startRec(File file) {
-            samplingInterval = 1.0F / attysComm.getSamplingRateInHz();
+            sample = 0;
             try {
                 textdataFileStream = new PrintWriter(file);
                 textdataFile = file;
@@ -154,7 +154,9 @@ public class AttysECG extends AppCompatActivity {
         public void stopRec() {
             if (textdataFileStream != null) {
                 textdataFileStream.close();
-                messageListener.haveMessage(AttysComm.MESSAGE_STOPPED_RECORDING);
+                if (messageListener != null) {
+                    messageListener.haveMessage(AttysComm.MESSAGE_STOPPED_RECORDING);
+                }
                 textdataFileStream = null;
                 if (textdataFile != null) {
                     Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
@@ -204,7 +206,7 @@ public class AttysECG extends AppCompatActivity {
                     s = 9;
                     break;
             }
-            float t = timestamp + samplingInterval;
+            double t = (double)sample / attysComm.getSamplingRateInHz();
             String tmp = String.format("%f%c", t, s);
             tmp = tmp + String.format("%f%c", I, s);
             tmp = tmp + String.format("%f%c", II, s);
@@ -214,6 +216,7 @@ public class AttysECG extends AppCompatActivity {
             tmp = tmp + String.format("%f%c", aVF, s);
             tmp = tmp + String.format("%f", bpm);
             bpm = 0;
+            sample++;
 
             if (textdataFileStream != null) {
                 textdataFileStream.format("%s\n", tmp);
@@ -689,6 +692,10 @@ public class AttysECG extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        if (dataRecorder != null) {
+            dataRecorder.stopRec();
+        }
 
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Destroy!");
