@@ -6,12 +6,12 @@ import pylab as pl
 #
 data = np.loadtxt('demo_ecg.tsv');
 #
-fig = pl.figure(1);
+fig = pl.figure(1)
 #
-a = 0100;
-b = 1000;
-ymin = -0.0015;
-ymax = 0.0015;
+a =  100
+b = 1000
+ymin = -0.0015
+ymax = 0.0015
 pl.title('ECG measured with the Attys');
 # I
 pl.subplot(611);
