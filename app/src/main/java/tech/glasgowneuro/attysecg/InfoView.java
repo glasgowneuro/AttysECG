@@ -108,7 +108,9 @@ public class InfoView extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
             if (holder == null) return;
-            holder.unlockCanvasAndPost(canvas);
+            try {
+                holder.unlockCanvasAndPost(canvas);
+            } catch (Exception e) {}
             canvas = null;
             textHeight = y2 + yLarge;
         }

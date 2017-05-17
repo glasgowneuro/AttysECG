@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference
+        android:key="single_ch"
+        android:summary="Single channel mode for Vets and patient monitoring"
+        android:defaultValue="false"
+        android:title="Single channel mode" />
     <ListPreference
         android:entries="@array/gainOptions"
         android:entryValues="@array/gainValues"

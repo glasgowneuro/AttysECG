@@ -62,6 +62,10 @@ public class AttysECG extends AppCompatActivity {
     private VectorPlotFragment vectorPlotFragment = null;
     private ECGPlotFragment ecgPlotFragment = null;
 
+    private MenuItem menuItemshowEinthoven = null;
+    private MenuItem menuItemshowAugmented = null;
+    private MenuItem menuItemplotWindowVector = null;
+
     private BluetoothAdapter BA;
     private AttysComm attysComm = null;
     private BluetoothDevice btAttysDevice = null;
@@ -79,6 +83,7 @@ public class AttysECG extends AppCompatActivity {
     private double notchBW = 2.5; // Hz
     private int notchOrder = 2;
     private float powerlineHz = 50;
+    private boolean displayAllCh = true;
 
     private boolean showEinthoven = true;
     private boolean showAugmented = true;
@@ -119,6 +124,8 @@ public class AttysECG extends AppCompatActivity {
     ProgressDialog progress = null;
 
     AlertDialog alertDialog = null;
+
+    BeepGenerator beepGenerator = null;
 
     private class DataRecorder {
         /////////////////////////////////////////////////////////////
@@ -206,15 +213,20 @@ public class AttysECG extends AppCompatActivity {
                     s = 9;
                     break;
             }
-            double t = (double)sample / attysComm.getSamplingRateInHz();
+            double t = (double) sample / attysComm.getSamplingRateInHz();
             String tmp = String.format("%f%c", t, s);
-            tmp = tmp + String.format("%f%c", I, s);
-            tmp = tmp + String.format("%f%c", II, s);
-            tmp = tmp + String.format("%f%c", III, s);
-            tmp = tmp + String.format("%f%c", aVR, s);
-            tmp = tmp + String.format("%f%c", aVL, s);
-            tmp = tmp + String.format("%f%c", aVF, s);
-            tmp = tmp + String.format("%f", bpm);
+            if (displayAllCh) {
+                tmp = tmp + String.format("%f%c", I, s);
+                tmp = tmp + String.format("%f%c", II, s);
+                tmp = tmp + String.format("%f%c", III, s);
+                tmp = tmp + String.format("%f%c", aVR, s);
+                tmp = tmp + String.format("%f%c", aVL, s);
+                tmp = tmp + String.format("%f%c", aVF, s);
+                tmp = tmp + String.format("%f", bpm);
+            } else {
+                tmp = tmp + String.format("%f%c", II, s);
+                tmp = tmp + String.format("%f", bpm);
+            }
             bpm = 0;
             sample++;
 
@@ -387,64 +399,78 @@ public class AttysECG extends AppCompatActivity {
                             }
 
                             if (ecgPlotFragment != null) {
-                                ecgPlotFragment.addValue(I,II,III,aVR,aVL,aVF);
+                                ecgPlotFragment.addValue(I, II, III, aVR, aVL, aVF);
                             }
 
                             dataRecorder.saveData(I, II, III, aVR, aVL, aVF);
 
                             int nRealChN = 0;
-                            if (showEinthoven) {
-                                if (attysComm != null) {
-                                    tmpMin[nRealChN] = -max;
-                                    tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = ytick;
-                                    tmpLabels[nRealChN] = labels[0];
-                                    actualChannelIdx[nRealChN] = 0;
-                                    tmpSample[nRealChN++] = I;
+
+                            if (displayAllCh) {
+
+                                if (showEinthoven) {
+                                    if (attysComm != null) {
+                                        tmpMin[nRealChN] = -max;
+                                        tmpMax[nRealChN] = max;
+                                        tmpTick[nRealChN] = ytick;
+                                        tmpLabels[nRealChN] = labels[0];
+                                        actualChannelIdx[nRealChN] = 0;
+                                        tmpSample[nRealChN++] = I;
+                                    }
+                                    if (attysComm != null) {
+                                        tmpMin[nRealChN] = -max;
+                                        tmpMax[nRealChN] = max;
+                                        tmpTick[nRealChN] = ytick;
+                                        tmpLabels[nRealChN] = labels[1];
+                                        actualChannelIdx[nRealChN] = 1;
+                                        tmpSample[nRealChN++] = II;
+                                    }
+                                    if (attysComm != null) {
+                                        tmpMin[nRealChN] = -max;
+                                        tmpMax[nRealChN] = max;
+                                        tmpTick[nRealChN] = ytick;
+                                        tmpLabels[nRealChN] = labels[2];
+                                        actualChannelIdx[nRealChN] = 2;
+                                        tmpSample[nRealChN++] = III;
+                                    }
                                 }
+                                if (showAugmented) {
+                                    if (attysComm != null) {
+                                        tmpMin[nRealChN] = -max;
+                                        tmpMax[nRealChN] = max;
+                                        tmpTick[nRealChN] = ytick;
+                                        tmpLabels[nRealChN] = labels[3];
+                                        actualChannelIdx[nRealChN] = 3;
+                                        tmpSample[nRealChN++] = aVR;
+                                    }
+                                    if (attysComm != null) {
+                                        tmpMin[nRealChN] = -max;
+                                        tmpMax[nRealChN] = max;
+                                        tmpTick[nRealChN] = ytick;
+                                        tmpLabels[nRealChN] = labels[4];
+                                        actualChannelIdx[nRealChN] = 4;
+                                        tmpSample[nRealChN++] = aVL;
+                                    }
+                                    if (attysComm != null) {
+                                        tmpMin[nRealChN] = -max;
+                                        tmpMax[nRealChN] = max;
+                                        tmpTick[nRealChN] = ytick;
+                                        tmpLabels[nRealChN] = labels[5];
+                                        actualChannelIdx[nRealChN] = 5;
+                                        tmpSample[nRealChN++] = aVF;
+                                    }
+                                }
+                            } else {
                                 if (attysComm != null) {
                                     tmpMin[nRealChN] = -max;
                                     tmpMax[nRealChN] = max;
                                     tmpTick[nRealChN] = ytick;
-                                    tmpLabels[nRealChN] = labels[1];
+                                    tmpLabels[nRealChN] = "Ch1";
                                     actualChannelIdx[nRealChN] = 1;
                                     tmpSample[nRealChN++] = II;
                                 }
-                                if (attysComm != null) {
-                                    tmpMin[nRealChN] = -max;
-                                    tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = ytick;
-                                    tmpLabels[nRealChN] = labels[2];
-                                    actualChannelIdx[nRealChN] = 2;
-                                    tmpSample[nRealChN++] = III;
-                                }
                             }
-                            if (showAugmented) {
-                                if (attysComm != null) {
-                                    tmpMin[nRealChN] = -max;
-                                    tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = ytick;
-                                    tmpLabels[nRealChN] = labels[3];
-                                    actualChannelIdx[nRealChN] = 3;
-                                    tmpSample[nRealChN++] = aVR;
-                                }
-                                if (attysComm != null) {
-                                    tmpMin[nRealChN] = -max;
-                                    tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = ytick;
-                                    tmpLabels[nRealChN] = labels[4];
-                                    actualChannelIdx[nRealChN] = 4;
-                                    tmpSample[nRealChN++] = aVL;
-                                }
-                                if (attysComm != null) {
-                                    tmpMin[nRealChN] = -max;
-                                    tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = ytick;
-                                    tmpLabels[nRealChN] = labels[5];
-                                    actualChannelIdx[nRealChN] = 5;
-                                    tmpSample[nRealChN++] = aVF;
-                                }
-                            }
+
                             if (infoView != null) {
                                 if (ygapForInfo == 0) {
                                     ygapForInfo = infoView.getInfoHeight();
@@ -546,7 +572,7 @@ public class AttysECG extends AppCompatActivity {
     }
 
 
-    private void saveBPM(float bpm) {
+    private void r_peak_detected(float bpm) {
         dataRecorder.setBPM(bpm);
         if (heartratePlotFragment != null) {
             heartratePlotFragment.addValue(bpm);
@@ -554,8 +580,12 @@ public class AttysECG extends AppCompatActivity {
         if (ecgPlotFragment != null) {
             ecgPlotFragment.rDet();
         }
+        if (beepGenerator != null) {
+            beepGenerator.doBeep();
+        }
         this.bpm = bpm;
     }
+
 
     public void startDAQ() {
 
@@ -630,10 +660,15 @@ public class AttysECG extends AppCompatActivity {
                                   float unfiltbmp,
                                   double amplitude,
                                   double confidence) {
-                if (ecg_rr_det_ch1.getAmplitude() > ecg_rr_det_ch2.getAmplitude()) {
-                    saveBPM(bpm);
-                    bpmFromEinthovenLeadNo = "II";
-                    //Log.d(TAG,"RR det ch2");
+                if (displayAllCh) {
+                    if (ecg_rr_det_ch1.getAmplitude() > ecg_rr_det_ch2.getAmplitude()) {
+                        r_peak_detected(bpm);
+                        bpmFromEinthovenLeadNo = "II";
+                        //Log.d(TAG,"RR det ch1");
+                    }
+                } else {
+                    r_peak_detected(bpm);
+                    bpmFromEinthovenLeadNo = "Ch1";
                 }
             }
         });
@@ -647,10 +682,12 @@ public class AttysECG extends AppCompatActivity {
                                   float unfiltbpm,
                                   double amplitude,
                                   double confidence) {
-                if (ecg_rr_det_ch2.getAmplitude() > ecg_rr_det_ch1.getAmplitude()) {
-                    saveBPM(bpm);
-                    bpmFromEinthovenLeadNo = "III";
-                    //Log.d(TAG,"RR det ch3");
+                if (displayAllCh) {
+                    if (ecg_rr_det_ch2.getAmplitude() > ecg_rr_det_ch1.getAmplitude()) {
+                        r_peak_detected(bpm);
+                        bpmFromEinthovenLeadNo = "III";
+                        //Log.d(TAG,"RR det ch3");
+                    }
                 }
             }
         });
@@ -717,6 +754,16 @@ public class AttysECG extends AppCompatActivity {
             Log.d(TAG, "Restarting");
         }
         killAttysComm();
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        if (prefs == null) return;
+        displayAllCh = !(prefs.getBoolean("single_ch", false));
+
+        menuItemplotWindowVector.setEnabled(displayAllCh);
+        menuItemshowAugmented.setEnabled(displayAllCh);
+        menuItemshowEinthoven.setEnabled(displayAllCh);
+
     }
 
 
@@ -893,6 +940,10 @@ public class AttysECG extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_menu_attysecg, menu);
 
+        menuItemshowEinthoven = menu.findItem(R.id.showEinthoven);
+        menuItemshowAugmented = menu.findItem(R.id.showAugmented);
+        menuItemplotWindowVector = menu.findItem(R.id.plotWindowVector);
+
         return true;
     }
 
@@ -956,6 +1007,19 @@ public class AttysECG extends AppCompatActivity {
                 item.setChecked(showAugmented);
                 return true;
 
+            case R.id.heartbeatsound:
+                boolean b = item.isChecked();
+                b = !b;
+                item.setChecked(b);
+                if (beepGenerator != null) {
+                    beepGenerator.closeAudio();
+                }
+                if (b) {
+                    beepGenerator = new BeepGenerator();
+                } else {
+                    beepGenerator = null;
+                }
+
             case R.id.Ch1gain200:
                 gain = 200;
                 if (vectorPlotFragment != null) {
@@ -1000,17 +1064,19 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.plotWindowVector:
 
-                deletePlotWindow();
-                vectorPlotFragment = new VectorPlotFragment();
-                vectorPlotFragment.setHistorySize(attysComm.getSamplingRateInHz() / 2);
-                vectorPlotFragment.setGain(gain);
-                getSupportFragmentManager().beginTransaction()
-                        .add(R.id.fragment_plot_container,
-                                vectorPlotFragment,
-                                "vectorPlotFragment")
-                        .commit();
+                if (displayAllCh) {
+                    deletePlotWindow();
+                    vectorPlotFragment = new VectorPlotFragment();
+                    vectorPlotFragment.setHistorySize(attysComm.getSamplingRateInHz() / 2);
+                    vectorPlotFragment.setGain(gain);
+                    getSupportFragmentManager().beginTransaction()
+                            .add(R.id.fragment_plot_container,
+                                    vectorPlotFragment,
+                                    "vectorPlotFragment")
+                            .commit();
 
-                showPlotFragment();
+                    showPlotFragment();
+                }
                 return true;
 
             case R.id.plotWindowECG:
@@ -1102,10 +1168,11 @@ public class AttysECG extends AppCompatActivity {
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Setting preferences");
         }
-        SharedPreferences prefs = PreferenceManager
-                .getDefaultSharedPreferences(this);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
+        displayAllCh = !(prefs.getBoolean("single_ch", false));
 
         mux = AttysComm.ADC_MUX_ECG_EINTHOVEN;
         byte adcgain = (byte) (Integer.parseInt(prefs.getString("gainpref", "0")));
@@ -1120,13 +1187,14 @@ public class AttysECG extends AppCompatActivity {
         powerlineHz = Float.parseFloat(prefs.getString("powerlineFreq", "50"));
         if (powerlineHz > 60) {
             powerlineHz = 60;
-            Log.e(TAG,"Illegal mains frequency in the prefs.");
+            Log.e(TAG, "Illegal mains frequency in the prefs.");
         }
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "powerline=" + powerlineHz);
         }
 
-        boolean notchOn = prefs.getBoolean("mainsfilter",true);
+        boolean notchOn = prefs.getBoolean("mainsfilter", true);
+
 
         if (notchOn) {
             iirNotch_II = new Butterworth();
@@ -1141,9 +1209,9 @@ public class AttysECG extends AppCompatActivity {
         }
 
         samplingRate = (byte) Integer.parseInt(prefs.getString("samplingrate", "1"));
-        if ((samplingRate > AttysComm.ADC_RATE_250HZ)||(samplingRate < AttysComm.ADC_RATE_125HZ)) {
+        if ((samplingRate > AttysComm.ADC_RATE_250HZ) || (samplingRate < AttysComm.ADC_RATE_125HZ)) {
             samplingRate = AttysComm.ADC_RATE_250HZ;
-            Log.e(TAG,"Illegal samplingrate in the preferences");
+            Log.e(TAG, "Illegal samplingrate in the preferences");
         }
 
         attysComm.setAdc_samplingrate_index(samplingRate);
