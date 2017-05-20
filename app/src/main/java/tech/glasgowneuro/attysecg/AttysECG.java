@@ -78,6 +78,7 @@ public class AttysECG extends AppCompatActivity {
     private Highpass highpass_II = null;
     private Highpass highpass_III = null;
     private float gain = 500;
+    private float[] gain_settings = {250,500,1000};
     private Butterworth iirNotch_II = null;
     private Butterworth iirNotch_III = null;
     private double notchBW = 2.5; // Hz
@@ -547,7 +548,6 @@ public class AttysECG extends AppCompatActivity {
         iirNotch_II = null;
         iirNotch_III = null;
         actualChannelIdx[0] = AttysComm.INDEX_Analogue_channel_1;
-        gain = 500;
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -758,7 +758,24 @@ public class AttysECG extends AppCompatActivity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (prefs == null) return;
+        boolean olddisplayAllCh = displayAllCh;
         displayAllCh = !(prefs.getBoolean("single_ch", false));
+
+        if (olddisplayAllCh != displayAllCh) {
+            if (Log.isLoggable(TAG, Log.DEBUG)) {
+                Log.d(TAG, "Changing gain settings");
+            }
+            if (displayAllCh) {
+                gain_settings[0] = 200;
+                gain_settings[1] = 500;
+                gain_settings[2] = 1000;
+            } else {
+                gain_settings[0] = 100;
+                gain_settings[1] = 200;
+                gain_settings[2] = 500;
+            }
+            gain = gain_settings[1];
+        }
 
         menuItemplotWindowVector.setEnabled(displayAllCh);
         menuItemshowAugmented.setEnabled(displayAllCh);
@@ -1021,21 +1038,21 @@ public class AttysECG extends AppCompatActivity {
                 }
 
             case R.id.Ch1gain200:
-                gain = 200;
+                gain = gain_settings[0];
                 if (vectorPlotFragment != null) {
                     vectorPlotFragment.setGain(gain);
                 }
                 return true;
 
             case R.id.Ch1gain500:
-                gain = 500;
+                gain = gain_settings[1];
                 if (vectorPlotFragment != null) {
                     vectorPlotFragment.setGain(gain);
                 }
                 return true;
 
             case R.id.Ch1gain1000:
-                gain = 1000;
+                gain = gain_settings[2];
                 if (vectorPlotFragment != null) {
                     vectorPlotFragment.setGain(gain);
                 }
@@ -1172,8 +1189,6 @@ public class AttysECG extends AppCompatActivity {
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
-        displayAllCh = !(prefs.getBoolean("single_ch", false));
-
         mux = AttysComm.ADC_MUX_ECG_EINTHOVEN;
         byte adcgain = (byte) (Integer.parseInt(prefs.getString("gainpref", "0")));
         attysComm.setAdc1_gain_index(adcgain);
@@ -1194,7 +1209,6 @@ public class AttysECG extends AppCompatActivity {
         }
 
         boolean notchOn = prefs.getBoolean("mainsfilter", true);
-
 
         if (notchOn) {
             iirNotch_II = new Butterworth();
