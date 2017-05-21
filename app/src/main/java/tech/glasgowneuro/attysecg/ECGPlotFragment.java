@@ -42,6 +42,7 @@ public class ECGPlotFragment extends Fragment {
     private Spinner maxYspinner = null;
 
     private Spinner leadSpinner = null;
+    private boolean offerAllChannels = true;
 
     private Button resetButton = null;
 
@@ -212,7 +213,7 @@ public class ECGPlotFragment extends Fragment {
         });
         leadSpinner.setBackgroundResource(android.R.drawable.btn_default);
         leadSpinner.setSelection(1);
-
+        leadSpinner.setEnabled(offerAllChannels);
 
         maxYspinner = (Spinner) view.findViewById(R.id.ecgplotfragment_maxy);
         ArrayAdapter<String> adapterMaxY = new ArrayAdapter<>(getContext(),
@@ -297,6 +298,13 @@ public class ECGPlotFragment extends Fragment {
         if (rPtr < 0) {
             rPtr = inPtr;
             rCtr = nSamplesDispl / 2;
+        }
+    }
+
+    public void setOfferAllChannels(boolean _offerAllChannels) {
+        offerAllChannels = _offerAllChannels;
+        if (leadSpinner != null) {
+            leadSpinner.setEnabled(offerAllChannels);
         }
     }
 

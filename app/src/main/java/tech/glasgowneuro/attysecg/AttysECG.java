@@ -78,7 +78,7 @@ public class AttysECG extends AppCompatActivity {
     private Highpass highpass_II = null;
     private Highpass highpass_III = null;
     private float gain = 500;
-    private float[] gain_settings = {250,500,1000};
+    private float[] gain_settings = {250, 500, 1000};
     private Butterworth iirNotch_II = null;
     private Butterworth iirNotch_III = null;
     private double notchBW = 2.5; // Hz
@@ -561,14 +561,31 @@ public class AttysECG extends AppCompatActivity {
 
         startDAQ();
 
+        adjustMenu();
     }
 
+
+    private void adjustMenu() {
+        if (menuItemplotWindowVector != null) {
+            menuItemplotWindowVector.setEnabled(displayAllCh);
+        }
+        if (menuItemshowAugmented != null) {
+            menuItemshowAugmented.setEnabled(displayAllCh);
+        }
+        if (menuItemshowEinthoven != null) {
+            menuItemshowEinthoven.setEnabled(displayAllCh);
+        }
+        if (ecgPlotFragment != null) {
+            ecgPlotFragment.setOfferAllChannels(displayAllCh);
+        }
+    }
 
     @Override
     public void onResume() {
         super.onResume();
 
         updatePlotTask.resetAnalysis();
+
     }
 
 
@@ -755,32 +772,6 @@ public class AttysECG extends AppCompatActivity {
         }
         killAttysComm();
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-        if (prefs == null) return;
-        boolean olddisplayAllCh = displayAllCh;
-        displayAllCh = !(prefs.getBoolean("single_ch", false));
-
-        if (olddisplayAllCh != displayAllCh) {
-            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Log.d(TAG, "Changing gain settings");
-            }
-            if (displayAllCh) {
-                gain_settings[0] = 200;
-                gain_settings[1] = 500;
-                gain_settings[2] = 1000;
-            } else {
-                gain_settings[0] = 100;
-                gain_settings[1] = 200;
-                gain_settings[2] = 500;
-            }
-            gain = gain_settings[1];
-        }
-
-        menuItemplotWindowVector.setEnabled(displayAllCh);
-        menuItemshowAugmented.setEnabled(displayAllCh);
-        menuItemshowEinthoven.setEnabled(displayAllCh);
-
     }
 
 
@@ -961,6 +952,8 @@ public class AttysECG extends AppCompatActivity {
         menuItemshowAugmented = menu.findItem(R.id.showAugmented);
         menuItemplotWindowVector = menu.findItem(R.id.plotWindowVector);
 
+        adjustMenu();
+
         return true;
     }
 
@@ -1110,7 +1103,6 @@ public class AttysECG extends AppCompatActivity {
                 showPlotFragment();
                 return true;
 
-
             case R.id.plotWindowOff:
                 hidePlotFragment();
                 deletePlotWindow();
@@ -1188,6 +1180,24 @@ public class AttysECG extends AppCompatActivity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
+        boolean olddisplayAllCh = displayAllCh;
+        displayAllCh = !(prefs.getBoolean("single_ch", false));
+        if (olddisplayAllCh != displayAllCh) {
+            if (Log.isLoggable(TAG, Log.DEBUG)) {
+                Log.d(TAG, "Changing gain settings");
+            }
+            if (displayAllCh) {
+                gain_settings[0] = 200;
+                gain_settings[1] = 500;
+                gain_settings[2] = 1000;
+            } else {
+                gain_settings[0] = 100;
+                gain_settings[1] = 200;
+                gain_settings[2] = 500;
+            }
+            gain = gain_settings[1];
+        }
 
         mux = AttysComm.ADC_MUX_ECG_EINTHOVEN;
         byte adcgain = (byte) (Integer.parseInt(prefs.getString("gainpref", "0")));
