@@ -1,7 +1,5 @@
 package tech.glasgowneuro.attysecg;
 
-// import android.util.Log;
-
 import java.util.Arrays;
 
 import uk.me.berndporr.iirj.Butterworth;
@@ -44,8 +42,8 @@ public class ECG_rr_det {
     // notch order of the powerline filter
     private final int notchOrder = 2;
 
-    // 0.5mV as the thereshold the bandpass filtered ECG is an artefact
-    private double artefact_threshold = 1;
+    // 10mV as the threshold the bandpass filtered ECG is an artefact
+    private double artefact_threshold = 10;
 
     // ignores 1000 samples to let the filter settle
     private int ignoreECGdetector = 1000;
@@ -61,6 +59,9 @@ public class ECG_rr_det {
 
     // previous timestamp
     private long t2 = 0;
+
+    // previously detected heartrate
+    private float prevBPM = 0;
 
     // timewindow not to detect an R peak
     private int doNotDetect = 0;
@@ -140,9 +141,9 @@ public class ECG_rr_det {
         timestamp = 0;
         doNotDetect = (int) samplingRateInHz;
         ignoreECGdetector = (int) samplingRateInHz;
-        hrBuffer[0] = 0;
-        hrBuffer[1] = 0;
-        hrBuffer[2] = 0;
+        for (int i=0; i < medianFilterSize; i++){
+            hrBuffer[i] = 0;
+        }
     }
 
     float getFiltBPM() {
@@ -198,10 +199,22 @@ public class ECG_rr_det {
                         unfiltBPM = bpm;
                         System.arraycopy(hrBuffer, 0, sortBuffer, 0, hrBuffer.length);
                         Arrays.sort(sortBuffer);
-                        filtBPM = sortBuffer[1];
+                        filtBPM = sortBuffer[(int) Math.floor(medianFilterSize / 2)];
                         if (filtBPM > 0) {
-                            // Log.d(TAG,"h="+h+",amplitude="+amplitude+" bpm="+filtBPM);
-                            rrListener.haveRpeak(timestamp, filtBPM, unfiltBPM, amplitude, h / threshold);
+                            // still missed a heartbeat?
+                            if (Math.abs(filtBPM*2-prevBPM)<5) {
+                                // that's most likely a missed heartbeat because it's
+                                // exactly half of the previous heartrate
+                                ignoreRRvalue = 3;
+                            } else {
+                                if (rrListener != null) {
+                                    rrListener.haveRpeak(timestamp,
+                                            filtBPM,
+                                            unfiltBPM,
+                                            amplitude, h / threshold);
+                                }
+                            }
+                            prevBPM = filtBPM;
                         }
                     }
                 } else {

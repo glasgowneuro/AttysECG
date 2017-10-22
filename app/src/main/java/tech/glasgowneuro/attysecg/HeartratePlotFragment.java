@@ -22,7 +22,6 @@ import com.androidplot.xy.XYPlot;
 
 /**
  * Created by Bernd Porr on 20/01/17.
- * <p>
  * Heartrate Plot
  */
 
