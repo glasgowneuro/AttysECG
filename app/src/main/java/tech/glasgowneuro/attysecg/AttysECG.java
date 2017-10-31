@@ -1,8 +1,6 @@
 package tech.glasgowneuro.attysecg;
 
 import android.Manifest;
-import android.app.ProgressDialog;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -34,6 +32,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
+import android.widget.ProgressBar;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -65,8 +64,8 @@ public class AttysECG extends AppCompatActivity {
     private MenuItem menuItemshowEinthoven = null;
     private MenuItem menuItemshowAugmented = null;
     private MenuItem menuItemplotWindowVector = null;
+    ProgressBar progress = null;
 
-    private BluetoothAdapter BA;
     private AttysComm attysComm = null;
     private BluetoothDevice btAttysDevice = null;
     private byte samplingRate = AttysComm.ADC_RATE_250HZ;
@@ -121,8 +120,6 @@ public class AttysECG extends AppCompatActivity {
 
     private final String ATTYS_SUBDIR = "attys";
     private File attysdir = null;
-
-    ProgressDialog progress = null;
 
     AlertDialog alertDialog = null;
 
@@ -249,16 +246,11 @@ public class AttysECG extends AppCompatActivity {
                     if (attysComm != null) {
                         attysComm.stop();
                     }
-                    progress.dismiss();
+                    progress.setVisibility(View.GONE);
                     finish();
                     break;
                 case AttysComm.MESSAGE_CONNECTED:
-                    progress.dismiss();
-                    break;
-                case AttysComm.MESSAGE_CONFIGURE:
-                    Toast.makeText(getApplicationContext(),
-                            "Configuring Attys", Toast.LENGTH_SHORT).show();
-                    progress.dismiss();
+                    progress.setVisibility(View.GONE);
                     break;
                 case AttysComm.MESSAGE_RETRY:
                     Toast.makeText(getApplicationContext(),
@@ -276,8 +268,7 @@ public class AttysECG extends AppCompatActivity {
                             Toast.LENGTH_SHORT).show();
                     break;
                 case AttysComm.MESSAGE_CONNECTING:
-                    progress.setMessage("Connecting");
-                    progress.show();
+                    progress.setVisibility(View.VISIBLE);
             }
         }
     };
@@ -522,8 +513,6 @@ public class AttysECG extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        progress = new ProgressDialog(this);
-
         attysdir = new File(Environment.getExternalStorageDirectory().getPath(),
                 ATTYS_SUBDIR);
         if (!attysdir.exists()) {
@@ -536,8 +525,10 @@ public class AttysECG extends AppCompatActivity {
 
         setContentView(R.layout.main_activity_layout);
 
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
+
+        progress = findViewById(R.id.indeterminateBar);
 
         int nChannels = AttysComm.NCHANNELS;
         iirNotch_II = new Butterworth();
@@ -643,7 +634,7 @@ public class AttysECG extends AppCompatActivity {
         highpass_II.setAlpha(1.0F / attysComm.getSamplingRateInHz());
         highpass_III.setAlpha(1.0F / attysComm.getSamplingRateInHz());
 
-        realtimePlotView = (RealtimePlotView) findViewById(R.id.realtimeplotview);
+        realtimePlotView = findViewById(R.id.realtimeplotview);
         realtimePlotView.setMaxChannels(15);
         realtimePlotView.init();
 
@@ -662,7 +653,7 @@ public class AttysECG extends AppCompatActivity {
                     }
                 });
 
-        infoView = (InfoView) findViewById(R.id.infoview);
+        infoView = findViewById(R.id.infoview);
         infoView.setZOrderOnTop(true);
         infoView.setZOrderMediaOverlay(true);
 
@@ -1129,12 +1120,12 @@ public class AttysECG extends AppCompatActivity {
 
 
     private void showPlotFragment() {
-        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
+        FrameLayout frameLayout = findViewById(R.id.mainplotlayout);
         frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT, 1.0f));
 
-        frameLayout = (FrameLayout) findViewById(R.id.fragment_plot_container);
+        frameLayout = findViewById(R.id.fragment_plot_container);
         frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT, 1.5f));
@@ -1142,7 +1133,7 @@ public class AttysECG extends AppCompatActivity {
     }
 
     private void hidePlotFragment() {
-        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.mainplotlayout);
+        FrameLayout frameLayout = findViewById(R.id.mainplotlayout);
         frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT, 0.0f));
