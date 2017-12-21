@@ -34,8 +34,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.ProgressBar;
 
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.File;
@@ -110,13 +108,6 @@ public class AttysECG extends AppCompatActivity {
 
     private String dataFilename = null;
     private byte dataSeparator = 0;
-
-    /**
-     * App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
-    private Action viewAction;
 
     private final String ATTYS_SUBDIR = "attys";
     private File attysdir = null;
@@ -539,10 +530,6 @@ public class AttysECG extends AppCompatActivity {
         iirNotch_II = null;
         iirNotch_III = null;
         actualChannelIdx[0] = AttysComm.INDEX_Analogue_channel_1;
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     // this is called whenever the app is starting or re-starting
@@ -596,14 +583,6 @@ public class AttysECG extends AppCompatActivity {
 
 
     public void startDAQ() {
-
-        client.connect();
-        viewAction = Action.newAction(
-                Action.TYPE_VIEW,
-                "Attys Homepage",
-                Uri.parse("http://www.attys.tech")
-        );
-        AppIndex.AppIndexApi.start(client, viewAction);
 
         btAttysDevice = AttysComm.findAttysBtDevice();
         if (btAttysDevice == null) {
@@ -787,8 +766,6 @@ public class AttysECG extends AppCompatActivity {
 
         killAttysComm();
 
-        AppIndex.AppIndexApi.end(client, viewAction);
-        client.disconnect();
     }
 
 
