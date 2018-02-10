@@ -41,6 +41,10 @@
                     android:checked="true"
                     android:title="Show Augmented leads" />
                 <item
+                    android:id="@+id/showHRV"
+                    android:checked="false"
+                    android:title="Show HRV animation" />
+                <item
                     android:id="@+id/heartbeatsound"
                     android:checked="false"
                     android:title="Heartbeat sound" />

@@ -50,6 +50,18 @@
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="10dp" />
 
+            <tech.glasgowneuro.attysecg.HRVView
+                android:layout_gravity="bottom|right"
+                android:id="@+id/hrvview"
+                title="HRV Animation"
+                android:background="@android:color/transparent"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp" />
+
             <ProgressBar
                 android:id="@+id/indeterminateBar"
                 android:layout_width="wrap_content"

@@ -34,8 +34,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.ProgressBar;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -55,6 +53,7 @@ public class AttysECG extends AppCompatActivity {
 
     private RealtimePlotView realtimePlotView = null;
     private InfoView infoView = null;
+    private HRVView hrvView = null;
     private HeartratePlotFragment heartratePlotFragment = null;
     private VectorPlotFragment vectorPlotFragment = null;
     private ECGPlotFragment ecgPlotFragment = null;
@@ -62,6 +61,7 @@ public class AttysECG extends AppCompatActivity {
     private MenuItem menuItemshowEinthoven = null;
     private MenuItem menuItemshowAugmented = null;
     private MenuItem menuItemplotWindowVector = null;
+    private MenuItem menuItemshowHRV = null;
     ProgressBar progress = null;
 
     private AttysComm attysComm = null;
@@ -81,10 +81,11 @@ public class AttysECG extends AppCompatActivity {
     private double notchBW = 2.5; // Hz
     private int notchOrder = 2;
     private float powerlineHz = 50;
-    private boolean displayAllCh = true;
+    private boolean full2chECGrecording = true;
 
     private boolean showEinthoven = true;
     private boolean showAugmented = true;
+    private boolean showHRV = false;
     private float bpm = 0;
     private String bpmFromEinthovenLeadNo = "II";
 
@@ -204,7 +205,7 @@ public class AttysECG extends AppCompatActivity {
             }
             double t = (double) sample / attysComm.getSamplingRateInHz();
             String tmp = String.format("%f%c", t, s);
-            if (displayAllCh) {
+            if (full2chECGrecording) {
                 tmp = tmp + String.format("%f%c", I, s);
                 tmp = tmp + String.format("%f%c", II, s);
                 tmp = tmp + String.format("%f%c", III, s);
@@ -389,7 +390,7 @@ public class AttysECG extends AppCompatActivity {
 
                             int nRealChN = 0;
 
-                            if (displayAllCh) {
+                            if (full2chECGrecording) {
 
                                 if (showEinthoven) {
                                     if (attysComm != null) {
@@ -476,6 +477,18 @@ public class AttysECG extends AppCompatActivity {
                     if (realtimePlotView != null) {
                         realtimePlotView.stopAddSamples();
                     }
+                    if (hrvView != null) {
+                        if (hrvView.getVisibility() == View.VISIBLE) {
+                            final float _bpm = bpm;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hrvView.animate(_bpm,
+                                            attysComm.getSamplingRateInHz() / 2);
+                                }
+                            });
+                        }
+                    }
                     if (vectorPlotFragment != null) {
                         vectorPlotFragment.redraw();
                     }
@@ -520,6 +533,8 @@ public class AttysECG extends AppCompatActivity {
         setSupportActionBar(myToolbar);
 
         progress = findViewById(R.id.indeterminateBar);
+        hrvView = findViewById(R.id.hrvview);
+        hrvView.setVisibility(View.INVISIBLE);
 
         int nChannels = AttysComm.NCHANNELS;
         iirNotch_II = new Butterworth();
@@ -545,16 +560,16 @@ public class AttysECG extends AppCompatActivity {
 
     private void adjustMenu() {
         if (menuItemplotWindowVector != null) {
-            menuItemplotWindowVector.setEnabled(displayAllCh);
+            menuItemplotWindowVector.setEnabled(full2chECGrecording);
         }
         if (menuItemshowAugmented != null) {
-            menuItemshowAugmented.setEnabled(displayAllCh);
+            menuItemshowAugmented.setEnabled(full2chECGrecording);
         }
         if (menuItemshowEinthoven != null) {
-            menuItemshowEinthoven.setEnabled(displayAllCh);
+            menuItemshowEinthoven.setEnabled(full2chECGrecording);
         }
         if (ecgPlotFragment != null) {
-            ecgPlotFragment.setOfferAllChannels(displayAllCh);
+            ecgPlotFragment.setOfferAllChannels(full2chECGrecording);
         }
     }
 
@@ -647,7 +662,7 @@ public class AttysECG extends AppCompatActivity {
                                   float unfiltbmp,
                                   double amplitude,
                                   double confidence) {
-                if (displayAllCh) {
+                if (full2chECGrecording) {
                     if (ecg_rr_det_ch1.getAmplitude() > ecg_rr_det_ch2.getAmplitude()) {
                         r_peak_detected(bpm);
                         bpmFromEinthovenLeadNo = "II";
@@ -669,7 +684,7 @@ public class AttysECG extends AppCompatActivity {
                                   float unfiltbpm,
                                   double amplitude,
                                   double confidence) {
-                if (displayAllCh) {
+                if (full2chECGrecording) {
                     if (ecg_rr_det_ch2.getAmplitude() > ecg_rr_det_ch1.getAmplitude()) {
                         r_peak_detected(bpm);
                         bpmFromEinthovenLeadNo = "III";
@@ -919,6 +934,7 @@ public class AttysECG extends AppCompatActivity {
         menuItemshowEinthoven = menu.findItem(R.id.showEinthoven);
         menuItemshowAugmented = menu.findItem(R.id.showAugmented);
         menuItemplotWindowVector = menu.findItem(R.id.plotWindowVector);
+        menuItemshowHRV = menu.findItem(R.id.showHRV);
 
         adjustMenu();
 
@@ -985,6 +1001,16 @@ public class AttysECG extends AppCompatActivity {
                 item.setChecked(showAugmented);
                 return true;
 
+            case R.id.showHRV:
+                showHRV = !showHRV;
+                item.setChecked(showHRV);
+                if (showHRV) {
+                    hrvView.setVisibility(View.VISIBLE);
+                } else {
+                    hrvView.setVisibility(View.INVISIBLE);
+                }
+                return true;
+
             case R.id.heartbeatsound:
                 boolean b = item.isChecked();
                 b = !b;
@@ -1042,7 +1068,7 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.plotWindowVector:
 
-                if (displayAllCh) {
+                if (full2chECGrecording) {
                     deletePlotWindow();
                     vectorPlotFragment = new VectorPlotFragment();
                     vectorPlotFragment.setHistorySize(attysComm.getSamplingRateInHz() / 2);
@@ -1149,13 +1175,13 @@ public class AttysECG extends AppCompatActivity {
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
-        boolean olddisplayAllCh = displayAllCh;
-        displayAllCh = !(prefs.getBoolean("single_ch", false));
-        if (olddisplayAllCh != displayAllCh) {
+        boolean olddisplayAllCh = full2chECGrecording;
+        full2chECGrecording = !(prefs.getBoolean("single_ch", false));
+        if (olddisplayAllCh != full2chECGrecording) {
             if (Log.isLoggable(TAG, Log.DEBUG)) {
                 Log.d(TAG, "Changing gain settings");
             }
-            if (displayAllCh) {
+            if (full2chECGrecording) {
                 gain_settings[0] = 200;
                 gain_settings[1] = 500;
                 gain_settings[2] = 1000;
