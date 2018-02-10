@@ -1005,6 +1005,7 @@ public class AttysECG extends AppCompatActivity {
                 showHRV = !showHRV;
                 item.setChecked(showHRV);
                 if (showHRV) {
+                    hrvView.reset();
                     hrvView.setVisibility(View.VISIBLE);
                 } else {
                     hrvView.setVisibility(View.INVISIBLE);

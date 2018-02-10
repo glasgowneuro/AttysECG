@@ -6,6 +6,7 @@ ECG app for [Attys](http://www.attys.tech)
 
 * Realtime plot of I,II,III,aVR,aVL,aVF
 * Heartrate over time with heartrate variability stats
+* Heartrate variability animation for biofeedback / breathing exercises
 * PQRST inspector: zoom into one PQRST complex and measure precisely the timings
 * Vector ECG to assess in detail the electrical heart axis of P,QRS and T
 * Save the data in OCTAVE/MATLAB(tm)/PYTHON compatible format
