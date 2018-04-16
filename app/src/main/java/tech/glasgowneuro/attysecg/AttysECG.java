@@ -1132,7 +1132,7 @@ public class AttysECG extends AppCompatActivity {
         frameLayout = findViewById(R.id.fragment_plot_container);
         frameLayout.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT, 1.5f));
+                LinearLayout.LayoutParams.MATCH_PARENT, 0.5f));
 
     }
 
