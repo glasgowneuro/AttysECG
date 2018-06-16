@@ -603,10 +603,10 @@ public class AttysECG extends AppCompatActivity {
         if (btAttysDevice == null) {
             alertDialog = new AlertDialog.Builder(this)
                     .setTitle("No Attys found")
-                    .setMessage("Visit www.attys.tech for help and you can buy your Attys directly from there!")
+                    .setMessage("Have you paired your attys with this phone? Visit www.attys.tech for help.")
                     .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int whichButton) {
-                            String url = "http://www.attys.tech";
+                            String url = "https://www.attys.tech/how-to/";
                             Intent i = new Intent(Intent.ACTION_VIEW);
                             i.setData(Uri.parse(url));
                             startActivity(i);
