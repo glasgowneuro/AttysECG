@@ -5,10 +5,10 @@ android {
 
     defaultConfig {
         applicationId "tech.glasgowneuro.attysecg"
-        minSdkVersion 16
+        minSdkVersion 23
         targetSdkVersion 27
-        versionCode 24
-        versionName "1.2.2"
+        versionCode 26
+        versionName "1.2.4"
     }
     buildTypes {
         release {

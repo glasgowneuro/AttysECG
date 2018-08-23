@@ -347,10 +347,6 @@ public class AttysECG extends AppCompatActivity {
 
                             II = highpass_II.filter(II);
 
-                            if (ecg_rr_det_ch1 != null) {
-                                ecg_rr_det_ch1.detect(II);
-                            }
-
                             if (iirNotch_II != null) {
                                 II = (float) iirNotch_II.filter((double) II);
                             }
@@ -358,10 +354,6 @@ public class AttysECG extends AppCompatActivity {
                             float III = sample[AttysComm.INDEX_Analogue_channel_2];
 
                             III = highpass_III.filter(III);
-
-                            if (ecg_rr_det_ch2 != null) {
-                                ecg_rr_det_ch2.detect(III);
-                            }
 
                             if (iirNotch_III != null) {
                                 III = (float) iirNotch_III.filter((double) III);
@@ -373,6 +365,14 @@ public class AttysECG extends AppCompatActivity {
 
                             // I-II+III = 0
                             float I = II - III;
+
+                            if (ecg_rr_det_ch1 != null) {
+                                ecg_rr_det_ch1.detect(II);
+                            }
+
+                            if (ecg_rr_det_ch2 != null) {
+                                ecg_rr_det_ch2.detect(I);
+                            }
 
                             float aVR = III / 2 - II;
                             float aVL = II / 2 - III;
@@ -687,7 +687,7 @@ public class AttysECG extends AppCompatActivity {
                 if (full2chECGrecording) {
                     if (ecg_rr_det_ch2.getAmplitude() > ecg_rr_det_ch1.getAmplitude()) {
                         r_peak_detected(bpm);
-                        bpmFromEinthovenLeadNo = "III";
+                        bpmFromEinthovenLeadNo = "I";
                         //Log.d(TAG,"RR det ch3");
                     }
                 }
