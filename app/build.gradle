@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     defaultConfig {
         applicationId "tech.glasgowneuro.attysecg"
         minSdkVersion 23
-        targetSdkVersion 27
-        versionCode 26
-        versionName "1.2.4"
+        targetSdkVersion 28
+        versionCode 27
+        versionName "1.2.5"
     }
     buildTypes {
         release {
