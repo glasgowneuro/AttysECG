@@ -603,12 +603,10 @@ public class AttysECG extends AppCompatActivity {
         if (btAttysDevice == null) {
             alertDialog = new AlertDialog.Builder(this)
                     .setTitle("No Attys found")
-                    .setMessage("Have you paired your attys with this phone? Visit www.attys.tech for help.")
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    .setMessage("Do you want to pair your Attys with this device?")
+                    .setPositiveButton("To bluetooth settings", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int whichButton) {
-                            String url = "https://www.attys.tech/how-to/";
-                            Intent i = new Intent(Intent.ACTION_VIEW);
-                            i.setData(Uri.parse(url));
+                            Intent i = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
                             startActivity(i);
                         }
                     })
