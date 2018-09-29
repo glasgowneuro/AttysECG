@@ -597,25 +597,30 @@ public class AttysECG extends AppCompatActivity {
     }
 
 
+    private void noAttysFoundAlert() {
+        alertDialog = new AlertDialog.Builder(this)
+                .setTitle("No Attys found or bluetooth disabled")
+                .setMessage("Before you can use the Attys you need to pair it with this device.")
+                .setPositiveButton("Configure bluetooth", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        Intent i = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
+                        startActivity(i);
+                    }
+                })
+                .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        finish();
+                    }
+                })
+                .show();
+    }
+
+
     public void startDAQ() {
 
         btAttysDevice = AttysComm.findAttysBtDevice();
         if (btAttysDevice == null) {
-            alertDialog = new AlertDialog.Builder(this)
-                    .setTitle("No Attys found")
-                    .setMessage("Do you want to pair your Attys with this device?")
-                    .setPositiveButton("To bluetooth settings", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int whichButton) {
-                            Intent i = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
-                            startActivity(i);
-                        }
-                    })
-                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int whichButton) {
-                            finish();
-                        }
-                    })
-                    .show();
+            noAttysFoundAlert();
         }
 
         attysComm = new AttysComm(btAttysDevice);

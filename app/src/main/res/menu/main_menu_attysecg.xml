@@ -9,7 +9,7 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:title="ECG"
+        android:title="View"
         app:showAsAction="ifRoom|withText">
 
         <menu>
@@ -71,17 +71,18 @@
     </item>
 
     <item
-        android:id="@+id/preferences"
-        android:title="Preferences"
-        app:showAsAction="never" />
-
-    <item
         android:id="@+id/enterFilename"
-        android:title="Enter Filename" />
+        app:showAsAction="ifRoom|withText"
+        android:title="Filename" />
 
     <item
         android:id="@+id/filebrowser"
-        android:title="File Browser"
+        android:title="File browser"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/preferences"
+        android:title="Preferences"
         app:showAsAction="never" />
 
     <item

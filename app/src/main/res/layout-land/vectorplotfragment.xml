@@ -5,25 +5,24 @@
     android:layout_height="fill_parent"
     android:orientation="vertical">
 
-    <android.support.percent.PercentFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+    <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_height="fill_parent"
+        android:layout_margin="10dp">
 
         <com.androidplot.xy.XYPlot
-            android:layout_gravity="center"
-            app:layout_aspectRatio="100%"
-            app:layout_widthPercent="95%"
-            app:layout_marginTopPercent="0%"
-            app:layout_marginLeftPercent="0%"
             android:id="@+id/vectorPlotView"
             style="@style/APDefacto.Dark"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             ap:domainTitle="domain"
             ap:lineLabelRotationBottom="-45"
             ap:lineLabels="left|bottom"
             ap:rangeTitle="range"
             ap:title="Vector ECG" />
 
-    </android.support.percent.PercentFrameLayout>
+    </android.support.constraint.ConstraintLayout>
+
 
 </LinearLayout>

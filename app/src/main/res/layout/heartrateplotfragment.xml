@@ -1,64 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.percent.PercentFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ap="http://schemas.android.com/apk/res-auto"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_height="fill_parent"
+    android:layout_gravity="center"
+    android:orientation="vertical">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:ap="http://schemas.android.com/apk/res-auto"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ToggleButton
+            android:id="@+id/bpmautoscale"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textOff="Fixed scale"
+            android:textOn="Autoscale" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text=" " />
+
+        <Button
+            android:id="@+id/bpmreset"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Reset" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/bpmTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:gravity="end"
+        android:text=""
+        android:textColor="#00FFFF"
+        android:textSize="36sp" />
+
+    <TextView
+        android:id="@+id/bpmstats"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text=""
+        android:textColor="#00FFFF"
+        android:textSize="14sp" />
+
+    <android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_gravity="center"
-        android:orientation="vertical"
-        app:layout_heightPercent="95%"
-        app:layout_widthPercent="95%">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <ToggleButton
-                android:id="@+id/bpmautoscale"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textOff="Fixed scale"
-                android:textOn="Autoscale" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text=" " />
-
-            <Button
-                android:id="@+id/bpmreset"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Reset" />
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/bpmTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:gravity="end"
-            android:text=""
-            android:textColor="#00FFFF"
-            android:textSize="36sp" />
-
-        <TextView
-            android:id="@+id/bpmstats"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:text=""
-            android:textColor="#00FFFF"
-            android:textSize="14sp" />
+        android:layout_height="fill_parent">
 
         <com.androidplot.xy.XYPlot
             android:id="@+id/bpmPlotView"
@@ -71,6 +70,7 @@
             ap:rangeTitle="range"
             ap:title="Heart rate (BPM)" />
 
-    </LinearLayout>
+    </android.support.constraint.ConstraintLayout>
 
-</android.support.percent.PercentFrameLayout>
+
+</LinearLayout>
