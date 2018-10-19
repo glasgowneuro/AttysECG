@@ -101,7 +101,7 @@ public class ECG_rr_det {
     // constructor
     // provide the sampling rate and the powerline frequency
     public ECG_rr_det(float _samplingrateInHz, float _powerlineHz) {
-        init(_samplingrateInHz, _powerlineHz, 3);
+        init(_samplingrateInHz, _powerlineHz, 5);
     }
 
     private void init(float _samplingrateInHz, float _powerlineHz, int _medianFilterSize) {
@@ -111,7 +111,7 @@ public class ECG_rr_det {
         hrBuffer = new float[medianFilterSize];
         sortBuffer = new float[medianFilterSize];
         // this fakes an R peak so we have a matched filter!
-        ecgDetector.bandPass(2, samplingRateInHz, 20, 15);
+        ecgDetector.bandPass(6, samplingRateInHz, 20, 15);
         ecgDetNotch.bandStop(notchOrder, samplingRateInHz, powerlineHz, notchBW);
         reset();
     }
