@@ -2,17 +2,15 @@ package tech.glasgowneuro.attysecg;
 
 import java.util.Arrays;
 
+import uk.me.berndporr.firj.Fir1;
 import uk.me.berndporr.iirj.Butterworth;
 
 /**
- * ECG R-peak detector and heart rate detector
+ * ECG R-peak detector and heart rate detector.
+ * Sampling rate needs to be 250Hz (default Attys rate).
  * <p>
- * The detector uses the matched filter approach by creating
- * an IIR bandpass filter which looks like an R peak and
- * thus is a recursive matched filter. One could also say
- * it's a causal wavelet or perhaps just a bandpass filter
- * which covers the frequency range of the R peak. It's all
- * the same in different forms!
+ * The detector uses the wavelet approach with a DB3
+ * wavelet filter which looks like an R peak.
  * <p>
  * As an input the detector just gets the data samples
  * at a given sampling rate and then it detects the r-peak and
@@ -26,6 +24,45 @@ import uk.me.berndporr.iirj.Butterworth;
 public class ECG_rr_det {
 
     String TAG = "ECG_rr_det";
+
+    static final double[] waveletDB3 = {
+            1.10265752e-02,
+            2.67449277e-02,
+            4.19878574e-02,
+            6.03947231e-02,
+            7.61275365e-02,
+            9.21548684e-02,
+            1.11568926e-01,
+            1.32278887e-01,
+            6.45829680e-02,
+            -3.97635130e-02,
+            -1.38929884e-01,
+            -2.62428322e-01,
+            -3.62246804e-01,
+            -4.62843343e-01,
+            -5.89607507e-01,
+            -7.25363076e-01,
+            -3.36865858e-01,
+            2.67715108e-01,
+            8.40176767e-01,
+            1.55574430e+00,
+            1.18688954e+00,
+            4.20276324e-01,
+            -1.51697311e-01,
+            -9.42076108e-01,
+            -7.93172332e-01,
+            -3.26343710e-01,
+            -1.24552779e-01,
+            2.12909254e-01,
+            1.75770320e-01,
+            1.47523075e-02,
+            8.22192707e-03,
+            -3.02920592e-02,
+            -2.21119497e-02,
+            7.30703025e-03,
+            2.83200488e-03,
+            -1.16759765e-03
+    };
 
     // how fast the adaptive threshold follows changes in ECG
     // amplitude. Realisic values: 0.1 .. 1.0
@@ -73,7 +110,7 @@ public class ECG_rr_det {
     private float[] sortBuffer;
 
     // the R preak detector. This is a matched filter implemented as IIR
-    private Butterworth ecgDetector = new Butterworth();
+    private Fir1 ecgDetector = new Fir1(waveletDB3);
 
     // mains filter
     private Butterworth ecgDetNotch = new Butterworth();
@@ -111,7 +148,6 @@ public class ECG_rr_det {
         hrBuffer = new float[medianFilterSize];
         sortBuffer = new float[medianFilterSize];
         // this fakes an R peak so we have a matched filter!
-        ecgDetector.bandPass(6, samplingRateInHz, 20, 15);
         ecgDetNotch.bandStop(notchOrder, samplingRateInHz, powerlineHz, notchBW);
         reset();
     }
