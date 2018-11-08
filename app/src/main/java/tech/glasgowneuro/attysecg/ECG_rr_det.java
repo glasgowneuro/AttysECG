@@ -10,7 +10,8 @@ import uk.me.berndporr.iirj.Butterworth;
  * Sampling rate needs to be 250Hz (default Attys rate).
  * <p>
  * The detector uses the wavelet approach with a DB3
- * wavelet filter which looks like an R peak.
+ * wavelet which looks like an R peak and then used
+ * as a matched filter.
  * <p>
  * As an input the detector just gets the data samples
  * at a given sampling rate and then it detects the r-peak and
@@ -109,7 +110,7 @@ public class ECG_rr_det {
     private float[] hrBuffer;
     private float[] sortBuffer;
 
-    // the R preak detector. This is a matched filter implemented as IIR
+    // the R preak detector. This is a matched filter implemented as an FIR.
     private Fir1 ecgDetector = new Fir1(waveletDB3);
 
     // mains filter
