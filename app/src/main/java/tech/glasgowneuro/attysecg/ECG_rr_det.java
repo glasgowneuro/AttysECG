@@ -26,7 +26,7 @@ public class ECG_rr_det {
 
     String TAG = "ECG_rr_det";
 
-    static final double[] waveletDB3 = {
+    private static final double[] waveletDB3 = {
             1.10265752e-02,
             2.67449277e-02,
             4.19878574e-02,
@@ -136,12 +136,6 @@ public class ECG_rr_det {
         init(_samplingrateInHz, _powerlineHz, _medianFilterSize);
     }
 
-    // constructor
-    // provide the sampling rate and the powerline frequency
-    public ECG_rr_det(float _samplingrateInHz, float _powerlineHz) {
-        init(_samplingrateInHz, _powerlineHz, 5);
-    }
-
     private void init(float _samplingrateInHz, float _powerlineHz, int _medianFilterSize) {
         samplingRateInHz = _samplingrateInHz;
         powerlineHz = _powerlineHz;
@@ -236,7 +230,7 @@ public class ECG_rr_det {
                         unfiltBPM = bpm;
                         System.arraycopy(hrBuffer, 0, sortBuffer, 0, hrBuffer.length);
                         Arrays.sort(sortBuffer);
-                        filtBPM = sortBuffer[(int) Math.floor(medianFilterSize / 2)];
+                        filtBPM = sortBuffer[(int) Math.floor(medianFilterSize / 2.0)];
                         if (filtBPM > 0) {
                             // still missed a heartbeat?
                             if (Math.abs(filtBPM*2-prevBPM)<5) {

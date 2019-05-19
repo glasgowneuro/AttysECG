@@ -8,17 +8,18 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
@@ -50,6 +51,8 @@ public class AttysECG extends AppCompatActivity {
     private Timer timer = null;
     // screen refresh rate
     private final int REFRESH_IN_MS = 50;
+
+    private final int MEDIANFILTER = 5;
 
     private RealtimePlotView realtimePlotView = null;
     private InfoView infoView = null;
@@ -335,9 +338,7 @@ public class AttysECG extends AppCompatActivity {
                     if (!realtimePlotView.startAddSamples(n)) return;
                     for (int i = 0; ((i < n) && (attysComm != null)); i++) {
                         float[] sample = null;
-                        if (attysComm != null) {
-                            sample = attysComm.getSampleFromBuffer();
-                        }
+                        sample = attysComm.getSampleFromBuffer();
                         if (sample != null) {
                             // debug ECG detector
                             // sample[AttysComm.INDEX_Analogue_channel_2] = (float)ecgDetOut;
@@ -484,7 +485,7 @@ public class AttysECG extends AppCompatActivity {
                                 @Override
                                 public void run() {
                                     hrvView.animate(_bpm,
-                                            attysComm.getSamplingRateInHz() / 2);
+                                            (float) (attysComm.getSamplingRateInHz() / 2.0));
                                 }
                             });
                         }
@@ -523,9 +524,7 @@ public class AttysECG extends AppCompatActivity {
             attysdir.mkdirs();
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
-        }
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
 
         setContentView(R.layout.main_activity_layout);
 
@@ -591,7 +590,7 @@ public class AttysECG extends AppCompatActivity {
             ecgPlotFragment.rDet();
         }
         if (beepGenerator != null) {
-            beepGenerator.doBeep();
+            BeepGenerator.doBeep();
         }
         this.bpm = bpm;
     }
@@ -656,7 +655,7 @@ public class AttysECG extends AppCompatActivity {
 
         attysComm.start();
 
-        ecg_rr_det_ch1 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz);
+        ecg_rr_det_ch1 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz, MEDIANFILTER);
 
         ecg_rr_det_ch1.setRrListener(new ECG_rr_det.RRlistener() {
             @Override
@@ -678,7 +677,7 @@ public class AttysECG extends AppCompatActivity {
             }
         });
 
-        ecg_rr_det_ch2 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz);
+        ecg_rr_det_ch2 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz, MEDIANFILTER);
 
         ecg_rr_det_ch2.setRrListener(new ECG_rr_det.RRlistener() {
             @Override
@@ -860,22 +859,18 @@ public class AttysECG extends AppCompatActivity {
             );
         }
 
-        final List files = new ArrayList();
+        final List<String> files = new ArrayList<>();
         final String[] list = attysdir.list();
-        if (list == null) return;
-        if (files == null) return;
         if (list != null) {
             for (String file : list) {
-                if (files != null) {
-                    if (file != null) {
-                        files.add(file);
-                    }
+                if (file != null) {
+                    files.add(file);
                 }
             }
         }
 
         final ListView listview = new ListView(this);
-        ArrayAdapter adapter = new ArrayAdapter(this,
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_multiple_choice,
                 files);
         listview.setAdapter(adapter);
@@ -919,12 +914,10 @@ public class AttysECG extends AppCompatActivity {
                 })
                 .show();
 
-        if (listview != null) {
-            ViewGroup.LayoutParams layoutParams = listview.getLayoutParams();
-            Screensize screensize = new Screensize(getWindowManager());
-            layoutParams.height = screensize.getHeightInPixels() / 2;
-            listview.setLayoutParams(layoutParams);
-        }
+        ViewGroup.LayoutParams layoutParams = listview.getLayoutParams();
+        Screensize screensize = new Screensize(getWindowManager());
+        layoutParams.height = screensize.getHeightInPixels() / 2;
+        listview.setLayoutParams(layoutParams);
 
     }
 
@@ -941,7 +934,36 @@ public class AttysECG extends AppCompatActivity {
 
         adjustMenu();
 
+        openWindowBPM();
+
         return true;
+    }
+
+    private void toggleShowHRV() {
+        showHRV = !showHRV;
+        if (showHRV) {
+            hrvView.reset();
+            hrvView.setVisibility(View.VISIBLE);
+        } else {
+            hrvView.setVisibility(View.INVISIBLE);
+        }
+        menuItemshowHRV.setChecked(showHRV);
+    }
+
+    private void openWindowBPM() {
+        deletePlotWindow();
+        // Create a new Fragment to be placed in the activity layout
+        heartratePlotFragment = new HeartratePlotFragment();
+        // Add the fragment to the 'fragment_container' FrameLayout
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "Adding heartrate fragment");
+        }
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_plot_container,
+                        heartratePlotFragment,
+                        "heartratePlotFragment")
+                .commit();
+        showPlotFragment();
     }
 
 
@@ -1005,14 +1027,7 @@ public class AttysECG extends AppCompatActivity {
                 return true;
 
             case R.id.showHRV:
-                showHRV = !showHRV;
-                item.setChecked(showHRV);
-                if (showHRV) {
-                    hrvView.reset();
-                    hrvView.setVisibility(View.VISIBLE);
-                } else {
-                    hrvView.setVisibility(View.INVISIBLE);
-                }
+                toggleShowHRV();
                 return true;
 
             case R.id.heartbeatsound:
@@ -1054,20 +1069,7 @@ public class AttysECG extends AppCompatActivity {
                 return true;
 
             case R.id.plotWindowBPM:
-
-                deletePlotWindow();
-                // Create a new Fragment to be placed in the activity layout
-                heartratePlotFragment = new HeartratePlotFragment();
-                // Add the fragment to the 'fragment_container' FrameLayout
-                if (Log.isLoggable(TAG, Log.DEBUG)) {
-                    Log.d(TAG, "Adding heartrate fragment");
-                }
-                getSupportFragmentManager().beginTransaction()
-                        .add(R.id.fragment_plot_container,
-                                heartratePlotFragment,
-                                "heartratePlotFragment")
-                        .commit();
-                showPlotFragment();
+                openWindowBPM();
                 return true;
 
             case R.id.plotWindowVector:

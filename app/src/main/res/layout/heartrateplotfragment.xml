@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:ap="http://schemas.android.com/apk/res-auto"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -35,15 +34,35 @@
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/bpmTextView"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:gravity="end"
-        android:text=""
-        android:textColor="#00FFFF"
-        android:textSize="36sp" />
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/bpmTextView"
+            ap:layout_constraintStart_toStartOf="parent"
+            ap:layout_constraintTop_toTopOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:gravity="end"
+            android:text=""
+            android:textColor="#00FFFF"
+            android:textSize="36sp" />
+
+        <TextView
+            android:id="@+id/nrmssdTextView"
+            ap:layout_constraintEnd_toEndOf="parent"
+            ap:layout_constraintTop_toTopOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:gravity="end"
+            android:text=""
+            android:textColor="#00FFFF"
+            android:textSize="36sp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
         android:id="@+id/bpmstats"
@@ -54,8 +73,7 @@
         android:textColor="#00FFFF"
         android:textSize="14sp" />
 
-    <android.support.constraint.ConstraintLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent">
 
@@ -65,12 +83,16 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             ap:domainTitle="domain"
+            ap:layout_constraintBottom_toBottomOf="parent"
+            ap:layout_constraintEnd_toEndOf="parent"
+            ap:layout_constraintStart_toStartOf="parent"
+            ap:layout_constraintTop_toTopOf="parent"
             ap:lineLabelRotationBottom="-45"
             ap:lineLabels="left|bottom"
             ap:rangeTitle="range"
-            ap:title="Heart rate (BPM)" />
+            ap:title="Heart rate &amp; Variability" />
 
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
 </LinearLayout>
