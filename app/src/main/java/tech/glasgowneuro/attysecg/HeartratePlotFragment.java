@@ -1,11 +1,15 @@
 package tech.glasgowneuro.attysecg;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,7 +25,12 @@ import com.androidplot.xy.SimpleXYSeries;
 import com.androidplot.xy.StepMode;
 import com.androidplot.xy.XYPlot;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.Locale;
+
+import tech.glasgowneuro.attyscomm.AttysComm;
 
 
 /**
@@ -46,6 +55,9 @@ public class HeartratePlotFragment extends Fragment {
     private TextView bpmText = null;
     private TextView nrmssdText = null;
 
+    private double avgHR = 0;
+    private double devHR = 0;
+    private double rmsHR = 0;
     private double nrmssd = 0;
 
     private Button bpmResetButton = null;
@@ -55,6 +67,45 @@ public class HeartratePlotFragment extends Fragment {
     private TextView bpmStatsView = null;
 
     View view = null;
+
+
+    private class DataRecorder {
+        /////////////////////////////////////////////////////////////
+        // saving data into a file
+
+        private final String FILENAME = "hr.tsv";
+
+        private PrintWriter textdataFileStream = null;
+
+        // starts the recording
+        private DataRecorder() {
+            try {
+                File f = new File(AttysECG.ATTYSDIR, FILENAME);
+                textdataFileStream = new PrintWriter(new FileOutputStream(f, true));
+            } catch (java.io.FileNotFoundException e) {
+                textdataFileStream = null;
+            }
+        }
+
+        // are we recording?
+        public boolean isRecording() {
+            return (textdataFileStream != null);
+        }
+
+        private void saveData(float bpm) {
+            if (textdataFileStream == null) return;
+            char s = 9;
+            long t = System.currentTimeMillis();
+            String tmp = String.format(Locale.US, "%d%c", t, s);
+            tmp = tmp + String.format(Locale.US, "%f", bpm);
+            if (textdataFileStream != null) {
+                textdataFileStream.format("%s\n", tmp);
+                textdataFileStream.flush();
+            }
+        }
+    }
+
+    private DataRecorder dataRecorder = null;
 
     /**
      * Called when the activity is first created.
@@ -109,9 +160,9 @@ public class HeartratePlotFragment extends Fragment {
         bpmPlot.getGraph().setDomainGridLinePaint(paint);
         bpmPlot.getGraph().setRangeGridLinePaint(paint);
 
-        bpmStatsView = (TextView) view.findViewById(R.id.bpmstats);
-        bpmResetButton = (Button) view.findViewById(R.id.bpmreset);
-        bpmAutoscaleButton = (ToggleButton) view.findViewById(R.id.bpmautoscale);
+        bpmStatsView = view.findViewById(R.id.bpmstats);
+        bpmResetButton = view.findViewById(R.id.bpmreset);
+        bpmAutoscaleButton = view.findViewById(R.id.bpmautoscale);
 
         bpmAutoscaleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -143,9 +194,27 @@ public class HeartratePlotFragment extends Fragment {
             }
         });
 
-        return view;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        if (prefs.getBoolean("hrv_logging", true)) {
+            AttysECG.createSubDir();
+            dataRecorder = new DataRecorder();
+        }
 
+        return view;
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        if (prefs.getBoolean("hrv_logging", true)) {
+            if (null == dataRecorder) {
+                dataRecorder = new DataRecorder();
+            }
+        }
+    }
+
 
     private void reset() {
         int n = bpmHistorySeries.size();
@@ -202,6 +271,50 @@ public class HeartratePlotFragment extends Fragment {
             nrmssdHistorySeries.removeFirst();
         }
 
+        double sum = 0;
+        final int startIdx = bpmHistorySeries.size() / 2;
+        if (bpmStatsView != null) {
+            int n = 0;
+            for (int i = startIdx; i < bpmHistorySeries.size(); i++) {
+                sum = sum + hr2interval(i);
+                n++;
+            }
+            avgHR = sum / n;
+            double dev = 0;
+            for (int i = startIdx; i < bpmHistorySeries.size(); i++) {
+                dev = dev + Math.pow(hr2interval(i) - avgHR, 2);
+            }
+            devHR = Math.sqrt(dev / (n - 1));
+
+            n = 0;
+            sum = 0;
+            for (int i = startIdx; i < bpmHistorySeries.size() - 1; i++) {
+                sum = sum + Math.pow(hr2interval(i) - hr2interval(i + 1), 2);
+                n++;
+            }
+            rmsHR = Math.sqrt(sum / n);
+            if (avgHR > 0) {
+                Double a = rmsHR / avgHR;
+                if (!a.isInfinite() && !a.isNaN()) {
+                    nrmssd = a;
+                }
+            }
+        }
+
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    bpmStatsView.setText(String.format(Locale.US,
+                            "avg = %3.02f BPM, sd = %3.02f ms, rmssd = %3.02f ms",
+                            60 / avgHR, devHR * 1000, rmsHR * 1000));
+                }
+            });
+        }
+
+        // add the latest history sample:
+        bpmHistorySeries.addLast(null, v);
+
         float maxBpm = MAXBPM;
 
         if (bpmAutoscaleButton.isChecked()) {
@@ -213,51 +326,14 @@ public class HeartratePlotFragment extends Fragment {
             bpmPlot.setRangeBoundaries(0, maxBpm, BoundaryMode.FIXED);
         }
 
-        // add the latest history sample:
-        bpmHistorySeries.addLast(null, v);
         double nr = nrmssd;
-        if (nr > (100/HRVSCALING)) nr = 100/HRVSCALING;
+        if (nr > (100 / HRVSCALING)) nr = 100.0 / HRVSCALING;
         nrmssdHistorySeries.addLast(null, nr * maxBpm * HRVSCALING);
         bpmPlot.redraw();
 
-        if (getActivity() != null) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    double sum = 0;
-                    final int startIdx = bpmHistorySeries.size()/2;
-                    if (bpmStatsView != null) {
-                        int n = 0;
-                        for (int i = startIdx; i < bpmHistorySeries.size(); i++) {
-                            sum = sum + hr2interval(i);
-                            n++;
-                        }
-                        double avg = sum / n;
-                        double dev = 0;
-                        for (int i = startIdx; i < bpmHistorySeries.size(); i++) {
-                            dev = dev + Math.pow(hr2interval(i) - avg, 2);
-                        }
-                        dev = (float)Math.sqrt(dev / (n - 1));
-
-                        double rms = 0;
-                        for (int i = 0; i < bpmHistorySeries.size() - 1; i++) {
-                            rms = rms + (float)Math.pow(hr2interval(i) - hr2interval(i+1), 2);
-                        }
-                        rms = Math.sqrt(rms / bpmHistorySeries.size());
-                        bpmStatsView.setText(String.format(Locale.US,
-                                "avg = %3.02f BPM, sd = %3.02f ms, rmssd = %3.02f ms",
-                                60/avg, dev*1000, rms*1000));
-                        if (avg > 0) {
-                            Double a = dev / avg;
-                            if (!a.isInfinite() && !a.isNaN()) {
-                                nrmssd = a;
-                            }
-                        }
-                    }
-                }
-            });
+        if (null != dataRecorder) {
+            dataRecorder.saveData(v);
         }
-
 
     }
 }

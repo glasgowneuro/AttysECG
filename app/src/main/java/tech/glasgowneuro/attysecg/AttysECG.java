@@ -40,11 +40,14 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import tech.glasgowneuro.attyscomm.AttysComm;
 import uk.me.berndporr.iirj.Butterworth;
+
+import static java.lang.String.format;
 
 public class AttysECG extends AppCompatActivity {
 
@@ -53,6 +56,8 @@ public class AttysECG extends AppCompatActivity {
     private final int REFRESH_IN_MS = 50;
 
     private final int MEDIANFILTER = 5;
+
+    final int REQUEST_EXTERNAL_STORAGE = 1;
 
     private RealtimePlotView realtimePlotView = null;
     private InfoView infoView = null;
@@ -113,8 +118,9 @@ public class AttysECG extends AppCompatActivity {
     private String dataFilename = null;
     private byte dataSeparator = 0;
 
-    private final String ATTYS_SUBDIR = "attys";
-    private File attysdir = null;
+    private static String ATTYS_SUBDIR = "attys";
+    public static File ATTYSDIR = new File(Environment.getExternalStorageDirectory().getPath(),
+            ATTYS_SUBDIR);
 
     AlertDialog alertDialog = null;
 
@@ -207,18 +213,18 @@ public class AttysECG extends AppCompatActivity {
                     break;
             }
             double t = (double) sample / attysComm.getSamplingRateInHz();
-            String tmp = String.format("%f%c", t, s);
+            String tmp = format(Locale.US,"%f%c", t, s);
             if (full2chECGrecording) {
-                tmp = tmp + String.format("%f%c", I, s);
-                tmp = tmp + String.format("%f%c", II, s);
-                tmp = tmp + String.format("%f%c", III, s);
-                tmp = tmp + String.format("%f%c", aVR, s);
-                tmp = tmp + String.format("%f%c", aVL, s);
-                tmp = tmp + String.format("%f%c", aVF, s);
-                tmp = tmp + String.format("%f", bpm);
+                tmp = tmp + format(Locale.US,"%f%c", I, s);
+                tmp = tmp + format(Locale.US,"%f%c", II, s);
+                tmp = tmp + format(Locale.US,"%f%c", III, s);
+                tmp = tmp + format(Locale.US,"%f%c", aVR, s);
+                tmp = tmp + format(Locale.US,"%f%c", aVL, s);
+                tmp = tmp + format(Locale.US,"%f%c", aVF, s);
+                tmp = tmp + format(Locale.US,"%f", bpm);
             } else {
-                tmp = tmp + String.format("%f%c", II, s);
-                tmp = tmp + String.format("%f", bpm);
+                tmp = tmp + format(Locale.US,"%f%c", II, s);
+                tmp = tmp + format(Locale.US,"%f", bpm);
             }
             bpm = 0;
             sample++;
@@ -292,8 +298,11 @@ public class AttysECG extends AppCompatActivity {
         }
 
         private void annotatePlot() {
-            String small = "";
-            small = small + "".format("1 sec/div, %1.01f mV/div, HR = %d BPM (from %s)", ytick * 1000, ((int) bpm), bpmFromEinthovenLeadNo);
+            String small = String.format(Locale.US,
+                    "1 sec/div, %1.01f mV/div, HR = %d BPM (from %s)",
+                    ytick * 1000,
+                    ((int) bpm),
+                    bpmFromEinthovenLeadNo);
             if (dataRecorder.isRecording()) {
                 small = small + " !!RECORDING to:" + dataFilename;
             }
@@ -318,7 +327,7 @@ public class AttysECG extends AppCompatActivity {
             }
 
             int nCh = 0;
-            if (attysComm != null) nCh = attysComm.NCHANNELS;
+            if (attysComm != null) nCh = AttysComm.NCHANNELS;
             if (attysComm != null) {
                 float[] tmpSample = new float[nCh];
                 float[] tmpMin = new float[nCh];
@@ -510,6 +519,12 @@ public class AttysECG extends AppCompatActivity {
         startActivity(startMain);
     }
 
+    public static void createSubDir() {
+        if (!ATTYSDIR.exists()) {
+            ATTYSDIR.mkdirs();
+        }
+    }
+
 
     /**
      * Called when the activity is first created.
@@ -518,11 +533,7 @@ public class AttysECG extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        attysdir = new File(Environment.getExternalStorageDirectory().getPath(),
-                ATTYS_SUBDIR);
-        if (!attysdir.exists()) {
-            attysdir.mkdirs();
-        }
+        requestPermissions();
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
 
@@ -785,13 +796,7 @@ public class AttysECG extends AppCompatActivity {
 
     }
 
-
-    private void enterFilename() {
-
-        final EditText filenameEditText = new EditText(this);
-        filenameEditText.setSingleLine(true);
-
-        final int REQUEST_EXTERNAL_STORAGE = 1;
+    private void requestPermissions() {
         String[] PERMISSIONS_STORAGE = {
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
         };
@@ -805,6 +810,32 @@ public class AttysECG extends AppCompatActivity {
                     REQUEST_EXTERNAL_STORAGE
             );
         }
+    }
+
+
+        /**
+     * Called after permission has been granted
+     */
+    @Override
+    final public void onRequestPermissionsResult(int requestCode,
+                                                 String[] permissions,
+                                                 int[] grantResults) {
+        Log.v(TAG, "External storage permission results: " + requestCode);
+        if (REQUEST_EXTERNAL_STORAGE != requestCode) return;
+        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Write permission to external memory granted");
+            createSubDir();
+    }
+}
+
+
+
+    private void enterFilename() {
+
+        createSubDir();
+
+        final EditText filenameEditText = new EditText(this);
+        filenameEditText.setSingleLine(true);
 
         filenameEditText.setHint("");
         filenameEditText.setText(dataFilename);
@@ -860,7 +891,7 @@ public class AttysECG extends AppCompatActivity {
         }
 
         final List<String> files = new ArrayList<>();
-        final String[] list = attysdir.list();
+        final String[] list = ATTYSDIR.list();
         if (list != null) {
             for (String file : list) {
                 if (file != null) {
@@ -896,7 +927,7 @@ public class AttysECG extends AppCompatActivity {
                         for (int i = 0; i < listview.getCount(); i++) {
                             if (checked.get(i)) {
                                 String filename = list[i];
-                                File fp = new File(attysdir, filename);
+                                File fp = new File(ATTYSDIR, filename);
                                 files.add(Uri.fromFile(fp));
                                 if (Log.isLoggable(TAG, Log.DEBUG)) {
                                     Log.d(TAG, "filename=" + filename);
@@ -934,7 +965,10 @@ public class AttysECG extends AppCompatActivity {
 
         adjustMenu();
 
-        openWindowBPM();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if (prefs.getBoolean("hr_display",true)) {
+            openWindowBPM();
+        }
 
         return true;
     }
@@ -989,7 +1023,7 @@ public class AttysECG extends AppCompatActivity {
                     }
                 } else {
                     if (dataFilename != null) {
-                        File file = new File(attysdir, dataFilename.trim());
+                        File file = new File(ATTYSDIR, dataFilename.trim());
                         dataRecorder.setDataSeparator(dataSeparator);
                         if (file.exists()) {
                             Toast.makeText(getApplicationContext(),
