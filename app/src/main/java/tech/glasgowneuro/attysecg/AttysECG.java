@@ -56,7 +56,7 @@ public class AttysECG extends AppCompatActivity {
     // screen refresh rate
     private final int REFRESH_IN_MS = 50;
 
-    private final int MEDIANFILTER = 5;
+    private final int MEDIANFILTER = 3;
 
     final int REQUEST_EXTERNAL_STORAGE = 1;
 

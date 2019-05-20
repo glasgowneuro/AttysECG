@@ -44,7 +44,7 @@ public class HeartratePlotFragment extends Fragment {
 
     private static final float MAXBPM = 200;
     private static final int HISTORY_SIZE = 60;
-    private static final int HRVSCALING = 5;
+    private static final int HRVSCALING = 10;
 
     private SimpleXYSeries bpmHistorySeries = null;
 
@@ -185,7 +185,7 @@ public class HeartratePlotFragment extends Fragment {
                         bpmText.setText(String.format(Locale.US, "%03d BPM", (int) v));
                     }
                     if (nrmssdText != null) {
-                        nrmssdText.setText(String.format(Locale.US, "%1.0f%% HRV", nrmssd * 100));
+                        nrmssdText.setText(String.format(Locale.US, "%1.1f%% HRV", nrmssd * 100));
                     }
                 }
             });
@@ -222,12 +222,16 @@ public class HeartratePlotFragment extends Fragment {
                 sum = sum + hr2interval(i);
                 n++;
             }
-            avgHR = sum / n;
+            if (n > 0) {
+                avgHR = sum / n;
+            }
             double dev = 0;
             for (int i = startIdx; i < bpmHistorySeries.size(); i++) {
                 dev = dev + Math.pow(hr2interval(i) - avgHR, 2);
             }
-            devHR = Math.sqrt(dev / (n - 1));
+            if (n > 1) {
+                devHR = Math.sqrt(dev / (n - 1));
+            }
 
             n = 0;
             sum = 0;
@@ -235,7 +239,9 @@ public class HeartratePlotFragment extends Fragment {
                 sum = sum + Math.pow(hr2interval(i) - hr2interval(i + 1), 2);
                 n++;
             }
-            rmsHR = Math.sqrt(sum / n);
+            if (n > 1) {
+                rmsHR = Math.sqrt(sum / n);
+            }
             if (avgHR > 0) {
                 Double a = rmsHR / avgHR;
                 if (!a.isInfinite() && !a.isNaN()) {
@@ -269,7 +275,7 @@ public class HeartratePlotFragment extends Fragment {
             bpmPlot.setRangeBoundaries(0, maxBpm, BoundaryMode.FIXED);
         }
 
-        double nr = nrmssd;
+        double nr = devHR;
         if (nr > (100 / HRVSCALING)) nr = 100.0 / HRVSCALING;
         nrmssdHistorySeries.addLast(null, nr * maxBpm * HRVSCALING);
         bpmPlot.redraw();
