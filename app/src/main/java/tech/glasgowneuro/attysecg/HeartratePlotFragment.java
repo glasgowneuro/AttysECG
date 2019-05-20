@@ -69,44 +69,6 @@ public class HeartratePlotFragment extends Fragment {
     View view = null;
 
 
-    private class DataRecorder {
-        /////////////////////////////////////////////////////////////
-        // saving data into a file
-
-        private final String FILENAME = "hr.tsv";
-
-        private PrintWriter textdataFileStream = null;
-
-        // starts the recording
-        private DataRecorder() {
-            try {
-                File f = new File(AttysECG.ATTYSDIR, FILENAME);
-                textdataFileStream = new PrintWriter(new FileOutputStream(f, true));
-            } catch (java.io.FileNotFoundException e) {
-                textdataFileStream = null;
-            }
-        }
-
-        // are we recording?
-        public boolean isRecording() {
-            return (textdataFileStream != null);
-        }
-
-        private void saveData(float bpm) {
-            if (textdataFileStream == null) return;
-            char s = 9;
-            long t = System.currentTimeMillis();
-            String tmp = String.format(Locale.US, "%d%c", t, s);
-            tmp = tmp + String.format(Locale.US, "%f", bpm);
-            if (textdataFileStream != null) {
-                textdataFileStream.format("%s\n", tmp);
-                textdataFileStream.flush();
-            }
-        }
-    }
-
-    private DataRecorder dataRecorder = null;
-
     /**
      * Called when the activity is first created.
      */
@@ -194,27 +156,8 @@ public class HeartratePlotFragment extends Fragment {
             }
         });
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        if (prefs.getBoolean("hrv_logging", true)) {
-            AttysECG.createSubDir();
-            dataRecorder = new DataRecorder();
-        }
-
         return view;
     }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        if (prefs.getBoolean("hrv_logging", true)) {
-            if (null == dataRecorder) {
-                dataRecorder = new DataRecorder();
-            }
-        }
-    }
-
 
     private void reset() {
         int n = bpmHistorySeries.size();
@@ -330,10 +273,6 @@ public class HeartratePlotFragment extends Fragment {
         if (nr > (100 / HRVSCALING)) nr = 100.0 / HRVSCALING;
         nrmssdHistorySeries.addLast(null, nr * maxBpm * HRVSCALING);
         bpmPlot.redraw();
-
-        if (null != dataRecorder) {
-            dataRecorder.saveData(v);
-        }
 
     }
 }

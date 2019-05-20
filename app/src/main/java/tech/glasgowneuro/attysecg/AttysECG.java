@@ -36,6 +36,7 @@ import android.widget.Toast;
 import android.widget.ProgressBar;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -125,6 +126,45 @@ public class AttysECG extends AppCompatActivity {
     AlertDialog alertDialog = null;
 
     BeepGenerator beepGenerator = null;
+
+
+    private class HRRecorder {
+        /////////////////////////////////////////////////////////////
+        // saving data into a file
+
+        private final String FILENAME = "hr.tsv";
+
+        private PrintWriter textdataFileStream = null;
+
+        // starts the recording
+        private HRRecorder() {
+            try {
+                File f = new File(AttysECG.ATTYSDIR, FILENAME);
+                textdataFileStream = new PrintWriter(new FileOutputStream(f, true));
+            } catch (java.io.FileNotFoundException e) {
+                textdataFileStream = null;
+            }
+        }
+
+        // are we recording?
+        public boolean isRecording() {
+            return (textdataFileStream != null);
+        }
+
+        private void saveData(float bpm) {
+            if (textdataFileStream == null) return;
+            char s = 9;
+            long t = System.currentTimeMillis();
+            String tmp = String.format(Locale.US, "%d%c", t, s);
+            tmp = tmp + String.format(Locale.US, "%f", bpm);
+            if (textdataFileStream != null) {
+                textdataFileStream.format("%s\n", tmp);
+                textdataFileStream.flush();
+            }
+        }
+    }
+
+    private HRRecorder hrRecorder = null;
 
     private class DataRecorder {
         /////////////////////////////////////////////////////////////
@@ -565,6 +605,16 @@ public class AttysECG extends AppCompatActivity {
         startDAQ();
 
         adjustMenu();
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if (prefs.getBoolean("hrv_logging", true)) {
+            AttysECG.createSubDir();
+            if (null == hrRecorder) {
+                hrRecorder = new HRRecorder();
+            }
+        } else {
+            hrRecorder = null;
+        }
     }
 
 
@@ -594,6 +644,9 @@ public class AttysECG extends AppCompatActivity {
 
     private void r_peak_detected(float bpm) {
         dataRecorder.setBPM(bpm);
+        if (null != hrRecorder) {
+            hrRecorder.saveData(bpm);
+        }
         if (heartratePlotFragment != null) {
             heartratePlotFragment.addValue(bpm);
         }
