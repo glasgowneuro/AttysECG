@@ -118,18 +118,10 @@ public class HeartratePlotFragment extends Fragment {
                 if (getActivity() == null) return;
                 Screensize screensize = new Screensize(getActivity().getWindowManager());
                 if (isChecked) {
-                    if (screensize.isTablet()) {
-                        bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 5);
-                    } else {
-                        bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 20);
-                    }
+                    bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 20);
                     bpmPlot.setRangeBoundaries(0, 200, BoundaryMode.FIXED);
                 } else {
-                    if (screensize.isTablet()) {
-                        bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 25);
-                    } else {
-                        bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 50);
-                    }
+                    bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 25);
                     bpmPlot.setRangeBoundaries(0, 200, BoundaryMode.FIXED);
                 }
                 bpmPlot.redraw();
@@ -168,7 +160,7 @@ public class HeartratePlotFragment extends Fragment {
                         bpmText.setText(String.format(Locale.US, "%03d BPM", (int) v));
                     }
                     if (nrmssdText != null) {
-                        nrmssdText.setText(String.format(Locale.US, "%1.1f%% HRV", nrmssd * 100));
+                        nrmssdText.setText(String.format(Locale.US, "%1.1f%% nRMSSD", nrmssd * 100));
                     }
                 }
             });

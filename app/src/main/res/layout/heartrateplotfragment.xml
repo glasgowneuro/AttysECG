@@ -48,7 +48,7 @@
             android:gravity="end"
             android:text=""
             android:textColor="#00FFFF"
-            android:textSize="36sp" />
+            android:textSize="32sp" />
 
         <TextView
             android:id="@+id/nrmssdTextView"
@@ -60,7 +60,7 @@
             android:gravity="end"
             android:text=""
             android:textColor="#00FFFF"
-            android:textSize="36sp" />
+            android:textSize="32sp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

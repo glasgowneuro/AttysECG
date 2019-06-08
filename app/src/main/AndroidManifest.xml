@@ -11,12 +11,14 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+
         <activity android:name="tech.glasgowneuro.attysecg.AttysECG">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name="tech.glasgowneuro.attysecg.PrefsActivity"
             android:theme="@android:style/Theme.Black.NoTitleBar" />

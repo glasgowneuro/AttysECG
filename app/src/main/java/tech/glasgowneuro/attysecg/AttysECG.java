@@ -166,6 +166,7 @@ public class AttysECG extends AppCompatActivity {
         }
 
         private void shutdown() {
+            if (null == textdataFileStream) return;
             textdataFileStream.flush();
             textdataFileStream.close();
             textdataFileStream = null;
