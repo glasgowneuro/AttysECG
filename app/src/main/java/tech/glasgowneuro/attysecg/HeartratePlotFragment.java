@@ -7,6 +7,7 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.preference.PreferenceManager;
@@ -40,15 +41,12 @@ import tech.glasgowneuro.attyscomm.AttysComm;
 
 public class HeartratePlotFragment extends Fragment {
 
-    String TAG = "HeartratePlotFragment";
+    private String TAG = "HeartratePlotFragment";
 
     private static final float MAXBPM = 200;
     private static final int HISTORY_SIZE = 60;
-    private static final int HRVSCALING = 10;
 
     private SimpleXYSeries bpmHistorySeries = null;
-
-    private SimpleXYSeries nrmssdHistorySeries = null;
 
     private XYPlot bpmPlot = null;
 
@@ -60,20 +58,15 @@ public class HeartratePlotFragment extends Fragment {
     private double rmsHR = 0;
     private double nrmssd = 0;
 
-    private Button bpmResetButton = null;
-
     private ToggleButton bpmAutoscaleButton = null;
 
     private TextView bpmStatsView = null;
-
-    View view = null;
-
 
     /**
      * Called when the activity is first created.
      */
     @Override
-    public View onCreateView(LayoutInflater inflater,
+    public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -83,7 +76,7 @@ public class HeartratePlotFragment extends Fragment {
             return null;
         }
 
-        view = inflater.inflate(R.layout.heartrateplotfragment, container, false);
+        final View view = inflater.inflate(R.layout.heartrateplotfragment, container, false);
 
         // setup the APR Levels plot:
         bpmPlot = view.findViewById(R.id.bpmPlotView);
@@ -93,17 +86,11 @@ public class HeartratePlotFragment extends Fragment {
         bpmHistorySeries = new SimpleXYSeries("BPM");
         bpmHistorySeries.useImplicitXVals();
 
-        nrmssdHistorySeries = new SimpleXYSeries(String.format(Locale.US, "HRV (x%d)", HRVSCALING));
-        nrmssdHistorySeries.useImplicitXVals();
-
         bpmPlot.setRangeBoundaries(0, MAXBPM, BoundaryMode.FIXED);
         bpmPlot.setDomainBoundaries(0, HISTORY_SIZE, BoundaryMode.FIXED);
         bpmPlot.addSeries(bpmHistorySeries,
                 new LineAndPointFormatter(
                         Color.rgb(100, 255, 255), null, null, null));
-        bpmPlot.addSeries(nrmssdHistorySeries,
-                new LineAndPointFormatter(
-                        Color.rgb(0, 255, 0), null, null, null));
         bpmPlot.setDomainLabel("Heartbeat #");
         bpmPlot.setRangeLabel("");
 
@@ -123,7 +110,7 @@ public class HeartratePlotFragment extends Fragment {
         bpmPlot.getGraph().setRangeGridLinePaint(paint);
 
         bpmStatsView = view.findViewById(R.id.bpmstats);
-        bpmResetButton = view.findViewById(R.id.bpmreset);
+        final Button bpmResetButton = view.findViewById(R.id.bpmreset);
         bpmAutoscaleButton = view.findViewById(R.id.bpmautoscale);
 
         bpmAutoscaleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -164,10 +151,6 @@ public class HeartratePlotFragment extends Fragment {
         for (int i = 0; i < n; i++) {
             bpmHistorySeries.removeLast();
         }
-        n = nrmssdHistorySeries.size();
-        for (int i = 0; i < n; i++) {
-            nrmssdHistorySeries.removeLast();
-        }
         bpmPlot.redraw();
     }
 
@@ -197,21 +180,10 @@ public class HeartratePlotFragment extends Fragment {
             }
             return;
         }
-        if (nrmssdHistorySeries == null) {
-            if (Log.isLoggable(TAG, Log.VERBOSE)) {
-                Log.v(TAG, "nrmssdHistorySeries == null");
-            }
-            return;
-        }
 
         // get rid the oldest sample in history:
         if (bpmHistorySeries.size() > HISTORY_SIZE) {
             bpmHistorySeries.removeFirst();
-        }
-
-        // get rid the oldest sample in history:
-        if (nrmssdHistorySeries.size() > HISTORY_SIZE) {
-            nrmssdHistorySeries.removeFirst();
         }
 
         double sum = 0;
@@ -275,10 +247,6 @@ public class HeartratePlotFragment extends Fragment {
             bpmPlot.setRangeBoundaries(0, maxBpm, BoundaryMode.FIXED);
         }
 
-        double nr = devHR;
-        if (nr > (100 / HRVSCALING)) nr = 100.0 / HRVSCALING;
-        nrmssdHistorySeries.addLast(null, nr * maxBpm * HRVSCALING);
         bpmPlot.redraw();
-
     }
 }

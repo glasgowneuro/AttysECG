@@ -133,14 +133,13 @@ public class AttysECG extends AppCompatActivity {
         // saving data into a file
 
         private final String FILENAME = "hr.tsv";
-
+        private File filename = new File(AttysECG.ATTYSDIR, FILENAME);
         private PrintWriter textdataFileStream = null;
 
         // starts the recording
         private HRRecorder() {
             try {
-                File f = new File(AttysECG.ATTYSDIR, FILENAME);
-                textdataFileStream = new PrintWriter(new FileOutputStream(f, true));
+                textdataFileStream = new PrintWriter(new FileOutputStream(filename, true));
             } catch (java.io.FileNotFoundException e) {
                 textdataFileStream = null;
             }
@@ -151,6 +150,7 @@ public class AttysECG extends AppCompatActivity {
             return (textdataFileStream != null);
         }
 
+        // saving one BPM signal
         private void saveData(float bpm) {
             if (textdataFileStream == null) return;
             char s = 9;
@@ -161,6 +161,16 @@ public class AttysECG extends AppCompatActivity {
                 textdataFileStream.format("%s\n", tmp);
                 textdataFileStream.flush();
             }
+        }
+
+        private void shutdown() {
+            textdataFileStream.flush();
+            textdataFileStream.close();
+            textdataFileStream = null;
+            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            Uri contentUri = Uri.fromFile(filename);
+            mediaScanIntent.setData(contentUri);
+            sendBroadcast(mediaScanIntent);
         }
     }
 
@@ -566,6 +576,21 @@ public class AttysECG extends AppCompatActivity {
     }
 
 
+    private void startRRrec() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if (prefs.getBoolean("hrv_logging", true)) {
+            AttysECG.createSubDir();
+            if (null == hrRecorder) {
+                hrRecorder = new HRRecorder();
+            }
+        } else {
+            if (null != hrRecorder) {
+                hrRecorder.shutdown();
+            }
+            hrRecorder = null;
+        }
+    }
+
     /**
      * Called when the activity is first created.
      */
@@ -595,6 +620,7 @@ public class AttysECG extends AppCompatActivity {
         iirNotch_II = null;
         iirNotch_III = null;
         actualChannelIdx[0] = AttysComm.INDEX_Analogue_channel_1;
+        startRRrec();
     }
 
     // this is called whenever the app is starting or re-starting
@@ -603,18 +629,8 @@ public class AttysECG extends AppCompatActivity {
         super.onStart();
 
         startDAQ();
-
         adjustMenu();
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if (prefs.getBoolean("hrv_logging", true)) {
-            AttysECG.createSubDir();
-            if (null == hrRecorder) {
-                hrRecorder = new HRRecorder();
-            }
-        } else {
-            hrRecorder = null;
-        }
+        startRRrec();
     }
 
 
@@ -636,7 +652,6 @@ public class AttysECG extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-
         updatePlotTask.resetAnalysis();
 
     }
@@ -725,7 +740,7 @@ public class AttysECG extends AppCompatActivity {
             @Override
             public void haveRpeak(long samplenumber,
                                   float bpm,
-                                  float unfiltbmp,
+                                  float filtbpm,
                                   double amplitude,
                                   double confidence) {
                 if (full2chECGrecording) {
@@ -747,7 +762,7 @@ public class AttysECG extends AppCompatActivity {
             @Override
             public void haveRpeak(long samplenumber,
                                   float bpm,
-                                  float unfiltbpm,
+                                  float filtbpm,
                                   double amplitude,
                                   double confidence) {
                 if (full2chECGrecording) {
@@ -798,20 +813,28 @@ public class AttysECG extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
+        killAttysComm();
+
         if (dataRecorder != null) {
             dataRecorder.stopRec();
+            dataRecorder = null;
+        }
+
+        if (null != hrRecorder) {
+            hrRecorder.shutdown();
+            hrRecorder = null;
         }
 
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Destroy!");
         }
-        killAttysComm();
+
         if (alertDialog != null) {
             if (alertDialog.isShowing()) {
                 alertDialog.dismiss();
             }
+            alertDialog = null;
         }
-        alertDialog = null;
     }
 
     @Override

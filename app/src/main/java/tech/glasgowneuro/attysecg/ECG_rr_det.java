@@ -122,12 +122,6 @@ public class ECG_rr_det {
     // powerline interference
     private float powerlineHz;
 
-    // heartrate in BPM after median filtering (3 bpm readings)
-    private float filtBPM = 0;
-
-    // heartrate in BPM without median filtering (might have 1/2 bpm readings)
-    private float unfiltBPM = 0;
-
     private int medianFilterSize;
 
     // constructor
@@ -177,14 +171,6 @@ public class ECG_rr_det {
         }
     }
 
-    float getFiltBPM() {
-        return filtBPM;
-    }
-
-    float getUnFiltBPM() {
-        return unfiltBPM;
-    }
-
     // detect r peaks
     // input: ECG samples at the specified sampling rate and in V
     public void detect(float v) {
@@ -227,25 +213,24 @@ public class ECG_rr_det {
                             hrBuffer[i + 1] = hrBuffer[i];
                         }
                         hrBuffer[0] = bpm;
-                        unfiltBPM = bpm;
                         System.arraycopy(hrBuffer, 0, sortBuffer, 0, hrBuffer.length);
                         Arrays.sort(sortBuffer);
-                        filtBPM = sortBuffer[(int) Math.floor(medianFilterSize / 2.0)];
-                        if (filtBPM > 0) {
+                        float filteredBPM = sortBuffer[(int) Math.floor(medianFilterSize / 2.0)];
+                        if (bpm > 0) {
                             // still missed a heartbeat?
-                            if (Math.abs(filtBPM*2-prevBPM)<5) {
+                            if (((bpm * 1.5) < prevBPM) || ((bpm * 0.75) > prevBPM)) {
                                 // that's most likely a missed heartbeat because it's
                                 // exactly half of the previous heartrate
                                 ignoreRRvalue = 3;
                             } else {
                                 if (rrListener != null) {
                                     rrListener.haveRpeak(timestamp,
-                                            filtBPM,
-                                            unfiltBPM,
+                                            bpm,
+                                            filteredBPM,
                                             amplitude, h / threshold);
                                 }
                             }
-                            prevBPM = filtBPM;
+                            prevBPM = bpm;
                         }
                     }
                 } else {
