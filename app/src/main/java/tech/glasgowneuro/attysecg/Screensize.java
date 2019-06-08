@@ -11,7 +11,7 @@ import android.view.WindowManager;
 public class Screensize {
 
 
-    final String TAG="Screensize";
+    private final String TAG="Screensize";
 
     Screensize(WindowManager windowManager) {
         windowManager.getDefaultDisplay().getMetrics(metrics);
@@ -23,7 +23,7 @@ public class Screensize {
         }
     }
 
-    DisplayMetrics metrics = new DisplayMetrics();
+    private DisplayMetrics metrics = new DisplayMetrics();
 
     private final double width;
     private final double height;

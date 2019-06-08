@@ -19,8 +19,6 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
     static private int xpos = 0;
     static private int nLeft = 0;
     static private SurfaceHolder holder = null;
-    static private float[] minData = null;
-    static private float[] maxData = null;
     static private int nMaxChannels = 0;
     static private float[][] ypos = null;
     static Paint paint = new Paint();
@@ -76,12 +74,8 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
 
     public void setMaxChannels(int n) {
         nMaxChannels = n;
-        minData = new float[n];
-        maxData = new float[n];
         yZero = new float[n];
         for (int i = 0; i < n; i++) {
-            minData[i] = -1;
-            maxData[i] = 1;
             yZero[i] = -1;
         }
     }
@@ -171,7 +165,7 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
         int nCh = newData.length;
         if (nCh == 0) return;
 
-        float base = height / nCh;
+        float base = (float)height / nCh;
         yHeight = base / 2;
 
         if (ypos == null) initYpos(width);
@@ -181,7 +175,7 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
         if (surface.isValid()) {
             Rect rect = new Rect(xpos, 0, xpos + gap, height+ygap);
             if (canvas != null) {
-                paintLabel.setTextSize(canvas.getHeight() / 30);
+                paintLabel.setTextSize((float)canvas.getHeight() / 30);
                 canvas.drawRect(rect, paintBlack);
                 for (int i = 0; i < nCh; i++) {
                     float dy = base / (maxV[i] - minV[i]);

@@ -3,6 +3,8 @@ package tech.glasgowneuro.attysecg;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -32,7 +34,7 @@ public class VectorPlotFragment extends Fragment {
 
     private PanZoom panZoom = null;
 
-    View view = null;
+    private View view = null;
 
     void setHistorySize(int historySize) {
         history_size = historySize;
@@ -54,7 +56,7 @@ public class VectorPlotFragment extends Fragment {
      * Called when the activity is first created.
      */
     @Override
-    public View onCreateView(LayoutInflater inflater,
+    public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -82,11 +84,6 @@ public class VectorPlotFragment extends Fragment {
         }
 
         vectorHistorySeries = new SimpleXYSeries("");
-        if (vectorHistorySeries == null) {
-            if (Log.isLoggable(TAG, Log.ERROR)) {
-                Log.e(TAG, "vectorHistorySeries == null");
-            }
-        }
 
         setScale();
         vectorPlot.addSeries(vectorHistorySeries,

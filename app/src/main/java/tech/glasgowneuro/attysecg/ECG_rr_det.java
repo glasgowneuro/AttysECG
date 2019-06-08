@@ -1,7 +1,5 @@
 package tech.glasgowneuro.attysecg;
 
-import java.util.Arrays;
-
 import uk.me.berndporr.firj.Fir1;
 import uk.me.berndporr.iirj.Butterworth;
 
@@ -104,11 +102,8 @@ public class ECG_rr_det {
     // timewindow not to detect an R peak
     private int doNotDetect = 0;
 
-    private int ignoreRRvalue = 2;
-
-    // three HR's are stored and a median filter is applied to them
-    private float[] hrBuffer;
-    private float[] sortBuffer;
+    // ignoring RR values at th start
+    private int ignoreRRvalue = 3;
 
     // the R preak detector. This is a matched filter implemented as an FIR.
     private Fir1 ecgDetector = new Fir1(waveletDB3);
@@ -122,20 +117,15 @@ public class ECG_rr_det {
     // powerline interference
     private float powerlineHz;
 
-    private int medianFilterSize;
-
     // constructor
     // provide the sampling rate, the powerline frequency and the median filter size
-    public ECG_rr_det(float _samplingrateInHz, float _powerlineHz, int _medianFilterSize) {
-        init(_samplingrateInHz, _powerlineHz, _medianFilterSize);
+    public ECG_rr_det(float _samplingrateInHz, float _powerlineHz) {
+        init(_samplingrateInHz, _powerlineHz);
     }
 
-    private void init(float _samplingrateInHz, float _powerlineHz, int _medianFilterSize) {
+    private void init(float _samplingrateInHz, float _powerlineHz) {
         samplingRateInHz = _samplingrateInHz;
         powerlineHz = _powerlineHz;
-        medianFilterSize = _medianFilterSize;
-        hrBuffer = new float[medianFilterSize];
-        sortBuffer = new float[medianFilterSize];
         // this fakes an R peak so we have a matched filter!
         ecgDetNotch.bandStop(notchOrder, samplingRateInHz, powerlineHz, notchBW);
         reset();
@@ -147,8 +137,7 @@ public class ECG_rr_det {
     // detection: 1 means just OK, greater than one means more confident
     public interface RRlistener {
         void haveRpeak(long samplenumber,
-                       float filtBpm,
-                       float unFiltBpm,
+                       float bpm,
                        double amplitude,
                        double confidence);
     }
@@ -166,9 +155,6 @@ public class ECG_rr_det {
         timestamp = 0;
         doNotDetect = (int) samplingRateInHz;
         ignoreECGdetector = (int) samplingRateInHz;
-        for (int i=0; i < medianFilterSize; i++){
-            hrBuffer[i] = 0;
-        }
     }
 
     // detect r peaks
@@ -209,24 +195,14 @@ public class ECG_rr_det {
                     if (ignoreRRvalue > 0) {
                         ignoreRRvalue--;
                     } else {
-                        for (int i = 0; i < (medianFilterSize - 1); i++) {
-                            hrBuffer[i + 1] = hrBuffer[i];
-                        }
-                        hrBuffer[0] = bpm;
-                        System.arraycopy(hrBuffer, 0, sortBuffer, 0, hrBuffer.length);
-                        Arrays.sort(sortBuffer);
-                        float filteredBPM = sortBuffer[(int) Math.floor(medianFilterSize / 2.0)];
                         if (bpm > 0) {
                             // still missed a heartbeat?
                             if (((bpm * 1.5) < prevBPM) || ((bpm * 0.75) > prevBPM)) {
-                                // that's most likely a missed heartbeat because it's
-                                // exactly half of the previous heartrate
                                 ignoreRRvalue = 3;
                             } else {
                                 if (rrListener != null) {
                                     rrListener.haveRpeak(timestamp,
                                             bpm,
-                                            filteredBPM,
                                             amplitude, h / threshold);
                                 }
                             }

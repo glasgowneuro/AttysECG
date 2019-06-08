@@ -14,14 +14,14 @@
         android:title="Heartrate plot at startup" />
     <CheckBoxPreference
         android:key="hrv_logging"
-        android:summary="Heartrate logging to the file 'hr.tsv' on the sd-card"
+        android:summary="Heartrate logging to the SD-card"
         android:defaultValue="false"
         android:title="HR logging" />
     <EditTextPreference
         android:key="hrv_filename"
-        android:title="Filename of for heartrate logging"
+        android:title="Filename for heartrate logging"
         android:dialogTitle="HR filename"
-        android:defaultValue="hrv.tsv"/>
+        android:defaultValue="hr.tsv"/>
     <ListPreference
         android:entries="@array/gainOptions"
         android:entryValues="@array/gainValues"

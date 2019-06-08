@@ -30,7 +30,6 @@
             <tech.glasgowneuro.attysecg.InfoView
                 android:layout_gravity="bottom|right"
                 android:id="@+id/infoview"
-                title="Plot Window"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_marginBottom="10dp"
@@ -41,7 +40,6 @@
             <tech.glasgowneuro.attysecg.RealtimePlotView
                 android:layout_gravity="bottom|right"
                 android:id="@+id/realtimeplotview"
-                title="Plot Window"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_marginBottom="10dp"
@@ -52,7 +50,6 @@
             <tech.glasgowneuro.attysecg.HRVView
                 android:layout_gravity="bottom|right"
                 android:id="@+id/hrvview"
-                title="HRV Animation"
                 android:background="@android:color/transparent"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"

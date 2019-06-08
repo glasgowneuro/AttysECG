@@ -10,10 +10,9 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
 import android.preference.PreferenceManager;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
@@ -104,8 +103,6 @@ public class AttysECG extends AppCompatActivity {
     private ECG_rr_det ecg_rr_det_ch2 = null;
 
     private float ytick = 0;
-
-    private int[] actualChannelIdx;
 
     int ygapForInfo = 0;
 
@@ -281,48 +278,49 @@ public class AttysECG extends AppCompatActivity {
 
     DataRecorder dataRecorder = new DataRecorder();
 
-    Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case AttysComm.MESSAGE_ERROR:
-                    Toast.makeText(getApplicationContext(),
-                            "Bluetooth connection problem", Toast.LENGTH_SHORT).show();
-                    if (attysComm != null) {
-                        attysComm.stop();
-                    }
-                    progress.setVisibility(View.GONE);
-                    finish();
-                    break;
-                case AttysComm.MESSAGE_CONNECTED:
-                    progress.setVisibility(View.GONE);
-                    break;
-                case AttysComm.MESSAGE_RETRY:
-                    Toast.makeText(getApplicationContext(),
-                            "Bluetooth - trying to connect. Please be patient.",
-                            Toast.LENGTH_SHORT).show();
-                    break;
-                case AttysComm.MESSAGE_STARTED_RECORDING:
-                    Toast.makeText(getApplicationContext(),
-                            "Started recording data to external storage.",
-                            Toast.LENGTH_SHORT).show();
-                    break;
-                case AttysComm.MESSAGE_STOPPED_RECORDING:
-                    Toast.makeText(getApplicationContext(),
-                            "Finished recording data to external storage.",
-                            Toast.LENGTH_SHORT).show();
-                    break;
-                case AttysComm.MESSAGE_CONNECTING:
-                    progress.setVisibility(View.VISIBLE);
+    public void handleMessage(final int msg) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (msg) {
+                    case AttysComm.MESSAGE_ERROR:
+                        Toast.makeText(getApplicationContext(),
+                                "Bluetooth connection problem", Toast.LENGTH_SHORT).show();
+                        if (attysComm != null) {
+                            attysComm.stop();
+                        }
+                        progress.setVisibility(View.GONE);
+                        finish();
+                        break;
+                    case AttysComm.MESSAGE_CONNECTED:
+                        progress.setVisibility(View.GONE);
+                        break;
+                    case AttysComm.MESSAGE_RETRY:
+                        Toast.makeText(getApplicationContext(),
+                                "Bluetooth - trying to connect. Please be patient.",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case AttysComm.MESSAGE_STARTED_RECORDING:
+                        Toast.makeText(getApplicationContext(),
+                                "Started recording data to external storage.",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case AttysComm.MESSAGE_STOPPED_RECORDING:
+                        Toast.makeText(getApplicationContext(),
+                                "Finished recording data to external storage.",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case AttysComm.MESSAGE_CONNECTING:
+                        progress.setVisibility(View.VISIBLE);
+                }
             }
-        }
-    };
-
+        });
+    }
 
     AttysComm.MessageListener messageListener = new AttysComm.MessageListener() {
         @Override
         public void haveMessage(int msg) {
-            handler.sendEmptyMessage(msg);
+            handleMessage(msg);
         }
     };
 
@@ -362,7 +360,7 @@ public class AttysECG extends AppCompatActivity {
             if (attysComm != null) {
                 if (attysComm.hasFatalError()) {
                     // Log.d(TAG,String.format("No bluetooth connection"));
-                    handler.sendEmptyMessage(AttysComm.MESSAGE_ERROR);
+                    handleMessage(AttysComm.MESSAGE_ERROR);
                     return;
                 }
             }
@@ -452,7 +450,6 @@ public class AttysECG extends AppCompatActivity {
                                         tmpMax[nRealChN] = max;
                                         tmpTick[nRealChN] = ytick;
                                         tmpLabels[nRealChN] = labels[0];
-                                        actualChannelIdx[nRealChN] = 0;
                                         tmpSample[nRealChN++] = I;
                                     }
                                     if (attysComm != null) {
@@ -460,7 +457,6 @@ public class AttysECG extends AppCompatActivity {
                                         tmpMax[nRealChN] = max;
                                         tmpTick[nRealChN] = ytick;
                                         tmpLabels[nRealChN] = labels[1];
-                                        actualChannelIdx[nRealChN] = 1;
                                         tmpSample[nRealChN++] = II;
                                     }
                                     if (attysComm != null) {
@@ -468,7 +464,6 @@ public class AttysECG extends AppCompatActivity {
                                         tmpMax[nRealChN] = max;
                                         tmpTick[nRealChN] = ytick;
                                         tmpLabels[nRealChN] = labels[2];
-                                        actualChannelIdx[nRealChN] = 2;
                                         tmpSample[nRealChN++] = III;
                                     }
                                 }
@@ -478,7 +473,6 @@ public class AttysECG extends AppCompatActivity {
                                         tmpMax[nRealChN] = max;
                                         tmpTick[nRealChN] = ytick;
                                         tmpLabels[nRealChN] = labels[3];
-                                        actualChannelIdx[nRealChN] = 3;
                                         tmpSample[nRealChN++] = aVR;
                                     }
                                     if (attysComm != null) {
@@ -486,7 +480,6 @@ public class AttysECG extends AppCompatActivity {
                                         tmpMax[nRealChN] = max;
                                         tmpTick[nRealChN] = ytick;
                                         tmpLabels[nRealChN] = labels[4];
-                                        actualChannelIdx[nRealChN] = 4;
                                         tmpSample[nRealChN++] = aVL;
                                     }
                                     if (attysComm != null) {
@@ -494,7 +487,6 @@ public class AttysECG extends AppCompatActivity {
                                         tmpMax[nRealChN] = max;
                                         tmpTick[nRealChN] = ytick;
                                         tmpLabels[nRealChN] = labels[5];
-                                        actualChannelIdx[nRealChN] = 5;
                                         tmpSample[nRealChN++] = aVF;
                                     }
                                 }
@@ -504,7 +496,6 @@ public class AttysECG extends AppCompatActivity {
                                     tmpMax[nRealChN] = max;
                                     tmpTick[nRealChN] = ytick;
                                     tmpLabels[nRealChN] = "Ch1";
-                                    actualChannelIdx[nRealChN] = 1;
                                     tmpSample[nRealChN++] = II;
                                 }
                             }
@@ -572,16 +563,20 @@ public class AttysECG extends AppCompatActivity {
 
     private void startRRrec() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if (prefs.getBoolean("hrv_logging", true)) {
+        if (prefs.getBoolean("hrv_logging", false)) {
             AttysECG.createSubDir();
             if (null == hrRecorder) {
+                final String filename = prefs.getString(
+                        PrefsActivity.HRV_KEY_FILENAME,
+                        PrefsActivity.HRV_FILENAME);
                 try {
-                    hrRecorder = new HRRecorder(prefs.getString("hrv_filename","hrv.tsv"));
+                    hrRecorder =
+                            new HRRecorder(filename);
                 } catch (Exception e) {
                     hrRecorder = null;
-                    Log.d(TAG,"Could not save the hrv file",e);
+                    Log.d(TAG,"Could not save the hr file: "+filename,e);
                     Toast.makeText(getApplicationContext(),
-                            "Could not create the heartreate file.",
+                            "Could not create the heartrate file: "+filename,
                             Toast.LENGTH_LONG).show();
                 }
             }
@@ -626,12 +621,10 @@ public class AttysECG extends AppCompatActivity {
         int nChannels = AttysComm.NCHANNELS;
         iirNotch_II = new Butterworth();
         iirNotch_III = new Butterworth();
-        actualChannelIdx = new int[nChannels];
         highpass_II = new Highpass();
         highpass_III = new Highpass();
         iirNotch_II = null;
         iirNotch_III = null;
-        actualChannelIdx[0] = AttysComm.INDEX_Analogue_channel_1;
         startRRrec();
     }
 
@@ -745,13 +738,12 @@ public class AttysECG extends AppCompatActivity {
 
         attysComm.start();
 
-        ecg_rr_det_ch1 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz, MEDIANFILTER);
+        ecg_rr_det_ch1 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz);
 
         ecg_rr_det_ch1.setRrListener(new ECG_rr_det.RRlistener() {
             @Override
             public void haveRpeak(long samplenumber,
                                   float bpm,
-                                  float filtbpm,
                                   double amplitude,
                                   double confidence) {
                 if (full2chECGrecording) {
@@ -767,13 +759,12 @@ public class AttysECG extends AppCompatActivity {
             }
         });
 
-        ecg_rr_det_ch2 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz, MEDIANFILTER);
+        ecg_rr_det_ch2 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz);
 
         ecg_rr_det_ch2.setRrListener(new ECG_rr_det.RRlistener() {
             @Override
             public void haveRpeak(long samplenumber,
                                   float bpm,
-                                  float filtbpm,
                                   double amplitude,
                                   double confidence) {
                 if (full2chECGrecording) {
@@ -906,8 +897,8 @@ public class AttysECG extends AppCompatActivity {
      */
     @Override
     final public void onRequestPermissionsResult(int requestCode,
-                                                 String[] permissions,
-                                                 int[] grantResults) {
+                                                 @NonNull String[] permissions,
+                                                 @NonNull int[] grantResults) {
         Log.v(TAG, "External storage permission results: " + requestCode);
         if (REQUEST_EXTERNAL_STORAGE != requestCode) return;
         if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -1279,17 +1270,15 @@ public class AttysECG extends AppCompatActivity {
 
     private synchronized void deletePlotWindow() {
         List<Fragment> fragments = getSupportFragmentManager().getFragments();
-        if (fragments != null) {
-            if (!(fragments.isEmpty())) {
-                for (Fragment fragment : fragments) {
-                    if (Log.isLoggable(TAG, Log.DEBUG)) {
-                        if (fragment != null) {
-                            Log.d(TAG, "Removing fragment: " + fragment.getTag());
-                        }
-                    }
+        if (!(fragments.isEmpty())) {
+            for (Fragment fragment : fragments) {
+                if (Log.isLoggable(TAG, Log.DEBUG)) {
                     if (fragment != null) {
-                        getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+                        Log.d(TAG, "Removing fragment: " + fragment.getTag());
                     }
+                }
+                if (fragment != null) {
+                    getSupportFragmentManager().beginTransaction().remove(fragment).commit();
                 }
             }
         }

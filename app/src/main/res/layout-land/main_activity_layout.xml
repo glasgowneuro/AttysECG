@@ -5,7 +5,7 @@
     android:layout_height="fill_parent"
     android:orientation="vertical">
 
-    <androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    <androidx.appcompat.widget.Toolbar
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/my_toolbar"
         android:layout_width="match_parent"
@@ -15,13 +15,13 @@
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="horizontal"
         android:baselineAligned="false">
 
-        <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        <FrameLayout
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="match_parent"
@@ -29,9 +29,8 @@
             android:orientation="vertical">
 
             <tech.glasgowneuro.attysecg.InfoView
-                android:layout_gravity="bottom|right"
+                android:layout_gravity="bottom|end"
                 android:id="@+id/infoview"
-                title="Plot Window"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_marginBottom="10dp"
@@ -40,9 +39,8 @@
                 android:layout_marginTop="10dp" />
 
             <tech.glasgowneuro.attysecg.RealtimePlotView
-                android:layout_gravity="bottom|right"
+                android:layout_gravity="bottom|end"
                 android:id="@+id/realtimeplotview"
-                title="Plot Window"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_marginBottom="10dp"
@@ -51,9 +49,8 @@
                 android:layout_marginTop="10dp" />
 
             <tech.glasgowneuro.attysecg.HRVView
-                android:layout_gravity="bottom|right"
+                android:layout_gravity="bottom|end"
                 android:id="@+id/hrvview"
-                title="HRV Animation"
                 android:background="@android:color/transparent"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"

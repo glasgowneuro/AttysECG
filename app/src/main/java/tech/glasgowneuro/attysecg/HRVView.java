@@ -15,6 +15,7 @@ import android.view.View;
 
 import java.util.ArrayList;
 import java.util.ListIterator;
+import java.util.Locale;
 
 import uk.me.berndporr.iirj.Butterworth;
 
@@ -103,7 +104,7 @@ public class HRVView extends View {
 
         canvas.drawPaint(paintClear);
 
-        String hrvTxt = String.format("%d", (int) heartRate);
+        String hrvTxt = String.format(Locale.US, "%d", (int) heartRate);
         int centreX = getWidth() / 2;
         int centreY = getHeight() / 2;
         paintTxt.setTextSize((float) INNERCIRCLEWIDTH * txtSizeMult);
@@ -111,8 +112,8 @@ public class HRVView extends View {
         paintTxt.getTextBounds(hrvTxt, 0, hrvTxt.length(), bounds);
 
         int i = MAXSAMPLES - 1;
-        for(ListIterator li = HRVValues.listIterator();li.hasNext();) {
-            float hr = (float) li.next();
+        for (Float hrvValue : HRVValues) {
+            float hr = (float) hrvValue;
             hr = (float) smoothFilter.filter(hr);
             ringsColours[i] = heartRateToColour(hr, i);
             i--;
@@ -126,8 +127,8 @@ public class HRVView extends View {
                 Shader.TileMode.CLAMP));
         canvas.drawCircle(centreX, centreY, maxCircleRadius, paintRings);
         canvas.drawText(hrvTxt,
-                centreX - bounds.width() / 2,
-                centreY + bounds.height() / 2,
+                centreX - (float)bounds.width() / 2,
+                centreY + (float)bounds.height() / 2,
                 paintTxt);
     }
 
@@ -154,8 +155,8 @@ public class HRVView extends View {
 
         float maxTmp = 0;
         float minTmp = 1000;
-        for(ListIterator li = HRVValues.listIterator();li.hasNext();) {
-            float hr = (float) li.next();
+        for (Float hrvValue : HRVValues) {
+            float hr = (float) hrvValue;
             if (hr > maxTmp) maxTmp = hr;
             if (hr < minTmp) minTmp = hr;
         }

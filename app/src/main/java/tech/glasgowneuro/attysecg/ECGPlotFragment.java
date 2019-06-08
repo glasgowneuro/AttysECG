@@ -5,6 +5,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,6 +24,8 @@ import com.androidplot.xy.PanZoom;
 import com.androidplot.xy.SimpleXYSeries;
 import com.androidplot.xy.XYGraphWidget;
 import com.androidplot.xy.XYPlot;
+
+import java.util.Locale;
 
 /**
  * Plots one PQRST complex in detail
@@ -87,7 +91,7 @@ public class ECGPlotFragment extends Fragment {
      * Called when the activity is first created.
      */
     @Override
-    public View onCreateView(LayoutInflater inflater,
+    public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -118,11 +122,6 @@ public class ECGPlotFragment extends Fragment {
         panZoom.setEnabled(true);
 
         pqrstSeries = new SimpleXYSeries("");
-        if (pqrstSeries == null) {
-            if (Log.isLoggable(TAG, Log.ERROR)) {
-                Log.e(TAG, "pqrstSeries == null");
-            }
-        }
 
         setScale();
         pqrstPlot.addSeries(pqrstSeries,
@@ -143,15 +142,15 @@ public class ECGPlotFragment extends Fragment {
                                   Number val, float x, float y, boolean isOrigin) {
                 Rect bounds = new Rect();
                 style.getPaint().getTextBounds("a", 0, 1, bounds);
-                drawLabel(canvas, String.format("%02.4f ", val.floatValue()),
-                        style.getPaint(), x + bounds.width() / 2, y + bounds.height(), isOrigin);
+                drawLabel(canvas, String.format(Locale.US, "%02.4f ", val.floatValue()),
+                        style.getPaint(), x + (float)bounds.width() / 2, y + bounds.height(), isOrigin);
             }
         };
         pqrstPlot.getGraph().setLineLabelRenderer(XYGraphWidget.Edge.LEFT, lineLabelRendererY);
 
         XYGraphWidget.LineLabelStyle lineLabelStyleY = pqrstPlot.getGraph().getLineLabelStyle(XYGraphWidget.Edge.LEFT);
         Rect bounds = new Rect();
-        String dummyTxt = String.format("%02.4f ", 0.000597558899);
+        String dummyTxt = String.format(Locale.US, "%02.4f ", 0.000597558899);
         lineLabelStyleY.getPaint().getTextBounds(dummyTxt, 0, dummyTxt.length(), bounds);
         pqrstPlot.getGraph().setMarginLeft(bounds.width());
 
@@ -166,8 +165,8 @@ public class ECGPlotFragment extends Fragment {
                 if (!isOrigin) {
                     final int canvasState = canvas.save();
                     canvas.rotate(style.getRotation(), x, y);
-                    drawLabel(canvas, String.format("%02.4f ", val.floatValue()),
-                            style.getPaint(), x + bounds.width() / 2, y + bounds.height(), isOrigin);
+                    drawLabel(canvas, String.format(Locale.US, "%02.4f ", val.floatValue()),
+                            style.getPaint(), x + (float)bounds.width() / 2, y + bounds.height(), isOrigin);
                     canvas.restoreToCount(canvasState);
                 }
             }
@@ -176,22 +175,22 @@ public class ECGPlotFragment extends Fragment {
 
         XYGraphWidget.LineLabelStyle lineLabelStyleX = pqrstPlot.getGraph().getLineLabelStyle(XYGraphWidget.Edge.LEFT);
         bounds = new Rect();
-        dummyTxt = String.format("%02.4f ", 0.000597558899);
+        dummyTxt = String.format(Locale.US, "%02.4f ", 0.000597558899);
         lineLabelStyleX.getPaint().getTextBounds(dummyTxt, 0, dummyTxt.length(), bounds);
         pqrstPlot.getGraph().setMarginBottom(bounds.width());
 
 
-        recordButton = (ToggleButton) view.findViewById(R.id.ecgplotfragment_record);
+        recordButton = view.findViewById(R.id.ecgplotfragment_record);
         recordButton.setChecked(true);
 
-        resetButton = (Button) view.findViewById(R.id.ecgplotfragment_reset);
+        resetButton = view.findViewById(R.id.ecgplotfragment_reset);
         resetButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 setScale();
             }
         });
 
-        leadSpinner = (Spinner) view.findViewById(R.id.ecgplotfragment_lead);
+        leadSpinner = view.findViewById(R.id.ecgplotfragment_lead);
         ArrayAdapter<String> adapterChannel = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_spinner_dropdown_item,
                 LEAD);

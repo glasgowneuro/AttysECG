@@ -90,7 +90,7 @@ public class InfoView extends SurfaceView implements SurfaceHolder.Callback {
             int txtDiv = 25;
             Rect bounds = new Rect();
             do {
-                paintSmall.setTextSize(getHeight() / txtDiv);
+                paintSmall.setTextSize((float)getHeight() / txtDiv);
                 paintSmall.getTextBounds(smallText, 0, smallText.length(), bounds);
                 txtDiv++;
             } while ((width - (bounds.width() * 10 / 9)) < 0);
@@ -101,7 +101,7 @@ public class InfoView extends SurfaceView implements SurfaceHolder.Callback {
                 Paint paint = new Paint();
                 paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
                 canvas.drawPaint(paint);
-                canvas.drawText(smallText, getWidth() / 100, y2, paintSmall);
+                canvas.drawText(smallText, (float)getWidth() / 100, y2, paintSmall);
             } else {
                 if (Log.isLoggable(TAG, Log.DEBUG)) {
                     Log.d(TAG, "Canvas==null");
