@@ -90,7 +90,7 @@
             ap:lineLabelRotationBottom="-45"
             ap:lineLabels="left|bottom"
             ap:rangeTitle="range"
-            ap:title="Heart rate &amp; Variability" />
+            ap:title="Heart rate" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

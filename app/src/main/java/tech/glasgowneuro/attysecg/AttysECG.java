@@ -15,6 +15,7 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -140,8 +141,9 @@ public class AttysECG extends AppCompatActivity {
         private HRRecorder() {
             try {
                 textdataFileStream = new PrintWriter(new FileOutputStream(filename, true));
-            } catch (java.io.FileNotFoundException e) {
+            } catch (Exception e) {
                 textdataFileStream = null;
+                Log.d(TAG,"Could not write to the SD card");
             }
         }
 
@@ -1000,18 +1002,25 @@ public class AttysECG extends AppCompatActivity {
                         Intent sendIntent = new Intent();
                         sendIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
                         ArrayList<Uri> files = new ArrayList<>();
-                        for (int i = 0; i < listview.getCount(); i++) {
-                            if (checked.get(i)) {
-                                String filename = list[i];
-                                File fp = new File(ATTYSDIR, filename);
-                                files.add(Uri.fromFile(fp));
-                                if (Log.isLoggable(TAG, Log.DEBUG)) {
-                                    Log.d(TAG, "filename=" + filename);
+                        if (null != list) {
+                            for (int i = 0; i < listview.getCount(); i++) {
+                                if (checked.get(i)) {
+                                    String filename = list[i];
+                                    File fp = new File(ATTYSDIR, filename);
+                                    final Uri u = FileProvider.getUriForFile(
+                                            getBaseContext(),
+                                            getApplicationContext().getPackageName()+".fileprovider",
+                                            fp);
+                                    files.add(u);
+                                    if (Log.isLoggable(TAG, Log.DEBUG)) {
+                                        Log.d(TAG, "filename=" + filename);
+                                    }
                                 }
                             }
                         }
                         sendIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, files);
                         sendIntent.setType("text/*");
+                        sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         startActivity(Intent.createChooser(sendIntent, "Send your files"));
                     }
                 })
