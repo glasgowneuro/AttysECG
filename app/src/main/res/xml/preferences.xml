@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <CheckBoxPreference
+<PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+<CheckBoxPreference
         android:key="single_ch"
         android:summary="Single channel mode for Vets and patient monitoring"
         android:defaultValue="false"
@@ -14,7 +16,12 @@
         android:key="hrv_logging"
         android:summary="Heartrate logging to the file 'hr.tsv' on the sd-card"
         android:defaultValue="false"
-        android:title="HR/HRV logging" />
+        android:title="HR logging" />
+    <EditTextPreference
+        android:key="hrv_filename"
+        android:title="Filename of for heartrate logging"
+        android:dialogTitle="HR filename"
+        android:defaultValue="hrv.tsv"/>
     <ListPreference
         android:entries="@array/gainOptions"
         android:entryValues="@array/gainValues"

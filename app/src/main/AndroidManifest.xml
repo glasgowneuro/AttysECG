@@ -21,7 +21,7 @@
 
         <activity
             android:name="tech.glasgowneuro.attysecg.PrefsActivity"
-            android:theme="@android:style/Theme.Black.NoTitleBar" />
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

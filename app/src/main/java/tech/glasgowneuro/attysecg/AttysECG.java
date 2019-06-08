@@ -38,6 +38,7 @@ import android.widget.ProgressBar;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -133,28 +134,18 @@ public class AttysECG extends AppCompatActivity {
         /////////////////////////////////////////////////////////////
         // saving data into a file
 
-        private final String FILENAME = "hr.tsv";
-        private File filename = new File(AttysECG.ATTYSDIR, FILENAME);
-        private PrintWriter textdataFileStream = null;
+        private PrintWriter textdataFileStream;
+        private final File fullpath;
 
         // starts the recording
-        private HRRecorder() {
-            try {
-                textdataFileStream = new PrintWriter(new FileOutputStream(filename, true));
-            } catch (Exception e) {
-                textdataFileStream = null;
-                Log.d(TAG,"Could not write to the SD card");
-            }
-        }
-
-        // are we recording?
-        public boolean isRecording() {
-            return (textdataFileStream != null);
+        private HRRecorder(String filename) throws IOException {
+            fullpath = new File(AttysECG.ATTYSDIR, filename);
+            textdataFileStream = new PrintWriter(new FileOutputStream(fullpath, true));
         }
 
         // saving one BPM signal
         private void saveData(float bpm) {
-            if (textdataFileStream == null) return;
+            if (null == textdataFileStream) return;
             char s = 9;
             long t = System.currentTimeMillis();
             String tmp = String.format(Locale.US, "%d%c", t, s);
@@ -171,7 +162,7 @@ public class AttysECG extends AppCompatActivity {
             textdataFileStream.close();
             textdataFileStream = null;
             Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            Uri contentUri = Uri.fromFile(filename);
+            Uri contentUri = Uri.fromFile(fullpath);
             mediaScanIntent.setData(contentUri);
             sendBroadcast(mediaScanIntent);
         }
@@ -183,9 +174,9 @@ public class AttysECG extends AppCompatActivity {
         /////////////////////////////////////////////////////////////
         // saving data into a file
 
-        public final static byte DATA_SEPARATOR_TAB = 0;
-        public final static byte DATA_SEPARATOR_COMMA = 1;
-        public final static byte DATA_SEPARATOR_SPACE = 2;
+        private final static byte DATA_SEPARATOR_TAB = 0;
+        private final static byte DATA_SEPARATOR_COMMA = 1;
+        private final static byte DATA_SEPARATOR_SPACE = 2;
 
 
         private PrintWriter textdataFileStream = null;
@@ -195,7 +186,7 @@ public class AttysECG extends AppCompatActivity {
         float bpm = 0;
 
         // starts the recording
-        public java.io.FileNotFoundException startRec(File file) {
+        private java.io.FileNotFoundException startRec(File file) {
             sample = 0;
             try {
                 textdataFileStream = new PrintWriter(file);
@@ -210,7 +201,7 @@ public class AttysECG extends AppCompatActivity {
         }
 
         // stops it
-        public void stopRec() {
+        private void stopRec() {
             if (textdataFileStream != null) {
                 textdataFileStream.close();
                 if (messageListener != null) {
@@ -228,23 +219,23 @@ public class AttysECG extends AppCompatActivity {
         }
 
         // are we recording?
-        public boolean isRecording() {
+        private boolean isRecording() {
             return (textdataFileStream != null);
         }
 
-        public File getFile() {
+        private File getFile() {
             return textdataFile;
         }
 
-        public void setDataSeparator(byte s) {
+        private void setDataSeparator(byte s) {
             data_separator = s;
         }
 
-        public byte getDataSeparator() {
+        private byte getDataSeparator() {
             return data_separator;
         }
 
-        public void setBPM(float _bpm) {
+        private void setBPM(float _bpm) {
             bpm = _bpm;
         }
 
@@ -266,18 +257,18 @@ public class AttysECG extends AppCompatActivity {
                     break;
             }
             double t = (double) sample / attysComm.getSamplingRateInHz();
-            String tmp = format(Locale.US,"%f%c", t, s);
+            String tmp = format(Locale.US, "%f%c", t, s);
             if (full2chECGrecording) {
-                tmp = tmp + format(Locale.US,"%f%c", I, s);
-                tmp = tmp + format(Locale.US,"%f%c", II, s);
-                tmp = tmp + format(Locale.US,"%f%c", III, s);
-                tmp = tmp + format(Locale.US,"%f%c", aVR, s);
-                tmp = tmp + format(Locale.US,"%f%c", aVL, s);
-                tmp = tmp + format(Locale.US,"%f%c", aVF, s);
-                tmp = tmp + format(Locale.US,"%f", bpm);
+                tmp = tmp + format(Locale.US, "%f%c", I, s);
+                tmp = tmp + format(Locale.US, "%f%c", II, s);
+                tmp = tmp + format(Locale.US, "%f%c", III, s);
+                tmp = tmp + format(Locale.US, "%f%c", aVR, s);
+                tmp = tmp + format(Locale.US, "%f%c", aVL, s);
+                tmp = tmp + format(Locale.US, "%f%c", aVF, s);
+                tmp = tmp + format(Locale.US, "%f", bpm);
             } else {
-                tmp = tmp + format(Locale.US,"%f%c", II, s);
-                tmp = tmp + format(Locale.US,"%f", bpm);
+                tmp = tmp + format(Locale.US, "%f%c", II, s);
+                tmp = tmp + format(Locale.US, "%f", bpm);
             }
             bpm = 0;
             sample++;
@@ -584,7 +575,15 @@ public class AttysECG extends AppCompatActivity {
         if (prefs.getBoolean("hrv_logging", true)) {
             AttysECG.createSubDir();
             if (null == hrRecorder) {
-                hrRecorder = new HRRecorder();
+                try {
+                    hrRecorder = new HRRecorder(prefs.getString("hrv_filename","hrv.tsv"));
+                } catch (Exception e) {
+                    hrRecorder = null;
+                    Log.d(TAG,"Could not save the hrv file",e);
+                    Toast.makeText(getApplicationContext(),
+                            "Could not create the heartreate file.",
+                            Toast.LENGTH_LONG).show();
+                }
             }
         } else {
             if (null != hrRecorder) {
@@ -593,6 +592,16 @@ public class AttysECG extends AppCompatActivity {
             hrRecorder = null;
         }
     }
+
+
+    private void stopRRRec() {
+        if (null != hrRecorder) {
+            hrRecorder.shutdown();
+            hrRecorder = null;
+        }
+    }
+
+
 
     /**
      * Called when the activity is first created.
@@ -658,7 +667,6 @@ public class AttysECG extends AppCompatActivity {
         updatePlotTask.resetAnalysis();
 
     }
-
 
     private void r_peak_detected(float bpm) {
         dataRecorder.setBPM(bpm);
@@ -816,16 +824,13 @@ public class AttysECG extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
+        stopRRRec();
+
         killAttysComm();
 
         if (dataRecorder != null) {
             dataRecorder.stopRec();
             dataRecorder = null;
-        }
-
-        if (null != hrRecorder) {
-            hrRecorder.shutdown();
-            hrRecorder = null;
         }
 
         if (Log.isLoggable(TAG, Log.DEBUG)) {
@@ -856,6 +861,8 @@ public class AttysECG extends AppCompatActivity {
     public void onPause() {
         super.onPause();
 
+        stopRRRec();
+
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Paused");
         }
@@ -866,6 +873,8 @@ public class AttysECG extends AppCompatActivity {
     @Override
     public void onStop() {
         super.onStop();
+
+        stopRRRec();
 
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Stopped");
@@ -892,7 +901,7 @@ public class AttysECG extends AppCompatActivity {
     }
 
 
-        /**
+    /**
      * Called after permission has been granted
      */
     @Override
@@ -904,9 +913,8 @@ public class AttysECG extends AppCompatActivity {
         if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Write permission to external memory granted");
             createSubDir();
+        }
     }
-}
-
 
 
     private void enterFilename() {
@@ -1010,7 +1018,7 @@ public class AttysECG extends AppCompatActivity {
                                     File fp = new File(ATTYSDIR, filename);
                                     final Uri u = FileProvider.getUriForFile(
                                             getBaseContext(),
-                                            getApplicationContext().getPackageName()+".fileprovider",
+                                            getApplicationContext().getPackageName() + ".fileprovider",
                                             fp);
                                     files.add(u);
                                     if (Log.isLoggable(TAG, Log.DEBUG)) {
@@ -1052,7 +1060,7 @@ public class AttysECG extends AppCompatActivity {
         adjustMenu();
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if (prefs.getBoolean("hr_display",true)) {
+        if (prefs.getBoolean("hr_display", true)) {
             openWindowBPM();
         }
 

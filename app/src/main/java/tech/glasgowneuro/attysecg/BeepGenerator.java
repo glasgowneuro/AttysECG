@@ -24,7 +24,6 @@ public class BeepGenerator {
                 AudioFormat.ENCODING_PCM_8BIT,
                 nAudioSamples,
                 AudioTrack.MODE_STATIC);
-        if (sound == null) return;
         rawAudio = new byte[nAudioSamples];
         for (int i = 0; i < nAudioSamples; i++) {
             double s = Math.sin(i*2.0*Math.PI*f/((double)audioSamplingRate));
