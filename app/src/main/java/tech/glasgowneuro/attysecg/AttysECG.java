@@ -691,7 +691,7 @@ public class AttysECG extends AppCompatActivity {
                             Intent i = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
                             startActivity(i);
                         } catch (Exception e) {
-                            Crashlytics.log("Could not start bluetooth settings: "+e.toString());
+                            Crashlytics.logException(e);
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
