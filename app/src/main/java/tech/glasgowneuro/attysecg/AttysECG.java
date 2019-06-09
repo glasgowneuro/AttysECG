@@ -35,6 +35,8 @@ import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.ProgressBar;
 
+import com.crashlytics.android.Crashlytics;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -685,8 +687,21 @@ public class AttysECG extends AppCompatActivity {
                 .setMessage("Before you can use the Attys you need to pair it with this device.")
                 .setPositiveButton("Configure bluetooth", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        Intent i = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
-                        startActivity(i);
+                        try {
+                            Intent i = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
+                            startActivity(i);
+                        } catch (Exception e) {
+                            Crashlytics.log("Could not start bluetooth settings: "+e.toString());
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getApplicationContext(),
+                                            "Bluetooth settings have been blocked by the phone. "+
+                                            "Please enter them manually.",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
                     }
                 })
                 .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
