@@ -159,7 +159,10 @@ public class ECG_rr_det {
 
     // detect r peaks
     // input: ECG samples at the specified sampling rate and in V
-    public void detect(float v) {
+    public void detect(float v, boolean ignore) {
+        if (ignore) {
+            doNotDetect = 2;
+        }
         double h = ecgDetNotch.filter(v * 1000);
         h = ecgDetector.filter(h);
         if (ignoreECGdetector > 0) {

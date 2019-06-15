@@ -59,8 +59,6 @@ public class AttysECG extends AppCompatActivity {
     // screen refresh rate
     private final int REFRESH_IN_MS = 50;
 
-    private final int MEDIANFILTER = 3;
-
     final int REQUEST_EXTERNAL_STORAGE = 1;
 
     private RealtimePlotView realtimePlotView = null;
@@ -69,6 +67,7 @@ public class AttysECG extends AppCompatActivity {
     private HeartratePlotFragment heartratePlotFragment = null;
     private VectorPlotFragment vectorPlotFragment = null;
     private ECGPlotFragment ecgPlotFragment = null;
+    private LeadsView leadsView = null;
 
     private MenuItem menuItemshowEinthoven = null;
     private MenuItem menuItemshowAugmented = null;
@@ -79,6 +78,8 @@ public class AttysECG extends AppCompatActivity {
     private AttysComm attysComm = null;
     private BluetoothDevice btAttysDevice = null;
     private byte samplingRate = AttysComm.ADC_RATE_250HZ;
+
+    private boolean leadsOff = false;
 
     UpdatePlotTask updatePlotTask = null;
 
@@ -103,6 +104,11 @@ public class AttysECG extends AppCompatActivity {
 
     private ECG_rr_det ecg_rr_det_ch1 = null;
     private ECG_rr_det ecg_rr_det_ch2 = null;
+
+    private int IIok = 0;
+    private int IIIok = 0;
+
+    private int visCtr = 0;
 
     private float ytick = 0;
 
@@ -329,15 +335,7 @@ public class AttysECG extends AppCompatActivity {
 
     private class UpdatePlotTask extends TimerTask {
 
-        private String m_unit = "";
-        private float scaling_factor = 1;
-
         private void resetAnalysis() {
-
-            m_unit = AttysComm.CHANNEL_UNITS[AttysComm.INDEX_Analogue_channel_1];
-
-            scaling_factor = 1;
-
             annotatePlot();
         }
 
@@ -354,6 +352,29 @@ public class AttysECG extends AppCompatActivity {
                 if (attysComm != null) {
                     infoView.drawText(small);
                 }
+            }
+            if ((leadsView != null) && leadsOff) {
+                boolean r = (IIok == 0);
+                boolean f = (IIok == 0);
+                boolean l = (IIIok == 0);
+                if (r && l) {
+                    if (visCtr > 0) {
+                        visCtr--;
+                    }
+                } else {
+                    visCtr = 30;
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (visCtr > 0) {
+                            leadsView.setVisibility(View.VISIBLE);
+                        } else {
+                            leadsView.setVisibility(View.INVISIBLE);
+                        }
+                    }
+                });
+                leadsView.setLeadStatus(r,l,f);
             }
         }
 
@@ -390,14 +411,19 @@ public class AttysECG extends AppCompatActivity {
                 if (realtimePlotView != null) {
                     if (!realtimePlotView.startAddSamples(n)) return;
                     for (int i = 0; ((i < n) && (attysComm != null)); i++) {
-                        float[] sample = null;
-                        sample = attysComm.getSampleFromBuffer();
+                        float[] sample = attysComm.getSampleFromBuffer();
                         if (sample != null) {
                             // debug ECG detector
                             // sample[AttysComm.INDEX_Analogue_channel_2] = (float)ecgDetOut;
                             timestamp++;
 
                             float II = sample[AttysComm.INDEX_Analogue_channel_1];
+                            float thres = attysComm.getADCFullScaleRange(0) * 0.9F;
+                            if (Math.abs(II) > thres) {
+                                IIok = attysComm.getSamplingRateInHz();
+                            } else {
+                                if (IIok > 0) IIok--;
+                            }
 
                             II = highpass_II.filter(II);
 
@@ -406,6 +432,12 @@ public class AttysECG extends AppCompatActivity {
                             }
 
                             float III = sample[AttysComm.INDEX_Analogue_channel_2];
+                            thres = attysComm.getADCFullScaleRange(1) * 0.9F;
+                            if (Math.abs(III) > thres) {
+                                IIIok = attysComm.getSamplingRateInHz();
+                            } else {
+                                if (IIIok > 0) IIIok--;
+                            }
 
                             III = highpass_III.filter(III);
 
@@ -421,11 +453,11 @@ public class AttysECG extends AppCompatActivity {
                             float I = II - III;
 
                             if (ecg_rr_det_ch1 != null) {
-                                ecg_rr_det_ch1.detect(II);
+                                ecg_rr_det_ch1.detect(II,(IIok > 0) || (IIIok > 0));
                             }
 
                             if (ecg_rr_det_ch2 != null) {
-                                ecg_rr_det_ch2.detect(I);
+                                ecg_rr_det_ch2.detect(I,(IIok > 0) || (IIIok > 0));
                             }
 
                             float aVR = III / 2 - II;
@@ -619,8 +651,8 @@ public class AttysECG extends AppCompatActivity {
         progress = findViewById(R.id.indeterminateBar);
         hrvView = findViewById(R.id.hrvview);
         hrvView.setVisibility(View.INVISIBLE);
+        leadsView = findViewById(R.id.leadsview);
 
-        int nChannels = AttysComm.NCHANNELS;
         iirNotch_II = new Butterworth();
         iirNotch_III = new Butterworth();
         highpass_II = new Highpass();
@@ -1371,6 +1403,16 @@ public class AttysECG extends AppCompatActivity {
         }
 
         attysComm.setAdc_samplingrate_index(samplingRate);
+
+        leadsOff = prefs.getBoolean("leadsoff", true);
+
+        if (leadsOff) {
+            attysComm.setBiasCurrent(AttysComm.ADC_CURRENT_22NA);
+            attysComm.enableCurrents(false,true,true);
+            leadsView.setVisibility(View.VISIBLE);
+        } else {
+            leadsView.setVisibility(View.INVISIBLE);
+        }
     }
 
 }

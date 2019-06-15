@@ -81,7 +81,7 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
     }
 
     private void initYpos(int width) {
-        ypos = new float[nMaxChannels][width + gap * 2];
+        ypos = new float[nMaxChannels][width * 5 + gap * 2];
         xpos = 0;
     }
 

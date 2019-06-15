@@ -59,6 +59,11 @@
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="10dp" />
 
+            <tech.glasgowneuro.attysecg.LeadsView
+                android:id="@+id/leadsview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
             <ProgressBar
                 android:id="@+id/indeterminateBar"
                 android:layout_width="wrap_content"
