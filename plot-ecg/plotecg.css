@@ -1,3 +1,7 @@
+a {
+    text-decoration: none;
+}
+
 #drop_file_zone {
     background-color: #EEE; 
     border: #999 5px dashed;
