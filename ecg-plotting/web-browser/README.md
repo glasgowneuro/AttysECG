@@ -4,11 +4,12 @@ Plots ECGs recorded with the Attys (http://www.attys.tech)
 using the Dygraphs (http://dygraphs.com)
 library and jquery (https://jquery.com/).
 
-For example within the app AttysECG you can share the recorded 
-ECG via e-mail and then recipient simply drops the 
+For example within AttysECG you can share the recorded 
+ECG via e-mail or google drive and then the recipient simply drops the 
 ECG file into this ECG viewer.
 
-The ECG viewer allows panning and zooming.
+The ECG viewer allows panning, zooming and you can create printouts
+by simply using the print option of your web browser.
 
 ## How to run
 
