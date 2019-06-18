@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Attys ECG plotter</title>
+    <link rel="stylesheet" href="dygraph.css" />
+    <link rel="stylesheet" href="plotecg.css" />
+    <script src="dygraph.js"></script>
+    <script src="jquery-3.4.1.min.js"></script>
+    <script src="main.js"></script>
+</head>
+						       
+  <body>
+        <div class="link-interaction">
+      <style>.link-interaction a:visited { color: blue; }</style>
+      <div id="div_g"></div>
+      <b>Zoom:</b>
+      <a href="#" id="full">reset</a> 
+      <b>Pan:</b> 
+      <a href="#" id="left">left</a> 
+      <a href="#" id="right">right</a> 
+    </div>
+
+    <div id="filename"></div></br />
+    
+    <div id="ecg_i"></div><br />
+    <div id="ecg_ii"></div><br />
+    <div id="ecg_iii"></div><br />
+    <div id="ecg_avr"></div><br />
+    <div id="ecg_avl"></div><br />
+    <div id="ecg_avf"></div><br />
+    <div id="ecg_hr"></div><br />
+
+    <br />
+    
+<div id="drop_file_zone" ondrop="upload_file(event)" ondragover="return false">
+  <div id="drag_upload_file">
+    <p>Drop AttysECG .tsv file here</p>
+    <p>or</p>
+    <p><input type="button" value="Select AttysECG .tsv file" onclick="file_explorer();"></p>
+    <input type="file" id="selectfile">
+  </div>
+  <div id="message"> </div>
+</div>
+
+<br />
+<a href="http://www.attys.tech">ATTYS data acquisition</a>
+    
+  </body>
+</html>
+
