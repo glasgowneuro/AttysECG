@@ -1,15 +1,25 @@
-# ECG plotter
+# ECG viewer
 
-Plots ECGs recorded with the Attys using the Dygraphs (http://dygraphs.com)
+Plots ECGs recorded with the Attys (http://www.attys.tech)
+using the Dygraphs (http://dygraphs.com)
 library and jquery (https://jquery.com/).
 
-Just load index.html with your
-brower and then drop a .tsv file in the drag/drop zone.
+For example within the app AttysECG you can share the recorded 
+ECG via e-mail and then recipient simply drops the 
+ECG file into this ECG viewer.
 
-It allows panning and zooming.
+The ECG viewer allows panning and zooming.
 
-Try it out with the sample ecg in this folder.
+## How to run
 
-An online version is aviable here: https://www.attys.tech/plot-ecg/
+  - Copy all files in this directory into a local folder or on a web server.
+  - Point your web browser to index.html.
+  - Drop a tsv file into the drag/drop zone or browse for the tsv file.
+
+Try it out with the sample ecg provided here on github.
+
+## Online version
+
+An online version is available here: https://www.attys.tech/plot-ecg/
 
 ![alt tag](screenshot.png)
