@@ -55,11 +55,14 @@ import static java.lang.String.format;
 
 public class AttysECG extends AppCompatActivity {
 
-    private Timer timer = null;
-    // screen refresh rate
-    private final int REFRESH_IN_MS = 50;
+    private static final String TAG = AttysECG.class.getSimpleName();
 
-    final int REQUEST_EXTERNAL_STORAGE = 1;
+    // screen refresh rate
+    private static final int REFRESH_IN_MS = 50;
+
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+
+    private Timer timer = null;
 
     private RealtimePlotView realtimePlotView = null;
     private InfoView infoView = null;
@@ -73,7 +76,7 @@ public class AttysECG extends AppCompatActivity {
     private MenuItem menuItemshowAugmented = null;
     private MenuItem menuItemplotWindowVector = null;
     private MenuItem menuItemshowHRV = null;
-    ProgressBar progress = null;
+    private ProgressBar progress = null;
 
     private AttysComm attysComm = null;
     private BluetoothDevice btAttysDevice = null;
@@ -81,9 +84,7 @@ public class AttysECG extends AppCompatActivity {
 
     private boolean leadsOff = false;
 
-    UpdatePlotTask updatePlotTask = null;
-
-    private static final String TAG = "AttysECG";
+    private UpdatePlotTask updatePlotTask = null;
 
     private Highpass highpass_II = null;
     private Highpass highpass_III = null;
@@ -112,14 +113,14 @@ public class AttysECG extends AppCompatActivity {
 
     private float ytick = 0;
 
-    int ygapForInfo = 0;
+    private int ygapForInfo = 0;
 
     // debugging the ECG detector, commented out for production
     //double ecgDetOut;
 
     private int timestamp = 0;
 
-    String[] labels = {
+    private static final String[] labels = {
             "I", "II", "III",
             "aVR", "aVL", "aVF"};
 
@@ -130,9 +131,9 @@ public class AttysECG extends AppCompatActivity {
     public static File ATTYSDIR = new File(Environment.getExternalStorageDirectory().getPath(),
             ATTYS_SUBDIR);
 
-    AlertDialog alertDialog = null;
+    private AlertDialog alertDialog = null;
 
-    BeepGenerator beepGenerator = null;
+    private BeepGenerator beepGenerator = null;
 
 
     private class HRRecorder {
@@ -354,9 +355,9 @@ public class AttysECG extends AppCompatActivity {
                 }
             }
             if ((leadsView != null) && leadsOff) {
-                boolean r = (IIok == 0);
-                boolean f = (IIok == 0);
-                boolean l = (IIIok == 0);
+                final boolean r = (IIok == 0);
+                final boolean f = (IIok == 0);
+                final boolean l = (IIIok == 0);
                 if (r && l) {
                     if (visCtr > 0) {
                         visCtr--;
@@ -372,9 +373,9 @@ public class AttysECG extends AppCompatActivity {
                         } else {
                             leadsView.setVisibility(View.INVISIBLE);
                         }
+                        leadsView.setLeadStatus(r,l,f);
                     }
                 });
-                leadsView.setLeadStatus(r,l,f);
             }
         }
 
