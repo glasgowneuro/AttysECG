@@ -12,9 +12,9 @@ The ECG viewer allows panning and zooming.
 
 ## How to run
 
-  - Copy all files in this directory into a local folder or on a web server.
+  - Copy all files from this directory into a local folder or on a web server.
   - Point your web browser to index.html.
-  - Drop a tsv file into the drag/drop zone or browse for the tsv file.
+  - Drop a .tsv file into the drag/drop zone or browse for the .tsv file.
 
 Try it out with the sample ecg provided here on github.
 
