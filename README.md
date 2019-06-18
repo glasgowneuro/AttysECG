@@ -19,3 +19,9 @@ ECG app for [Attys](http://www.attys.tech)
 ## Link to Google Play Store
 
 [https://play.google.com/store/apps/details?id=tech.glasgowneuro.attysecg]
+
+## Plot and inspect the recorded ECGs with your browser
+
+https://www.attys.tech/plot-ecg/
+
+See also the subdirectory `plot-ecg` here.

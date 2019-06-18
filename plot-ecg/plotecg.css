@@ -16,3 +16,8 @@
 #drag_upload_file #selectfile {
   display: none;
 }
+
+.dygraph-ylabel { font-size: 18px; }
+
+#filename { font-size: 24px;  padding: 8px;}
+

@@ -10,7 +10,6 @@
 </head>
 						       
   <body>
-
         <div class="link-interaction">
       <style>.link-interaction a:visited { color: blue; }</style>
       <div id="div_g"></div>
@@ -20,10 +19,16 @@
       <a href="#" id="left">left</a> 
       <a href="#" id="right">right</a> 
     </div>
+
+    <div id="filename"></div></br />
     
     <div id="ecg_i"></div><br />
     <div id="ecg_ii"></div><br />
     <div id="ecg_iii"></div><br />
+    <div id="ecg_avr"></div><br />
+    <div id="ecg_avl"></div><br />
+    <div id="ecg_avf"></div><br />
+    <div id="ecg_hr"></div><br />
 
     <br />
     
@@ -31,7 +36,7 @@
   <div id="drag_upload_file">
     <p>Drop AttysECG .tsv file here</p>
     <p>or</p>
-    <p><input type="button" value="Select File" onclick="file_explorer();"></p>
+    <p><input type="button" value="Select AttysECG .tsv file" onclick="file_explorer();"></p>
     <input type="file" id="selectfile">
   </div>
   <div id="message"> </div>
