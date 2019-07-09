@@ -1129,7 +1129,7 @@ public class AttysECG extends AppCompatActivity {
                 .add(R.id.fragment_plot_container,
                         heartratePlotFragment,
                         "heartratePlotFragment")
-                .commit();
+                .commitAllowingStateLoss();
         showPlotFragment();
     }
 
