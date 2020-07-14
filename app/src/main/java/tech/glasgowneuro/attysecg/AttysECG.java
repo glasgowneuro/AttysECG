@@ -2,18 +2,41 @@ package tech.glasgowneuro.attysecg;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.ImageFormat;
+import android.graphics.Matrix;
+import android.graphics.Point;
+import android.graphics.RectF;
+import android.graphics.SurfaceTexture;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.ImageReader;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.SystemClock;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.preference.PreferenceManager;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AlertDialog;
@@ -21,17 +44,24 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.util.Log;
+import android.util.Range;
+import android.util.Size;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ProgressBar;
 
@@ -39,14 +69,20 @@ import com.crashlytics.android.Crashlytics;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import tech.glasgowneuro.attyscomm.AttysComm;
 import uk.me.berndporr.iirj.Butterworth;
@@ -54,8 +90,16 @@ import uk.me.berndporr.iirj.Butterworth;
 import static java.lang.String.format;
 
 public class AttysECG extends AppCompatActivity {
-
     private static final String TAG = AttysECG.class.getSimpleName();
+
+    PPGPlotFragment ppgPlotFragment = null;
+    static String mCameraId;
+    static CameraManager mCameraManager;
+    private CameraCharacteristics characteristics;
+    private static final int REQUEST_CAMERA_PERMISSION = 1;
+
+    static Range<Integer>[] fpsRanges;
+    static Range<Integer> fpsFixed;
 
     // screen refresh rate
     private static final int REFRESH_IN_MS = 50;
@@ -475,6 +519,11 @@ public class AttysECG extends AppCompatActivity {
 
                             dataRecorder.saveData(I, II, III, aVR, aVL, aVF);
 
+                            /**
+                             * Add Einthoven II data to Mustafa's buffer here
+                             */
+                            if(PPGPlotFragment.isRecording) PPGPlotFragment.ECG_II_data.add(II);
+
                             int nRealChN = 0;
 
                             if (full2chECGrecording) {
@@ -653,6 +702,26 @@ public class AttysECG extends AppCompatActivity {
         hrvView = findViewById(R.id.hrvview);
         hrvView.setVisibility(View.INVISIBLE);
         leadsView = findViewById(R.id.leadsview);
+
+        /**
+         * Mustafa's stuff
+         */
+        mCameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+
+        try {
+            mCameraId = mCameraManager.getCameraIdList()[0];
+            characteristics = mCameraManager.getCameraCharacteristics(mCameraId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        fpsRanges = characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+        // fpsFixed = Range.create(24, 24); // Set in preferences
+        Log.i("FPS Ranges", Arrays.toString(fpsRanges));
+
+        /**
+         * END of Mustafa's stuff
+         */
 
         iirNotch_II = new Butterworth();
         iirNotch_III = new Butterworth();
@@ -953,8 +1022,46 @@ public class AttysECG extends AppCompatActivity {
             Log.d(TAG, "Write permission to external memory granted");
             createSubDir();
         }
+        /**
+         * CAMERA related
+         */
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults.length != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(AttysECG.this, "ERROR: Camera permissions not granted", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 
+    // Permissions
+    void requestCameraPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+            new AlertDialog.Builder(AttysECG.this)
+                    .setMessage("R string request permission")
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(AttysECG.this,
+                                    new String[]{Manifest.permission.CAMERA},
+                                    REQUEST_CAMERA_PERMISSION);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+
+                                }
+                            })
+                    .create();
+
+        } else {
+            ActivityCompat.requestPermissions(AttysECG.this, new String[]{Manifest.permission.CAMERA},
+                    REQUEST_CAMERA_PERMISSION);
+        }
+    }
 
     private void enterFilename() {
 
@@ -1117,6 +1224,17 @@ public class AttysECG extends AppCompatActivity {
         menuItemshowHRV.setChecked(showHRV);
     }
 
+    private void openWindowPPG() {
+        deletePlotWindow();
+        ppgPlotFragment = new PPGPlotFragment();
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_plot_container,
+                        ppgPlotFragment,
+                        "ppgPlotFragment")
+                .commitAllowingStateLoss();
+        showPlotFragment();
+    }
+
     private void openWindowBPM() {
         deletePlotWindow();
         // Create a new Fragment to be placed in the activity layout
@@ -1233,6 +1351,10 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.enterFilename:
                 enterFilename();
+                return true;
+
+            case R.id.plotWindowPPG:
+                openWindowPPG();
                 return true;
 
             case R.id.plotWindowBPM:
@@ -1414,6 +1536,9 @@ public class AttysECG extends AppCompatActivity {
         } else {
             leadsView.setVisibility(View.INVISIBLE);
         }
+
+        int cameraFPS = Integer.parseInt(prefs.getString("fps", "24"));
+        fpsFixed = Range.create(cameraFPS, cameraFPS);
     }
 
 }

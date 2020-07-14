@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ap="http://schemas.android.com/apk/res-auto"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_gravity="center"
+    android:orientation="vertical"
+    style="@style/APDefacto.Light">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="25dp"
+        android:orientation="horizontal">
+
+        <Chronometer
+            android:id="@+id/chronometer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_weight="0.5"
+            android:textAlignment="center"
+            android:alpha="0.5"
+            android:layout_marginLeft="10dp"/>
+
+        <TextView
+            android:id="@+id/fpsView"
+            android:layout_width="150px"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:textAlignment="center"/>
+
+        <TextView
+            android:id="@+id/rgbView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_weight="0.5"
+            android:textAlignment="center"
+            android:layout_marginRight="10dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100px"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/recordButton"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:onClick="record"
+            android:text="RECORD PPG/ECG"
+            android:layout_marginLeft="10dp"/>
+
+        <TextureView
+            android:id="@+id/texture"
+            android:layout_width="80px"
+            android:layout_height="80px"
+            android:layout_marginTop="10px"/>
+
+        <Button
+            android:id="@+id/flashButton"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:onClick="flashButton"
+            android:text="FLASH ON"
+            android:layout_marginRight="10dp"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/bpmPPG"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="32sp"
+        android:text="-"
+        android:textAlignment="center"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="10dp">
+
+        <com.androidplot.xy.XYPlot
+            android:id="@+id/ppgPlotView"
+            style="@style/APDefacto.Light"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            ap:domainTitle="domain"
+            ap:layout_constraintBottom_toBottomOf="parent"
+            ap:layout_constraintEnd_toEndOf="parent"
+            ap:layout_constraintStart_toStartOf="parent"
+            ap:layout_constraintTop_toTopOf="parent"
+            ap:lineLabelRotationBottom="-45"
+            ap:lineLabels="left|bottom"
+            ap:rangeTitle="range"
+            ap:title="Photoplethysmography" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</LinearLayout>

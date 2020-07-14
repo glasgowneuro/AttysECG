@@ -35,6 +35,35 @@
         </menu>
     </item>
 
+    <item
+        android:title="PPG analysis"
+        app:showAsAction="collapseActionView">
+        <menu>
+            <item
+                app:showAsAction="never"
+                android:id="@+id/plotWindowPPG"
+                android:title="PPG plotter" />
+            <item
+                app:showAsAction="never"
+                android:id="@+id/enableRecordButton"
+                android:checkable="true"
+                android:checked="true"
+                android:title="Enable plotter" />
+            <item
+                app:showAsAction="never"
+                android:id="@+id/enableFlashButton"
+                android:checkable="true"
+                android:checked="true"
+                android:title="Heartrate monitor" />
+            <item
+                app:showAsAction="never"
+                android:id="@+id/fpsAnalyser"
+                android:checkable="true"
+                android:checked="true"
+                android:title="FPS Analyser"/>
+        </menu>
+    </item>
+
     <group android:checkableBehavior="all">
         <item
             app:showAsAction="ifRoom"
