@@ -2,43 +2,48 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:ap="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/APDefacto.Light"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:layout_gravity="center"
-    android:orientation="vertical"
-    style="@style/APDefacto.Light">
+    android:background="?attr/colorPrimary"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="25dp"
+        android:baselineAligned="false"
         android:orientation="horizontal">
 
         <Chronometer
             android:id="@+id/chronometer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
             android:layout_marginTop="5dp"
-            android:layout_weight="0.5"
-            android:textAlignment="center"
+            android:layout_weight="0.3"
             android:alpha="0.5"
-            android:layout_marginLeft="10dp"/>
+            android:textAlignment="center" />
 
         <TextView
             android:id="@+id/fpsView"
-            android:layout_width="150px"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="5dp"
-            android:textAlignment="center"/>
+            android:layout_weight="0.4"
+            android:textAlignment="center"
+            android:textColor="#555" />
 
         <TextView
             android:id="@+id/rgbView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="5dp"
-            android:layout_weight="0.5"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="0.3"
             android:textAlignment="center"
-            android:layout_marginRight="10dp"/>
-
+            android:textColor="#555" />
     </LinearLayout>
 
     <LinearLayout
@@ -50,25 +55,23 @@
             android:id="@+id/recordButton"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
             android:layout_weight="0.5"
-            android:onClick="record"
-            android:text="RECORD PPG/ECG"
-            android:layout_marginLeft="10dp"/>
+            android:text="RECORD PPG/ECG" />
 
         <TextureView
             android:id="@+id/texture"
             android:layout_width="80px"
             android:layout_height="80px"
-            android:layout_marginTop="10px"/>
+            android:layout_marginTop="10px" />
 
         <Button
             android:id="@+id/flashButton"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginEnd="10dp"
             android:layout_weight="0.5"
-            android:onClick="flashButton"
-            android:text="FLASH ON"
-            android:layout_marginRight="10dp"/>
+            android:text="FLASH ON" />
 
     </LinearLayout>
 
@@ -76,29 +79,39 @@
         android:id="@+id/bpmPPG"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="32sp"
+        android:fontFamily="serif"
         android:text="-"
-        android:textAlignment="center"/>
+        android:textAlignment="center"
+        android:textSize="32sp" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_marginTop="10dp">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
         <com.androidplot.xy.XYPlot
             android:id="@+id/ppgPlotView"
-            style="@style/APDefacto.Light"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            ap:domainTitle="domain"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            ap:backgroundColor="?attr/colorPrimary"
+            ap:domainOriginLineColor="?attr/colorPrimary"
+            ap:graphBackgroundColor="?attr/colorPrimary"
+            ap:gridBackgroundColor="?attr/colorPrimary"
+            ap:graphMarginBottom="100dp"
+            ap:graphMarginLeft="0dp"
+            ap:graphMarginRight="0dp"
+            ap:graphMarginTop="50dp"
+            ap:graphWidth="-25dp"
             ap:layout_constraintBottom_toBottomOf="parent"
             ap:layout_constraintEnd_toEndOf="parent"
             ap:layout_constraintStart_toStartOf="parent"
             ap:layout_constraintTop_toTopOf="parent"
-            ap:lineLabelRotationBottom="-45"
-            ap:lineLabels="left|bottom"
-            ap:rangeTitle="range"
-            ap:title="Photoplethysmography" />
+            ap:legendAnchor="bottom_middle"
+            ap:legendHeight="60dp"
+            ap:legendHorizontalPositioning="absolute_from_center"
+            ap:legendVisible="true"
+            ap:lineLabels="none"
+            ap:rangeLineColor="@color/ap_white"
+            ap:rangeOriginLineColor="@color/ap_white" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

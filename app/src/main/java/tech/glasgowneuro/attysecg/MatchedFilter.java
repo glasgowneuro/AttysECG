@@ -12,7 +12,6 @@ class MatchedFilter {
         coefficients = Coefficients;
         size = coefficients.length;
         buffer = new float[size];
-
     }
 
     float matched_filter(float data) {

@@ -45,22 +45,16 @@
                 android:title="PPG plotter" />
             <item
                 app:showAsAction="never"
-                android:id="@+id/enableRecordButton"
-                android:checkable="true"
-                android:checked="true"
-                android:title="Enable plotter" />
-            <item
-                app:showAsAction="never"
-                android:id="@+id/enableFlashButton"
-                android:checkable="true"
-                android:checked="true"
-                android:title="Heartrate monitor" />
-            <item
-                app:showAsAction="never"
                 android:id="@+id/fpsAnalyser"
-                android:checkable="true"
                 android:checked="true"
-                android:title="FPS Analyser"/>
+                android:checkable="true"
+                android:title="FPS analyser"/>
+            <item
+                app:showAsAction="never"
+                android:id="@+id/thresholdAnalyser"
+                android:checked="false"
+                android:checkable="true"
+                android:title="Plot threshold"/>
         </menu>
     </item>
 

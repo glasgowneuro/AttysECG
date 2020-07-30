@@ -9,10 +9,10 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.graphics.drawable.ColorDrawable;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -86,7 +86,8 @@ public class PPGPlotFragment extends Fragment {
 
     private TextView rgbView;
     private TextView bpmView;
-    private TextView fps;
+    @SuppressLint("StaticFieldLeak")
+    static TextView fps;
     private Chronometer chronometer;
     private Bitmap bitmap;
 
@@ -99,6 +100,8 @@ public class PPGPlotFragment extends Fragment {
     static boolean isRecording = false;
     private boolean aboveThreshold = true;
     private boolean bpmInitialLoop = true;
+    static boolean fpsAnalyserON = true;
+    static boolean thresholdAnalyserON = false;
     private int loop_counter = 0;
 
     private List<Float> PPG_data = new ArrayList<>();
@@ -114,6 +117,7 @@ public class PPGPlotFragment extends Fragment {
 
     private SimpleXYSeries redHistorySeries = null;
     private SimpleXYSeries thresholdHistorySeries = null;
+    private LineAndPointFormatter redLineAndPointFormatter;
 
     private XYPlot ppgPlot = null;
 
@@ -176,6 +180,7 @@ public class PPGPlotFragment extends Fragment {
                     float b = blueBucket/pixelCount;
 
                     rgbView.setText("R:" + Math.round(r) + " G:" + Math.round(g) + " B:" + Math.round(b));
+                    redLineAndPointFormatter.getLinePaint().setColor(Color.argb((int) r, (int) r, (int) g, (int) b));
 
                     float maxValue = 0;
                     float minValue = 256;
@@ -193,8 +198,9 @@ public class PPGPlotFragment extends Fragment {
                     float r_matched = matchedFilter.matched_filter(r_filtered);
 
                     // Heart Rate detector
-                    THRESHOLD = (float) 1.1 * (maxValue + minValue); // Adaptive threshold
-                    heartRate_detect(r_matched, THRESHOLD);
+                    if (r < 200) bpmView.setText("-");
+                    THRESHOLD = (float) 0.9 * (minValue + maxValue);
+                    if (r > 200) heartRate_detect(r_matched, THRESHOLD);
 
                     // Recorder
                     if (isRecording) PPG_data.add(r_filtered);
@@ -220,13 +226,14 @@ public class PPGPlotFragment extends Fragment {
     @SuppressLint("SetTextI18n")
     private void heartRate_detect(float signal, float threshold) {
         if (signal >= threshold && aboveThreshold) {
+            BeepGenerator.doBeep();
             if (bpmInitialLoop) {
                 timeStamp = new Date().getTime();
                 bpmInitialLoop = false;
             } else {
                 double bpm = 60.0 / ((new Date().getTime() - timeStamp) / 1000.0);
-                if (bpm > 40 && bpm < 180) bpmView.setText((int) bpm + "bpm");
-                else bpmView.setText("-");
+                if (bpm > 40 && bpm < 150) bpmView.setText((int) bpm + "bpm");
+                else Toast.makeText(getContext(), "Measuring, keep steady...", Toast.LENGTH_SHORT).show();
                 bpmInitialLoop = true;
             }
             aboveThreshold = false;
@@ -262,7 +269,7 @@ public class PPGPlotFragment extends Fragment {
                     chronometer.setAlpha(0.5f);
                     chronometer.stop();
 
-                    File file = new File(Objects.requireNonNull(getActivity()).getFilesDir(), "PPG_ECG_recordings");
+                    File file = new File(AttysECG.ATTYSDIR, "PPG & ECG recordings");
                     if (!file.exists()) {
                         boolean wasSuccessful = file.mkdir();
                         if (!wasSuccessful) Log.e("File.mkdir()", "Failed");
@@ -606,13 +613,14 @@ public class PPGPlotFragment extends Fragment {
         // Init high-pass filter
         highpass = new Highpass();
         matchedFilter = new MatchedFilter();
+        new BeepGenerator();
         matchedFilter.set_coefficients(float_coefficients);
 
         AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(Objects.requireNonNull(requireActivity()), R.style.CustomDialog);
         dlgAlert.setIcon(R.drawable.fingertip);
         dlgAlert.setMessage("Place your index fingertip over the rear camera to analyse your heart-rate\n\n" +
                 "You can use the record PPG/ECG button to simultaneously record PPG & ECG data to a .txt file as an array\n\n" +
-                "Recordings saved to: /data/data/tech.glasgowneuro.attysecg/files/PPG_ECG_recordings");
+                "Recordings saved to: 'Phone/attys/PPG & ECG recordings' folder");
         dlgAlert.setTitle("PPG Info");
         dlgAlert.setPositiveButton("OK", null);
         dlgAlert.setCancelable(false);
@@ -667,14 +675,15 @@ public class PPGPlotFragment extends Fragment {
         // setup the APR Levels plot:
         ppgPlot = view.findViewById(R.id.ppgPlotView);
 
-        // Set padding
+        // Set padding & colors
         XYGraphWidget ppgGraph = ppgPlot.getGraph();
-        ppgGraph.setPadding(10, 50, 50, 10);
+        ppgGraph.setDomainGridLinePaint(null);
+        ppgGraph.setRangeGridLinePaint(null);
 
         ppgPlot.setBorderPaint(null);
         ppgPlot.setPlotMargins(0, 0, 0, 0);
 
-        redHistorySeries = new SimpleXYSeries("R");
+        redHistorySeries = new SimpleXYSeries("pulse");
         thresholdHistorySeries = new SimpleXYSeries("threshold");
         redHistorySeries.useImplicitXVals();
         thresholdHistorySeries.useImplicitXVals();
@@ -682,23 +691,16 @@ public class PPGPlotFragment extends Fragment {
         ppgPlot.setDomainBoundaries(0, HISTORY_SIZE, BoundaryMode.FIXED);
         ppgPlot.setRangeBoundaries(-maxRed/2, maxRed/2, BoundaryMode.FIXED);
 
-        ppgPlot.addSeries(redHistorySeries,
-                new LineAndPointFormatter(
-                        Color.rgb(250, 0, 0), null, null, null));
+        redLineAndPointFormatter = new LineAndPointFormatter(Color.argb(100, 250, 0, 0), null, null, null);
+        redLineAndPointFormatter.getLinePaint().setStrokeWidth(6);
+        ppgPlot.addSeries(redHistorySeries, redLineAndPointFormatter);
+
         ppgPlot.addSeries(thresholdHistorySeries,
                 new LineAndPointFormatter(
-                        Color.BLACK, null, null, null));
+                        Color.argb(100, 0, 0, 0), null, null, null));
 
-        ppgPlot.setDomainLabel("PPG #");
-        ppgPlot.setRangeLabel("");
-
+        ppgPlot.getLegend().setDrawIconBackgroundEnabled(false);
         ppgPlot.setDomainStep(StepMode.INCREMENT_BY_VAL, 10);
-
-
-        Paint paint = new Paint();
-        paint.setColor(Color.argb(128, 0, 0, 0));
-        ppgPlot.getGraph().setDomainGridLinePaint(paint);
-        ppgPlot.getGraph().setRangeGridLinePaint(paint);
 
         return view;
     }
@@ -719,7 +721,8 @@ public class PPGPlotFragment extends Fragment {
 
         // add the latest history sample:
         redHistorySeries.addLast(null, v);
-        thresholdHistorySeries.addLast(null, t);
+        if (thresholdAnalyserON) thresholdHistorySeries.addLast(null, t);
+        else thresholdHistorySeries.addLast(null, null);
 
         ppgPlot.redraw();
     }
@@ -735,7 +738,7 @@ public class PPGPlotFragment extends Fragment {
                     @SuppressLint("SetTextI18n")
                     @Override
                     public void run() {
-                        fps.setText("FPS " + loop_counter);
+                        if(fpsAnalyserON) fps.setText("FPS " + loop_counter);
                         loop_counter = 0;
                     }
                 });

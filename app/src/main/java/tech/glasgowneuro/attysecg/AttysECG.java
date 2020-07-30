@@ -8,35 +8,16 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.ImageFormat;
-import android.graphics.Matrix;
-import android.graphics.Point;
-import android.graphics.RectF;
-import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.ImageReader;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.SystemClock;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
 import android.preference.PreferenceManager;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AlertDialog;
@@ -45,23 +26,17 @@ import androidx.appcompat.widget.Toolbar;
 
 import android.util.Log;
 import android.util.Range;
-import android.util.Size;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.Surface;
-import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.Chronometer;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ProgressBar;
 
@@ -69,20 +44,14 @@ import com.crashlytics.android.Crashlytics;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 import tech.glasgowneuro.attyscomm.AttysComm;
 import uk.me.berndporr.iirj.Butterworth;
@@ -120,6 +89,8 @@ public class AttysECG extends AppCompatActivity {
     private MenuItem menuItemshowAugmented = null;
     private MenuItem menuItemplotWindowVector = null;
     private MenuItem menuItemshowHRV = null;
+    private MenuItem menuItemfpsAnalyser = null;
+    private MenuItem menuItemthresholdAnalyser = null;
     private ProgressBar progress = null;
 
     private AttysComm attysComm = null;
@@ -1202,6 +1173,8 @@ public class AttysECG extends AppCompatActivity {
         menuItemshowAugmented = menu.findItem(R.id.showAugmented);
         menuItemplotWindowVector = menu.findItem(R.id.plotWindowVector);
         menuItemshowHRV = menu.findItem(R.id.showHRV);
+        menuItemfpsAnalyser = menu.findItem(R.id.fpsAnalyser);
+        menuItemthresholdAnalyser = menu.findItem(R.id.thresholdAnalyser);
 
         adjustMenu();
 
@@ -1210,6 +1183,21 @@ public class AttysECG extends AppCompatActivity {
             openWindowBPM();
         }
 
+        if (prefs.getBoolean("fpsAnalyser", true)) {
+            menuItemfpsAnalyser.setChecked(true);
+            PPGPlotFragment.fpsAnalyserON = true;
+        } else {
+            menuItemfpsAnalyser.setChecked(false);
+            PPGPlotFragment.fpsAnalyserON = false;
+        }
+
+        if (prefs.getBoolean("thresholdAnalyser", true)) {
+            menuItemthresholdAnalyser.setChecked(true);
+            PPGPlotFragment.thresholdAnalyserON = true;
+        } else {
+            menuItemthresholdAnalyser.setChecked(false);
+            PPGPlotFragment.thresholdAnalyserON = false;
+        }
         return true;
     }
 
@@ -1254,6 +1242,8 @@ public class AttysECG extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         switch (item.getItemId()) {
 
@@ -1355,6 +1345,38 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.plotWindowPPG:
                 openWindowPPG();
+                return true;
+
+            case R.id.fpsAnalyser:
+                if (item.isChecked()) {
+                    PPGPlotFragment.fpsAnalyserON = false;
+                    item.setChecked(false);
+                    prefs.edit().putBoolean("fpsAnalyser", false).apply();
+                    if (PPGPlotFragment.fps != null) {
+                        PPGPlotFragment.fps.setEnabled(false);
+                        PPGPlotFragment.fps.setTextColor(Color.TRANSPARENT);
+                    }
+                } else {
+                    PPGPlotFragment.fpsAnalyserON = true;
+                    item.setChecked(true);
+                    prefs.edit().putBoolean("fpsAnalyser", true).apply();
+                    if (PPGPlotFragment.fps != null) {
+                        PPGPlotFragment.fps.setEnabled(true);
+                        PPGPlotFragment.fps.setTextColor(Color.parseColor("#555555"));
+                    }
+                }
+                return true;
+
+            case R.id.thresholdAnalyser:
+                if (item.isChecked()) {
+                    PPGPlotFragment.thresholdAnalyserON = false;
+                    item.setChecked(false);
+                    prefs.edit().putBoolean("thresholdAnalyser", false).apply();
+                } else {
+                    PPGPlotFragment.thresholdAnalyserON = true;
+                    item.setChecked(true);
+                    prefs.edit().putBoolean("thresholdAnalyser", true).apply();
+                }
                 return true;
 
             case R.id.plotWindowBPM:
