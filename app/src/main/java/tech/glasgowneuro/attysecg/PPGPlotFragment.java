@@ -1,10 +1,15 @@
 package tech.glasgowneuro.attysecg;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
@@ -12,7 +17,6 @@ import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.graphics.drawable.ColorDrawable;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -35,8 +39,11 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.Chronometer;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,19 +59,24 @@ import com.androidplot.xy.StepMode;
 import com.androidplot.xy.XYGraphWidget;
 import com.androidplot.xy.XYPlot;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import static android.content.Context.MODE_PRIVATE;
 
 
 /**
@@ -72,6 +84,9 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class PPGPlotFragment extends Fragment {
+
+    private SQLiteDatabase database;
+    private Intent historyActivity;
 
     private TextureView mTextureView;
     private CameraCaptureSession mCaptureSession;
@@ -83,6 +98,15 @@ public class PPGPlotFragment extends Fragment {
     private CaptureRequest.Builder mPreviewRequestBuilder;
     private CaptureRequest mPreviewRequest;
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
+
+    private ObjectAnimator progressAnimator;
+    private ProgressBar loadBar;
+    private ProgressBar spinner;
+
+    private Highpass highpass = null;
+    private MatchedFilter matchedFilter = null;
+    private IIRFilter iirFilter = null;
+    private FIR_Filter firFilter = null;
 
     private TextView rgbView;
     private TextView bpmView;
@@ -103,8 +127,13 @@ public class PPGPlotFragment extends Fragment {
     static boolean fpsAnalyserON = true;
     static boolean thresholdAnalyserON = false;
     private int loop_counter = 0;
+    private int fingerOnCounter = 0;
+    private int lastBPM;
 
-    private List<Float> PPG_data = new ArrayList<>();
+    private List<Float> U_raw_data = new ArrayList<>();
+    private List<Float> U_filtered_data = new ArrayList<>();
+    private List<Float> U_matched_data = new ArrayList<>();
+    private List<Float> THRESHOLD_data = new ArrayList<>();
     static List<Float> ECG_II_data = new ArrayList<>();
 
     private String TAG = "PPGPlotFragment";
@@ -112,25 +141,19 @@ public class PPGPlotFragment extends Fragment {
     private String flashOFFTag = "FLASH ON";
 
     private final double maxRed = Math.pow(2, 8);
-    private final int HISTORY_SIZE = AttysECG.fpsFixed.getLower() * 3;
+    private final int HISTORY_SIZE = AttysECG.fpsFixed.getLower() * 6;
     private long timeStamp;
+    private long bogusStamp = 0;
+    private double bpmTotal = 0;
+    private int beatCounter = 0;
 
     private SimpleXYSeries redHistorySeries = null;
     private SimpleXYSeries thresholdHistorySeries = null;
-    private LineAndPointFormatter redLineAndPointFormatter;
 
     private XYPlot ppgPlot = null;
 
     private Vibrator vibrator;
-    private float THRESHOLD = (float) 30.0;
-
-    private Highpass highpass = null;
-    private MatchedFilter matchedFilter = null;
-    // Time reversed template for matched filter. Calculated from actual PPG data.
-    private double[] double_coefficients = {1.7802734,  1.3839874,  1.1468048, -0.7828369, -3.3840485,
-            -5.482147 , -6.950699 , -1.9465332,  1.2310181,  1.9858093,
-            2.610321 ,  2.5477142};
-    private float[] float_coefficients = new float[double_coefficients.length];
+    private float THRESHOLD;
 
     /**
      * Mustafa's functions
@@ -165,8 +188,8 @@ public class PPGPlotFragment extends Fragment {
                 @SuppressLint("SetTextI18n")
                 @Override
                 public void run() {
-                    for (int y = 0; y < bitmap.getHeight(); y+=bitmap.getHeight() / 10) {
-                        for (int x = 0; x < bitmap.getWidth(); x+=bitmap.getWidth() / 10) {
+                    for (int y = 0; y < bitmap.getHeight(); y+=bitmap.getHeight() / 20) {
+                        for (int x = 0; x < bitmap.getWidth(); x+=bitmap.getWidth() / 20) {
                             int pixel = bitmap.getPixel(x, y);
                             pixelCount++;
 
@@ -179,43 +202,69 @@ public class PPGPlotFragment extends Fragment {
                     float g = greenBucket/pixelCount;
                     float b = blueBucket/pixelCount;
 
-                    rgbView.setText("R:" + Math.round(r) + " G:" + Math.round(g) + " B:" + Math.round(b));
-                    redLineAndPointFormatter.getLinePaint().setColor(Color.argb((int) r, (int) r, (int) g, (int) b));
+                    // double Y = 0.257*r + 0.504*g + 0.098*b + 16;
+                    double U = -0.148*r - 0.291*g + 0.439*b + 128;
 
-                    float maxValue = 0;
-                    float minValue = 256;
+                    rgbView.setText("R:" + Math.round(r) + " G:" + Math.round(g) + " B:" + Math.round(b));
+
+                    float maxValue = 0, localMax = 0;
+                    float minValue = 255;
+
                     for (int i = 0; i < redHistorySeries.size(); i++) {
                         float val = redHistorySeries.getY(i).floatValue();
                         if (val > maxValue) maxValue = val;
                         if (val < minValue) minValue = val;
                     }
-                    ppgPlot.setRangeBoundaries(minValue, maxValue, BoundaryMode.FIXED);
+                    ppgPlot.setRangeBoundaries(minValue - 0.001, maxValue + 0.001, BoundaryMode.FIXED);
+
+                    for (int i = redHistorySeries.size()-1; i >= (redHistorySeries.size() - redHistorySeries.size()/10); i--) {
+                        float val = redHistorySeries.getY(i).floatValue();
+                        if (val > localMax) localMax = val;
+                    }
 
                     // DC removal with high-pass filter
-                    float r_filtered = highpass.filter(r);
+                    //float r_filtered = highpass.filter((float) U);
+                    //float U_filtered = iirFilter.doFilter((float) U);
+                    float U_filtered = firFilter.doFilter((float) U);
 
                     // Matched filter
-                    float r_matched = matchedFilter.matched_filter(r_filtered);
+                    float U_matched = isFlashON ? matchedFilter.matched_filter(U_filtered) : 0;
 
-                    // Heart Rate detector
-                    if (r < 200) bpmView.setText("-");
-                    THRESHOLD = (float) 0.9 * (minValue + maxValue);
-                    if (r > 200) heartRate_detect(r_matched, THRESHOLD);
+                    THRESHOLD = isFlashON ? (float) 0.7 * localMax : 0;
+
+                    // Finger ON
+                    if (r >= 150 && b <= 10) {
+                        fingerOnCounter++;
+                        if (spinner.getAlpha() == 1) {
+                            spinner.setAlpha(0);
+                            Toast.makeText(getContext(), "Measuring - keep steady", Toast.LENGTH_SHORT).show();
+                        }
+                        if (fingerOnCounter > AttysECG.fpsFixed.getLower() * 2) {
+                            if (loadBar.getProgress() == 0) progressLoader(true);
+                            addValue(U_matched, THRESHOLD);
+                            heartRate_detect(U_matched, THRESHOLD);
+                        } else {
+                            addValue(0, 0);
+                        }
+                    } else {
+                        // Finger OFF
+                        addValue(0, 0);
+                        if (loadBar.getProgress() != 0) {
+                            progressLoader(false);
+                            lastBPM = Integer.parseInt(bpmView.getText().toString());
+                            bpmView.setText("");
+                            spinner.setAlpha(1);
+                            fingerOnCounter = 0;
+                        }
+                    }
 
                     // Recorder
-                    if (isRecording) PPG_data.add(r_filtered);
-
-                    // Live Plot
-                    addValue(r_matched, THRESHOLD);
-
-                    /*
-                    // YUV format: taken from: https://stackoverflow.com/questions/5960247/convert-bitmap-array-to-yuv-ycbcr-nv21
-                    long Y = ( (  66 * r + 129 * g +  25 * b + 128) >> 8) +  16;
-                    long U = ( ( -38 * r -  74 * g + 112 * b + 128) >> 8) + 128;
-                    long V = ( ( 112 * r -  94 * g -  18 * b + 128) >> 8) + 128;
-                    rgbView.setText("Y:" + Y + " U:" + U + " V:" + V);
-                    if (isRecording) PPG_data.add((Y+U+V)/3);
-                    */
+                    if (isRecording) {
+                        U_raw_data.add((float) U);
+                        U_filtered_data.add(U_filtered);
+                        U_matched_data.add(U_matched);
+                        THRESHOLD_data.add(THRESHOLD);
+                    }
                 }
             });
             loop_counter++; // used for FPS calculation
@@ -225,20 +274,103 @@ public class PPGPlotFragment extends Fragment {
 
     @SuppressLint("SetTextI18n")
     private void heartRate_detect(float signal, float threshold) {
-        if (signal >= threshold && aboveThreshold) {
+        // bogusStamp > 333 checks if the two detected peaks = heart-rate > 180
+        if (signal >= threshold && aboveThreshold && (new Date().getTime() - bogusStamp) > 333) {
             BeepGenerator.doBeep();
             if (bpmInitialLoop) {
                 timeStamp = new Date().getTime();
                 bpmInitialLoop = false;
             } else {
                 double bpm = 60.0 / ((new Date().getTime() - timeStamp) / 1000.0);
-                if (bpm > 40 && bpm < 150) bpmView.setText((int) bpm + "bpm");
-                else Toast.makeText(getContext(), "Measuring, keep steady...", Toast.LENGTH_SHORT).show();
+                if (bpm > 40 && bpm < 180) {
+                    if (spinner.getAlpha() != 0) spinner.setAlpha(0);
+                    beatCounter++;
+                    bpmTotal += bpm;
+                    bpmView.setText(Integer.toString((int) bpmTotal/beatCounter));
+                }
                 bpmInitialLoop = true;
             }
             aboveThreshold = false;
         } else if (signal < threshold && !aboveThreshold) {
+            bogusStamp = new Date().getTime();
             aboveThreshold = true;
+        }
+    }
+
+    private void progressLoader(final boolean start) {
+        if (start) {
+            progressAnimator.removeAllListeners();
+            progressAnimator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    loadBar.setProgress(0);
+                    ppgPlot.setDrawingCacheEnabled(true);
+                    ppgPlot.buildDrawingCache(true);
+                    Bitmap cache = ppgPlot.getDrawingCache();
+                    final Bitmap bitmap = Bitmap.createBitmap(cache);
+                    ppgPlot.redraw();
+                    ppgPlot.setDrawingCacheEnabled(false);
+
+                    final String recordedDateTime = new SimpleDateFormat("EEE, d MMM yyyy\nHH:mm:ss", Locale.getDefault()).format(new Date());
+
+                    ImageView preview = new ImageView(getContext());
+                    preview.setImageBitmap(bitmap);
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getContext()));
+                    builder.setView(preview)
+                            .setTitle(bpmView.getText() + "bpm")
+                            .setIcon(R.drawable.heart)
+                            .setMessage(recordedDateTime)
+                            .setCancelable(false)
+                            .setPositiveButton("SAVE", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+                                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, bStream);
+                                    byte[] byteArray = bStream.toByteArray();
+
+                                    ContentValues contentValues = new ContentValues();
+                                    contentValues.put("BPMs", lastBPM + "bpm");
+                                    contentValues.put("DateTimes", recordedDateTime);
+                                    contentValues.put("Plots", byteArray);
+
+                                    database.insert("RecordingsTable", null, contentValues);
+                                    startActivity(historyActivity);
+                                }
+                            })
+                            .setNegativeButton("DISCARD", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    flashON(true);
+                                }
+                            })
+                            .show();
+                    flashON(false);
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+            progressAnimator.start();
+        }
+        else {
+            if (progressAnimator.isRunning()) {
+                progressAnimator.removeAllListeners();
+                progressAnimator.end();
+                loadBar.setProgress(0);
+            }
         }
     }
 
@@ -282,8 +414,11 @@ public class PPGPlotFragment extends Fragment {
                         FileWriter writer_ppg = new FileWriter(ppgFile);
                         FileWriter writer_ecg = new FileWriter(ecgFile);
 
-                        writer_ppg.append(PPG_data.toString());
-                        writer_ecg.append(ECG_II_data.toString());
+                        writer_ppg.append("Y[U]V_raw: ").append(U_raw_data.toString()).append("\n")
+                                    .append("Y[U]V_filtered: ").append(U_filtered_data.toString()).append("\n")
+                                    .append("Y[U]V_matched: ").append(U_matched_data.toString()).append("\n");
+                        writer_ppg.append("threshold: ").append(THRESHOLD_data.toString());
+                        writer_ecg.append("Einthoven II").append(ECG_II_data.toString());
 
                         writer_ppg.flush();
                         writer_ecg.flush();
@@ -294,8 +429,11 @@ public class PPGPlotFragment extends Fragment {
                         Log.e("PPG/ECG recording error", "Could not save!");
                     }
 
-                    PPG_data.clear(); // Clear the red data
+                    THRESHOLD_data.clear();
                     ECG_II_data.clear(); // Clear the ECG II data
+                    U_raw_data.clear();
+                    U_filtered_data.clear();
+                    U_matched_data.clear();
                 }
             });
         }
@@ -341,7 +479,7 @@ public class PPGPlotFragment extends Fragment {
             if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw new RuntimeException("Time out waiting to lock camera opening.");
             }
-            AttysECG.mCameraManager.openCamera(AttysECG.mCameraId, mStateCallback, mBackgroundHandler);
+            AttysECG.mCameraManager.openCamera(AttysECG.mCameraManager.getCameraIdList()[0], mStateCallback, mBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -433,15 +571,11 @@ public class PPGPlotFragment extends Fragment {
             public void run() {
                 try {
                     mCaptureSession.stopRepeating();
-                    if (SWITCH) {
-                        mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
-                        isFlashON = true;
-                        flashButton.setText(flashONTag);
-                    } else {
-                        mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
-                        isFlashON = false;
-                        flashButton.setText(flashOFFTag);
-                    }
+                    isFlashON = SWITCH;
+                    int flashMode = isFlashON ? CaptureRequest.FLASH_MODE_TORCH : CaptureRequest.FLASH_MODE_OFF;
+                    String flashButtonText = isFlashON ? flashONTag : flashOFFTag;
+                    mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, flashMode);
+                    flashButton.setText(flashButtonText);
                     mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), null, mBackgroundHandler);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -608,13 +742,25 @@ public class PPGPlotFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
-        for (int i = 0; i < double_coefficients.length; i++) float_coefficients[i] = (float) double_coefficients[i];
+        historyActivity = new Intent(getActivity(), ppgHistory.class);
+        database = Objects.requireNonNull(getActivity()).openOrCreateDatabase("database", MODE_PRIVATE, null);
+        database.execSQL("CREATE TABLE IF NOT EXISTS RecordingsTable(BPMs VARCHAR, DateTimes VARCHAR, Plots BLOB);");
 
         // Init high-pass filter
         highpass = new Highpass();
         matchedFilter = new MatchedFilter();
+        matchedFilter.set_coefficients(Constants.float_coefficients);
+
+        // Init FIR Filter
+        firFilter = new FIR_Filter();
+        firFilter.set_coefficients(Constants.FIR_coefficients);
+
+        // Init IIR Filter
+        iirFilter = new IIRFilter();
+        iirFilter.set_sos_coefficients(Constants.sos_butter_order4_bp);
+
+        // Init beep generator
         new BeepGenerator();
-        matchedFilter.set_coefficients(float_coefficients);
 
         AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(Objects.requireNonNull(requireActivity()), R.style.CustomDialog);
         dlgAlert.setIcon(R.drawable.fingertip);
@@ -640,6 +786,15 @@ public class PPGPlotFragment extends Fragment {
         }
 
         final View view = inflater.inflate(R.layout.ppgplotfragment, container, false);
+
+        // Progress Animator
+        loadBar = view.findViewById(R.id.loadBar);
+        loadBar.setMax(100 * 100);
+        progressAnimator = ObjectAnimator.ofInt(loadBar, "progress", 0, 100 * 100);
+        progressAnimator.setDuration(15000);
+        progressAnimator.setInterpolator(new LinearInterpolator());
+
+        spinner = view.findViewById(R.id.spinner);
 
         mTextureView = view.findViewById(R.id.texture);
         rgbView = view.findViewById(R.id.rgbView);
@@ -691,8 +846,8 @@ public class PPGPlotFragment extends Fragment {
         ppgPlot.setDomainBoundaries(0, HISTORY_SIZE, BoundaryMode.FIXED);
         ppgPlot.setRangeBoundaries(-maxRed/2, maxRed/2, BoundaryMode.FIXED);
 
-        redLineAndPointFormatter = new LineAndPointFormatter(Color.argb(100, 250, 0, 0), null, null, null);
-        redLineAndPointFormatter.getLinePaint().setStrokeWidth(6);
+        LineAndPointFormatter redLineAndPointFormatter = new LineAndPointFormatter(Color.rgb(255, 0, 0), null, null, null);
+        redLineAndPointFormatter.getLinePaint().setStrokeWidth(4);
         ppgPlot.addSeries(redHistorySeries, redLineAndPointFormatter);
 
         ppgPlot.addSeries(thresholdHistorySeries,
@@ -730,6 +885,12 @@ public class PPGPlotFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        startBackgroundThread();
+        if (mTextureView.isAvailable()) {
+            openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+        } else {
+            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+        }
         loopTimer = new Timer();
         loopTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -744,12 +905,7 @@ public class PPGPlotFragment extends Fragment {
                 });
             }
         }, 0, 1000);
-        startBackgroundThread();
-        if (mTextureView.isAvailable()) {
-            openCamera(mTextureView.getWidth(), mTextureView.getHeight());
-        } else {
-            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
-        }
+        flashON(true);
     }
 
     @Override

@@ -45,6 +45,10 @@
                 android:title="PPG plotter" />
             <item
                 app:showAsAction="never"
+                android:id="@+id/ppgHistory"
+                android:title="PPG history" />
+            <item
+                app:showAsAction="never"
                 android:id="@+id/fpsAnalyser"
                 android:checked="true"
                 android:checkable="true"

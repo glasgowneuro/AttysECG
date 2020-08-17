@@ -50,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -147,6 +148,7 @@ public class AttysECG extends AppCompatActivity {
             ATTYS_SUBDIR);
 
     private AlertDialog alertDialog = null;
+    static float II_export;
 
     private BeepGenerator beepGenerator = null;
 
@@ -447,6 +449,8 @@ public class AttysECG extends AppCompatActivity {
                                 II = (float) iirNotch_II.filter((double) II);
                             }
 
+                            II_export = II;
+
                             float III = sample[AttysComm.INDEX_Analogue_channel_2];
                             thres = attysComm.getADCFullScaleRange(1) * 0.9F;
                             if (Math.abs(III) > thres) {
@@ -733,7 +737,6 @@ public class AttysECG extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         updatePlotTask.resetAnalysis();
-
     }
 
     private void r_peak_detected(float bpm) {
@@ -1223,7 +1226,7 @@ public class AttysECG extends AppCompatActivity {
         showPlotFragment();
     }
 
-    private void openWindowBPM() {
+    public void openWindowBPM() {
         deletePlotWindow();
         // Create a new Fragment to be placed in the activity layout
         heartratePlotFragment = new HeartratePlotFragment();
@@ -1346,6 +1349,10 @@ public class AttysECG extends AppCompatActivity {
             case R.id.plotWindowPPG:
                 openWindowPPG();
                 return true;
+
+            case R.id.ppgHistory:
+                Intent historyActivity = new Intent(getApplicationContext(), ppgHistory.class);
+                startActivity(historyActivity);
 
             case R.id.fpsAnalyser:
                 if (item.isChecked()) {

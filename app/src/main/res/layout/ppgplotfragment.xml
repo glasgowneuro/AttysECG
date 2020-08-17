@@ -48,41 +48,86 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="100px"
+        android:layout_height="60dp"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/recordButton"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="35dp"
             android:layout_marginStart="10dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginTop="12.5dp"
             android:layout_weight="0.5"
+            android:background="@drawable/button"
             android:text="RECORD PPG/ECG" />
 
-        <TextureView
-            android:id="@+id/texture"
-            android:layout_width="80px"
-            android:layout_height="80px"
-            android:layout_marginTop="10px" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.75">
+            <TextureView
+                android:id="@+id/texture"
+                android:layout_width="100px"
+                android:layout_height="100px"
+                android:layout_centerInParent="true" />
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                ap:srcCompat="@drawable/ring"/>
+        </RelativeLayout>
 
         <Button
             android:id="@+id/flashButton"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="35dp"
             android:layout_marginEnd="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="12.5dp"
+            android:background="@drawable/button"
             android:layout_weight="0.5"
             android:text="FLASH ON" />
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/bpmPPG"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fontFamily="serif"
-        android:text="-"
-        android:textAlignment="center"
-        android:textSize="32sp" />
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/bpmPPG"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="serif"
+            android:paddingBottom="10dp"
+            android:layout_centerInParent="true"
+            android:textAlignment="center"
+            android:textSize="40sp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="serif"
+            android:textSize="16sp"
+            android:layout_centerInParent="true"
+            android:paddingTop="50dp"
+            android:text="bpm"
+            android:textAlignment="center"/>
+        <ProgressBar
+            android:id="@+id/spinner"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:paddingBottom="10dp"/>
+        <ProgressBar
+            android:id="@+id/loadBar"
+            android:layout_marginTop="20dp"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_gravity="center"
+            android:progressDrawable="@drawable/progress"
+            android:layout_centerInParent="true"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"/>
+    </RelativeLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -92,14 +137,13 @@
             android:id="@+id/ppgPlotView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            ap:backgroundColor="?attr/colorPrimary"
-            ap:domainOriginLineColor="?attr/colorPrimary"
-            ap:graphBackgroundColor="?attr/colorPrimary"
-            ap:gridBackgroundColor="?attr/colorPrimary"
-            ap:graphMarginBottom="100dp"
+            ap:backgroundColor="@color/ap_transparent"
+            ap:domainOriginLineColor="@color/ap_transparent"
+            ap:graphBackgroundColor="@color/ap_transparent"
+            ap:gridBackgroundColor="@color/ap_transparent"
+            ap:graphMarginBottom="50dp"
             ap:graphMarginLeft="0dp"
             ap:graphMarginRight="0dp"
-            ap:graphMarginTop="50dp"
             ap:graphWidth="-25dp"
             ap:layout_constraintBottom_toBottomOf="parent"
             ap:layout_constraintEnd_toEndOf="parent"
@@ -107,11 +151,12 @@
             ap:layout_constraintTop_toTopOf="parent"
             ap:legendAnchor="bottom_middle"
             ap:legendHeight="60dp"
+            ap:legendTextSize="14sp"
             ap:legendHorizontalPositioning="absolute_from_center"
             ap:legendVisible="true"
             ap:lineLabels="none"
-            ap:rangeLineColor="@color/ap_white"
-            ap:rangeOriginLineColor="@color/ap_white" />
+            ap:rangeLineColor="@color/ap_transparent"
+            ap:rangeOriginLineColor="@color/ap_transparent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

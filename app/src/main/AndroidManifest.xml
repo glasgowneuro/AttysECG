@@ -6,29 +6,29 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.FLASHLIGHT"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
-    <uses-feature android:name="android.hardware.camera.flash"/>
+    <uses-feature android:name="android.hardware.camera.flash" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher_attysecg"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        tools:ignore="GoogleAppIndexingWarning"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-
-        <activity android:name="tech.glasgowneuro.attysecg.AttysECG">
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+        tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".ppgHistory"></activity>
+        <activity android:name=".AttysECG">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name="tech.glasgowneuro.attysecg.PrefsActivity"
+            android:name=".PrefsActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
 
         <provider
