@@ -24,3 +24,19 @@ ECG app for [Attys](http://www.attys.tech)
 
 See also the subdirectory `ecg-plotting` how to use Python
 to plot the ECG or simply your web browser.
+
+# This (forked) version adds
+
+PPG heart-rate detection with your device camera, just navigate to menu > ppg analysis
+
+## Features
+* Realtime PPG plot of Y[U]V data
+* Momentary & Average heart-rate detection
+* History of recorded PPG data
+* PPG/ECG simultaneous recorder, outputs II, ppg raw, filter and matched data as well as threshold values
+* Framerate analyser for performance analysis and option to select 20, 24 or 30Hz sampling rate depending on device performance
+
+<p>
+  <img src="screenshots/ppg1.png" width="300">
+  <img src="screenshots/ppg2.png" width="300">
+</p>
