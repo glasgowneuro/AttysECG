@@ -35,7 +35,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.ProgressBar;
 
-import com.crashlytics.android.Crashlytics;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -724,7 +724,7 @@ public class AttysECG extends AppCompatActivity {
                             Intent i = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
                             startActivity(i);
                         } catch (Exception e) {
-                            Crashlytics.logException(e);
+                            FirebaseCrashlytics.getInstance().recordException(e);
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
