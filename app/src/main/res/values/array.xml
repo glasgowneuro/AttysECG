@@ -30,6 +30,17 @@
         <item>2</item>
     </string-array>
 
+    <string-array name="fpsOptions">
+        <item>20fps</item>
+        <item>24fps</item>
+        <item>30fps</item>
+    </string-array>
+    <string-array name="fpsValues">
+        <item>20</item>
+        <item>24</item>
+        <item>30</item>
+    </string-array>
+
     <string-array name="powerlineOptions">
         <item>50Hz</item>
         <item>60Hz</item>

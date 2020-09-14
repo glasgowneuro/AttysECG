@@ -59,4 +59,11 @@
         android:key="samplingrate"
         android:summary="Sampling rate the Attys is acquiring the data and transmitting it"
         android:title="Sampling rate" />
+    <ListPreference
+        android:defaultValue="24"
+        android:entries="@array/fpsOptions"
+        android:entryValues="@array/fpsValues"
+        android:key="fps"
+        android:summary="Frames per second for video (Higher values require more processing power)"
+        android:title="Camera FPS" />
 </PreferenceScreen>

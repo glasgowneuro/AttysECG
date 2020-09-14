@@ -35,6 +35,33 @@
         </menu>
     </item>
 
+    <item
+        android:title="PPG analysis"
+        app:showAsAction="collapseActionView">
+        <menu>
+            <item
+                app:showAsAction="never"
+                android:id="@+id/plotWindowPPG"
+                android:title="PPG plotter" />
+            <item
+                app:showAsAction="never"
+                android:id="@+id/ppgHistory"
+                android:title="PPG history" />
+            <item
+                app:showAsAction="never"
+                android:id="@+id/fpsAnalyser"
+                android:checked="true"
+                android:checkable="true"
+                android:title="FPS analyser"/>
+            <item
+                app:showAsAction="never"
+                android:id="@+id/thresholdAnalyser"
+                android:checked="false"
+                android:checkable="true"
+                android:title="Plot threshold"/>
+        </menu>
+    </item>
+
     <group android:checkableBehavior="all">
         <item
             app:showAsAction="ifRoom"

@@ -2,11 +2,15 @@ package tech.glasgowneuro.attysecg;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -21,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.util.Log;
+import android.util.Range;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -45,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -54,8 +60,16 @@ import uk.me.berndporr.iirj.Butterworth;
 import static java.lang.String.format;
 
 public class AttysECG extends AppCompatActivity {
-
     private static final String TAG = AttysECG.class.getSimpleName();
+
+    PPGPlotFragment ppgPlotFragment = null;
+    static String mCameraId;
+    static CameraManager mCameraManager;
+    private CameraCharacteristics characteristics;
+    private static final int REQUEST_CAMERA_PERMISSION = 1;
+
+    static Range<Integer>[] fpsRanges;
+    static Range<Integer> fpsFixed;
 
     // screen refresh rate
     private static final int REFRESH_IN_MS = 50;
@@ -76,6 +90,8 @@ public class AttysECG extends AppCompatActivity {
     private MenuItem menuItemshowAugmented = null;
     private MenuItem menuItemplotWindowVector = null;
     private MenuItem menuItemshowHRV = null;
+    private MenuItem menuItemfpsAnalyser = null;
+    private MenuItem menuItemthresholdAnalyser = null;
     private ProgressBar progress = null;
 
     private AttysComm attysComm = null;
@@ -132,6 +148,7 @@ public class AttysECG extends AppCompatActivity {
             ATTYS_SUBDIR);
 
     private AlertDialog alertDialog = null;
+    static float II_export;
 
     private BeepGenerator beepGenerator = null;
 
@@ -432,6 +449,8 @@ public class AttysECG extends AppCompatActivity {
                                 II = (float) iirNotch_II.filter((double) II);
                             }
 
+                            II_export = II;
+
                             float III = sample[AttysComm.INDEX_Analogue_channel_2];
                             thres = attysComm.getADCFullScaleRange(1) * 0.9F;
                             if (Math.abs(III) > thres) {
@@ -474,6 +493,11 @@ public class AttysECG extends AppCompatActivity {
                             }
 
                             dataRecorder.saveData(I, II, III, aVR, aVL, aVF);
+
+                            /**
+                             * Add Einthoven II data to Mustafa's buffer here
+                             */
+                            if(PPGPlotFragment.isRecording) PPGPlotFragment.ECG_II_data.add(II);
 
                             int nRealChN = 0;
 
@@ -654,6 +678,26 @@ public class AttysECG extends AppCompatActivity {
         hrvView.setVisibility(View.INVISIBLE);
         leadsView = findViewById(R.id.leadsview);
 
+        /**
+         * Mustafa's stuff
+         */
+        mCameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+
+        try {
+            mCameraId = mCameraManager.getCameraIdList()[0];
+            characteristics = mCameraManager.getCameraCharacteristics(mCameraId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        fpsRanges = characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+        // fpsFixed = Range.create(24, 24); // Set in preferences
+        Log.i("FPS Ranges", Arrays.toString(fpsRanges));
+
+        /**
+         * END of Mustafa's stuff
+         */
+
         iirNotch_II = new Butterworth();
         iirNotch_III = new Butterworth();
         highpass_II = new Highpass();
@@ -693,7 +737,6 @@ public class AttysECG extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         updatePlotTask.resetAnalysis();
-
     }
 
     private void r_peak_detected(float bpm) {
@@ -953,8 +996,46 @@ public class AttysECG extends AppCompatActivity {
             Log.d(TAG, "Write permission to external memory granted");
             createSubDir();
         }
+        /**
+         * CAMERA related
+         */
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults.length != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(AttysECG.this, "ERROR: Camera permissions not granted", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 
+    // Permissions
+    void requestCameraPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+            new AlertDialog.Builder(AttysECG.this)
+                    .setMessage("R string request permission")
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(AttysECG.this,
+                                    new String[]{Manifest.permission.CAMERA},
+                                    REQUEST_CAMERA_PERMISSION);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+
+                                }
+                            })
+                    .create();
+
+        } else {
+            ActivityCompat.requestPermissions(AttysECG.this, new String[]{Manifest.permission.CAMERA},
+                    REQUEST_CAMERA_PERMISSION);
+        }
+    }
 
     private void enterFilename() {
 
@@ -1095,6 +1176,8 @@ public class AttysECG extends AppCompatActivity {
         menuItemshowAugmented = menu.findItem(R.id.showAugmented);
         menuItemplotWindowVector = menu.findItem(R.id.plotWindowVector);
         menuItemshowHRV = menu.findItem(R.id.showHRV);
+        menuItemfpsAnalyser = menu.findItem(R.id.fpsAnalyser);
+        menuItemthresholdAnalyser = menu.findItem(R.id.thresholdAnalyser);
 
         adjustMenu();
 
@@ -1103,6 +1186,21 @@ public class AttysECG extends AppCompatActivity {
             openWindowBPM();
         }
 
+        if (prefs.getBoolean("fpsAnalyser", true)) {
+            menuItemfpsAnalyser.setChecked(true);
+            PPGPlotFragment.fpsAnalyserON = true;
+        } else {
+            menuItemfpsAnalyser.setChecked(false);
+            PPGPlotFragment.fpsAnalyserON = false;
+        }
+
+        if (prefs.getBoolean("thresholdAnalyser", true)) {
+            menuItemthresholdAnalyser.setChecked(true);
+            PPGPlotFragment.thresholdAnalyserON = true;
+        } else {
+            menuItemthresholdAnalyser.setChecked(false);
+            PPGPlotFragment.thresholdAnalyserON = false;
+        }
         return true;
     }
 
@@ -1117,7 +1215,18 @@ public class AttysECG extends AppCompatActivity {
         menuItemshowHRV.setChecked(showHRV);
     }
 
-    private void openWindowBPM() {
+    private void openWindowPPG() {
+        deletePlotWindow();
+        ppgPlotFragment = new PPGPlotFragment();
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_plot_container,
+                        ppgPlotFragment,
+                        "ppgPlotFragment")
+                .commitAllowingStateLoss();
+        showPlotFragment();
+    }
+
+    public void openWindowBPM() {
         deletePlotWindow();
         // Create a new Fragment to be placed in the activity layout
         heartratePlotFragment = new HeartratePlotFragment();
@@ -1136,6 +1245,8 @@ public class AttysECG extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         switch (item.getItemId()) {
 
@@ -1233,6 +1344,46 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.enterFilename:
                 enterFilename();
+                return true;
+
+            case R.id.plotWindowPPG:
+                openWindowPPG();
+                return true;
+
+            case R.id.ppgHistory:
+                Intent historyActivity = new Intent(getApplicationContext(), ppgHistory.class);
+                startActivity(historyActivity);
+
+            case R.id.fpsAnalyser:
+                if (item.isChecked()) {
+                    PPGPlotFragment.fpsAnalyserON = false;
+                    item.setChecked(false);
+                    prefs.edit().putBoolean("fpsAnalyser", false).apply();
+                    if (PPGPlotFragment.fps != null) {
+                        PPGPlotFragment.fps.setEnabled(false);
+                        PPGPlotFragment.fps.setTextColor(Color.TRANSPARENT);
+                    }
+                } else {
+                    PPGPlotFragment.fpsAnalyserON = true;
+                    item.setChecked(true);
+                    prefs.edit().putBoolean("fpsAnalyser", true).apply();
+                    if (PPGPlotFragment.fps != null) {
+                        PPGPlotFragment.fps.setEnabled(true);
+                        PPGPlotFragment.fps.setTextColor(Color.parseColor("#555555"));
+                    }
+                }
+                return true;
+
+            case R.id.thresholdAnalyser:
+                if (item.isChecked()) {
+                    PPGPlotFragment.thresholdAnalyserON = false;
+                    item.setChecked(false);
+                    prefs.edit().putBoolean("thresholdAnalyser", false).apply();
+                } else {
+                    PPGPlotFragment.thresholdAnalyserON = true;
+                    item.setChecked(true);
+                    prefs.edit().putBoolean("thresholdAnalyser", true).apply();
+                }
                 return true;
 
             case R.id.plotWindowBPM:
@@ -1414,6 +1565,9 @@ public class AttysECG extends AppCompatActivity {
         } else {
             leadsView.setVisibility(View.INVISIBLE);
         }
+
+        int cameraFPS = Integer.parseInt(prefs.getString("fps", "24"));
+        fpsFixed = Range.create(cameraFPS, cameraFPS);
     }
 
 }
