@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/AttysECG.iml" filepath="$PROJECT_DIR$/AttysECG.iml" group="AttysECG" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="AttysECG/app" />
-      <module fileurl="file://$PROJECT_DIR$/firj-release/firj-release.iml" filepath="$PROJECT_DIR$/firj-release/firj-release.iml" group="AttysECG/firj-release" />
+      <module fileurl="file://$PROJECT_DIR$/AttysECG.iml" filepath="$PROJECT_DIR$/AttysECG.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AttysECG.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AttysECG.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/firj-release/AttysECG.firj-release.iml" filepath="$PROJECT_DIR$/.idea/modules/firj-release/AttysECG.firj-release.iml" />
     </modules>
   </component>
 </project>
