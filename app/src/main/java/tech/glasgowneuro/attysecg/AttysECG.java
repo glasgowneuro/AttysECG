@@ -79,7 +79,6 @@ public class AttysECG extends AppCompatActivity {
     private ProgressBar progress = null;
 
     private AttysComm attysComm = null;
-    private BluetoothDevice btAttysDevice = null;
     private byte samplingRate = AttysComm.ADC_RATE_250HZ;
 
     private boolean leadsOff = false;
@@ -748,12 +747,12 @@ public class AttysECG extends AppCompatActivity {
 
     public void startDAQ() {
 
-        btAttysDevice = AttysComm.findAttysBtDevice();
+        BluetoothDevice btAttysDevice = AttysComm.findAttysBtDevice();
         if (btAttysDevice == null) {
             noAttysFoundAlert();
         }
 
-        attysComm = new AttysComm(btAttysDevice);
+        attysComm = new AttysComm();
         attysComm.registerMessageListener(messageListener);
 
         getsetAttysPrefs();
