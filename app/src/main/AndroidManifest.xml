@@ -4,17 +4,15 @@
     package="tech.glasgowneuro.attysecg">
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
     <application
-        android:requestLegacyExternalStorage="true"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher_attysecg"
         android:label="@string/app_name"
         android:supportsRtl="true"
         tools:ignore="GoogleAppIndexingWarning"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
 
         <activity android:name="tech.glasgowneuro.attysecg.AttysECG">
             <intent-filter>
@@ -24,8 +22,7 @@
         </activity>
 
         <activity
-            android:name="tech.glasgowneuro.attysecg.PrefsActivity"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
+            android:name="tech.glasgowneuro.attysecg.PrefsActivity"/>
 
         <provider
             android:name="androidx.core.content.FileProvider"

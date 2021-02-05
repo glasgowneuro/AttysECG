@@ -9,8 +9,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -126,10 +125,6 @@ public class AttysECG extends AppCompatActivity {
     private String dataFilename = null;
     private byte dataSeparator = 0;
 
-    private static String ATTYS_SUBDIR = "attys";
-    public static File ATTYSDIR = new File(Environment.getExternalStorageDirectory().getPath(),
-            ATTYS_SUBDIR);
-
     private AlertDialog alertDialog = null;
 
     private BeepGenerator beepGenerator = null;
@@ -144,7 +139,7 @@ public class AttysECG extends AppCompatActivity {
 
         // starts the recording
         private HRRecorder(String filename) throws IOException {
-            fullpath = new File(AttysECG.ATTYSDIR, filename);
+            fullpath = new File(getBaseContext().getExternalFilesDir(null), filename);
             textdataFileStream = new PrintWriter(new FileOutputStream(fullpath, true));
         }
 
@@ -166,10 +161,6 @@ public class AttysECG extends AppCompatActivity {
             textdataFileStream.flush();
             textdataFileStream.close();
             textdataFileStream = null;
-            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            Uri contentUri = Uri.fromFile(fullpath);
-            mediaScanIntent.setData(contentUri);
-            sendBroadcast(mediaScanIntent);
         }
     }
 
@@ -213,12 +204,6 @@ public class AttysECG extends AppCompatActivity {
                     messageListener.haveMessage(AttysComm.MESSAGE_STOPPED_RECORDING);
                 }
                 textdataFileStream = null;
-                if (textdataFile != null) {
-                    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                    Uri contentUri = Uri.fromFile(textdataFile);
-                    mediaScanIntent.setData(contentUri);
-                    sendBroadcast(mediaScanIntent);
-                }
                 textdataFile = null;
             }
         }
@@ -588,17 +573,9 @@ public class AttysECG extends AppCompatActivity {
         startActivity(startMain);
     }
 
-    public static void createSubDir() {
-        if (!ATTYSDIR.exists()) {
-            ATTYSDIR.mkdirs();
-        }
-    }
-
-
     private void startRRrec() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (prefs.getBoolean("hrv_logging", false)) {
-            AttysECG.createSubDir();
             if (null == hrRecorder) {
                 final String filename = prefs.getString(
                         PrefsActivity.HRV_KEY_FILENAME,
@@ -638,8 +615,6 @@ public class AttysECG extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        requestPermissions();
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
 
@@ -922,42 +897,8 @@ public class AttysECG extends AppCompatActivity {
 
     }
 
-    private void requestPermissions() {
-        String[] PERMISSIONS_STORAGE = {
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-        };
-
-        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                    this,
-                    PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
-        }
-    }
-
-
-    /**
-     * Called after permission has been granted
-     */
-    @Override
-    final public void onRequestPermissionsResult(int requestCode,
-                                                 @NonNull String[] permissions,
-                                                 @NonNull int[] grantResults) {
-        Log.v(TAG, "External storage permission results: " + requestCode);
-        if (REQUEST_EXTERNAL_STORAGE != requestCode) return;
-        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Write permission to external memory granted");
-            createSubDir();
-        }
-    }
-
 
     private void enterFilename() {
-
-        createSubDir();
 
         final EditText filenameEditText = new EditText(this);
         filenameEditText.setSingleLine(true);
@@ -1016,7 +957,7 @@ public class AttysECG extends AppCompatActivity {
         }
 
         final List<String> files = new ArrayList<>();
-        final String[] list = ATTYSDIR.list();
+        final String[] list = getBaseContext().getExternalFilesDir(null).list();
         if (list != null) {
             for (String file : list) {
                 if (file != null) {
@@ -1053,7 +994,7 @@ public class AttysECG extends AppCompatActivity {
                             for (int i = 0; i < listview.getCount(); i++) {
                                 if (checked.get(i)) {
                                     String filename = list[i];
-                                    File fp = new File(ATTYSDIR, filename);
+                                    File fp = new File(getBaseContext().getExternalFilesDir(null), filename);
                                     final Uri u = FileProvider.getUriForFile(
                                             getBaseContext(),
                                             getApplicationContext().getPackageName() + ".fileprovider",
@@ -1147,15 +1088,9 @@ public class AttysECG extends AppCompatActivity {
                 if (dataRecorder.isRecording()) {
                     File file = dataRecorder.getFile();
                     dataRecorder.stopRec();
-                    if (file != null) {
-                        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                        Uri contentUri = Uri.fromFile(file);
-                        mediaScanIntent.setData(contentUri);
-                        sendBroadcast(mediaScanIntent);
-                    }
                 } else {
                     if (dataFilename != null) {
-                        File file = new File(ATTYSDIR, dataFilename.trim());
+                        File file = new File(getBaseContext().getExternalFilesDir(null), dataFilename.trim());
                         dataRecorder.setDataSeparator(dataSeparator);
                         if (file.exists()) {
                             Toast.makeText(getApplicationContext(),

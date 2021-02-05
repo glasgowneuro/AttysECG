@@ -2,7 +2,7 @@ package tech.glasgowneuro.attysecg;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
@@ -44,24 +44,5 @@ public class PrefsActivity extends AppCompatActivity {
                 }
             }
         }
-
-        @Override
-        public void onPause() {
-            super.onPause();
-            fixPath();
-        }
-
-        @Override
-        public void onStop() {
-            super.onStop();
-            fixPath();
-        }
-
-        @Override
-        public void onDestroy() {
-            super.onDestroy();
-            fixPath();
-        }
     }
-
 }
