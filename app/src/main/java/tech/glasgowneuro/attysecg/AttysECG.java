@@ -97,11 +97,11 @@ public class AttysECG extends AppCompatActivity {
     private Highpass highpass_II = null;
     private Highpass highpass_III = null;
     private float gain = 500;
-    private float[] gain_settings = {250, 500, 1000};
+    final private float[] gain_settings = {250, 500, 1000};
     private Butterworth iirNotch_II = null;
     private Butterworth iirNotch_III = null;
-    private double notchBW = 2.5; // Hz
-    private int notchOrder = 2;
+    final private double notchBW = 2.5; // Hz
+    final private int notchOrder = 2;
     private float powerlineHz = 50;
     private boolean full2chECGrecording = true;
 

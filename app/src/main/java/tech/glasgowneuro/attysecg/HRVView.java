@@ -28,7 +28,7 @@ public class HRVView extends View {
     private ArrayList<Float> HRVValues = null;
     private int[] ringsColours;
     private float[] ringsStops;
-    private int alphas[];
+    private int[] alphas;
     private float maxCircleRadius;
     private final float HRVDecayConst = 1.0F;
 

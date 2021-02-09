@@ -41,22 +41,16 @@ public class ECGPlotFragment extends Fragment {
 
     private XYPlot pqrstPlot = null;
 
-    private PanZoom panZoom = null;
-
-    private Spinner maxYspinner = null;
-
     private Spinner leadSpinner = null;
     private boolean offerAllChannels = true;
 
-    private Button resetButton = null;
-
     private ToggleButton recordButton = null;
 
-    private static String[] LEAD = {"I", "II", "III", "aVR", "aVL", "aVF"};
+    private static final String[] LEAD = {"I", "II", "III", "aVR", "aVL", "aVF"};
 
-    private float[] leadsBuffer = new float[6];
+    private final float[] leadsBuffer = new float[6];
 
-    private static String[] MAXY = {"0.2 mV", "0.45 mV", "0.9 mV", "1.35 mV", "1.8 mV", "2.25 mV"};
+    private static final String[] MAXY = {"0.2 mV", "0.45 mV", "0.9 mV", "1.35 mV", "1.8 mV", "2.25 mV"};
 
     View view = null;
 
@@ -77,7 +71,7 @@ public class ECGPlotFragment extends Fragment {
     private int inPtr = 0;
     private int rPtr = -1;
     private int rCtr = 0;
-    private float displayTime = 0.45F*2;
+    private final float displayTime = 0.45F*2;
     private int nSamplesDispl = 1000;
 
     public void setSamplingRate(float _samplingrate) {
@@ -118,7 +112,7 @@ public class ECGPlotFragment extends Fragment {
             }
         }
 
-        panZoom = PanZoom.attach(pqrstPlot, PanZoom.Pan.BOTH, PanZoom.Zoom.STRETCH_BOTH);
+        PanZoom panZoom = PanZoom.attach(pqrstPlot, PanZoom.Pan.BOTH, PanZoom.Zoom.STRETCH_BOTH);
         panZoom.setEnabled(true);
 
         pqrstSeries = new SimpleXYSeries("");
@@ -183,7 +177,7 @@ public class ECGPlotFragment extends Fragment {
         recordButton = view.findViewById(R.id.ecgplotfragment_record);
         recordButton.setChecked(true);
 
-        resetButton = view.findViewById(R.id.ecgplotfragment_reset);
+        Button resetButton = view.findViewById(R.id.ecgplotfragment_reset);
         resetButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 setScale();
@@ -214,7 +208,7 @@ public class ECGPlotFragment extends Fragment {
         leadSpinner.setSelection(1);
         leadSpinner.setEnabled(offerAllChannels);
 
-        maxYspinner = (Spinner) view.findViewById(R.id.ecgplotfragment_maxy);
+        Spinner maxYspinner = (Spinner) view.findViewById(R.id.ecgplotfragment_maxy);
         ArrayAdapter<String> adapterMaxY = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_spinner_dropdown_item,
                 MAXY);

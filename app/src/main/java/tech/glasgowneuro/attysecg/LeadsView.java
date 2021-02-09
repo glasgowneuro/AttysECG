@@ -9,10 +9,10 @@ import android.view.View;
 
 public class LeadsView extends View {
 
-    private Paint textOKPaint;
-    private Paint textOffPaint;
-    private Paint legPaint;
-    private Rect bounds = new Rect();
+    private final Paint textOKPaint;
+    private final Paint textOffPaint;
+    private final Paint legPaint;
+    private final Rect bounds = new Rect();
 
     static final String right = "-,R";
     static final String left = "L,GND";
@@ -79,7 +79,7 @@ public class LeadsView extends View {
         } else {
             okPaint = textOffPaint;
         }
-        canvas.drawText(right, x0 - dy - bounds.width() / 2, dy * 3 + bounds.height(), okPaint);
+        canvas.drawText(right, x0 - dy - (float)bounds.width() / 2, dy * 3 + bounds.height(), okPaint);
 
         if (lOK) {
             okPaint = textOKPaint;
@@ -97,7 +97,7 @@ public class LeadsView extends View {
         canvas.drawText(foot, x0+dy, dy*5, okPaint);
 
         // Draw the head
-        canvas.drawCircle(x0, dy, dy/2, legPaint);
+        canvas.drawCircle(x0, dy, (float)dy/2, legPaint);
     }
 
 

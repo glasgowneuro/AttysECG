@@ -18,6 +18,9 @@ android {
             manifestPlaceholders = [crashlyticsCollection: "false"]
         }
         release {
+            ndk {
+                debugSymbolLevel = 'SYMBOL_TABLE'
+            }
             minifyEnabled false
             manifestPlaceholders = [crashlyticsCollection: "true"]
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

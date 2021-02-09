@@ -32,10 +32,6 @@ public class VectorPlotFragment extends Fragment {
 
     private XYPlot vectorPlot = null;
 
-    private PanZoom panZoom = null;
-
-    private View view = null;
-
     void setHistorySize(int historySize) {
         history_size = historySize;
     }
@@ -68,7 +64,7 @@ public class VectorPlotFragment extends Fragment {
             return null;
         }
 
-        view = inflater.inflate(R.layout.vectorplotfragment, container, false);
+        View view = inflater.inflate(R.layout.vectorplotfragment, container, false);
         if (view == null) {
             if (Log.isLoggable(TAG, Log.ERROR)) {
                 Log.e(TAG, "view == NULL!");
@@ -98,7 +94,7 @@ public class VectorPlotFragment extends Fragment {
         vectorPlot.getGraph().setDomainGridLinePaint(paint);
         vectorPlot.getGraph().setRangeGridLinePaint(paint);
 
-        panZoom = PanZoom.attach(vectorPlot, PanZoom.Pan.BOTH, PanZoom.Zoom.SCALE);
+        PanZoom panZoom = PanZoom.attach(vectorPlot, PanZoom.Pan.BOTH, PanZoom.Zoom.SCALE);
         panZoom.setEnabled(true);
 
         return view;

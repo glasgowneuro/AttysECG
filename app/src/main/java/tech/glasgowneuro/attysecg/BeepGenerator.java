@@ -12,7 +12,6 @@ public class BeepGenerator {
 
     // audio
     static private AudioTrack sound;
-    private byte[] rawAudio;
     public static final int audioSamplingRate = 44100;
     public static final int nAudioSamples = audioSamplingRate / 20; // 50ms
     public static double f = 1000; // Hz
@@ -24,7 +23,7 @@ public class BeepGenerator {
                 AudioFormat.ENCODING_PCM_8BIT,
                 nAudioSamples,
                 AudioTrack.MODE_STATIC);
-        rawAudio = new byte[nAudioSamples];
+        byte[] rawAudio = new byte[nAudioSamples];
         for (int i = 0; i < nAudioSamples; i++) {
             double s = Math.sin(i*2.0*Math.PI*f/((double)audioSamplingRate));
             double a = ((double)i)*0.01;
@@ -45,7 +44,7 @@ public class BeepGenerator {
             sound.flush();
             sound.reloadStaticData();
             sound.play();
-        } catch (IllegalStateException e) {
+        } catch (IllegalStateException ignored) {
         }
     }
 

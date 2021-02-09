@@ -32,7 +32,7 @@ import java.util.Locale;
 
 public class HeartratePlotFragment extends Fragment {
 
-    private String TAG = "HeartratePlotFragment";
+    private final String TAG = "HeartratePlotFragment";
 
     private static final float MAXBPM = 200;
     private static final int HISTORY_SIZE = 60;
@@ -198,8 +198,8 @@ public class HeartratePlotFragment extends Fragment {
                 rmsHR = Math.sqrt(sum / n);
             }
             if (avgHR > 0) {
-                Double a = rmsHR / avgHR;
-                if (!a.isInfinite() && !a.isNaN()) {
+                double a = rmsHR / avgHR;
+                if (!Double.isInfinite(a) && !Double.isNaN(a)) {
                     nrmssd = a;
                 }
             }
