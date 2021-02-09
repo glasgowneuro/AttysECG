@@ -1,8 +1,8 @@
 package tech.glasgowneuro.attysecg;
 
+import android.content.Context;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.WindowManager;
 
 /**
  * Calculates the screensize and determines if it's a mobile or not
@@ -10,40 +10,37 @@ import android.view.WindowManager;
 
 public class Screensize {
 
+    final String TAG="Screensize";
 
-    private final String TAG="Screensize";
-
-    Screensize(WindowManager windowManager) {
-        windowManager.getDefaultDisplay().getMetrics(metrics);
+    public Screensize(Context context) {
+        metrics = context.getResources().getDisplayMetrics();
         width = metrics.widthPixels / metrics.xdpi;
         height = metrics.heightPixels / metrics.ydpi;
-        diagonal = (float)(Math.sqrt(width*width + height*height));
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Log.d(TAG, "screensize=" + diagonal + "in");
-        }
+        diagonal = (float) (Math.sqrt(width * width + height * height));
+        Log.d(TAG, "screensize=" + diagonal + "in");
     }
 
-    private DisplayMetrics metrics = new DisplayMetrics();
+    private final DisplayMetrics metrics;
 
     private final double width;
     private final double height;
     private final float diagonal;
 
-    public boolean isMobile() {
+    final public boolean isMobile() {
         return (diagonal < 5);
     }
 
-    public boolean isTablet() {
+    final public boolean isTablet() {
         return !(diagonal < 5);
     }
 
-    public float getSizeInInch() {
+    final public float getSizeInInch() {
         return diagonal;
     }
 
-    public double getWidthInInch() { return width;}
-    public double getHeightInInch() { return height;}
+    final public double getWidthInInch() { return width;}
+    final public double getHeightInInch() { return height;}
 
-    public int getWidthInPixels() { return metrics.widthPixels;}
-    public int getHeightInPixels() { return metrics.heightPixels;}
+    final public int getWidthInPixels() { return metrics.widthPixels;}
+    final public int getHeightInPixels() { return metrics.heightPixels;}
 }
