@@ -10,12 +10,21 @@ android {
         applicationId "tech.glasgowneuro.attysecg"
         minSdkVersion 24
         targetSdkVersion 30
+<<<<<<< HEAD
         versionCode 55
         versionName "1.6.2"
+=======
+        versionCode 54
+        versionName "1.6.1"
+>>>>>>> 221611d3009ebc9551b18f1d23992ddd94597ad9
     }
     buildTypes {
+        debug {
+            manifestPlaceholders = [crashlyticsCollection: "false"]
+        }
         release {
             minifyEnabled false
+            manifestPlaceholders = [crashlyticsCollection: "true"]
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

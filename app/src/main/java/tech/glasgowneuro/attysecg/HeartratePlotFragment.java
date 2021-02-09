@@ -86,7 +86,7 @@ public class HeartratePlotFragment extends Fragment {
         bpmPlot.setRangeLabel("");
 
         if (getActivity() != null) {
-            Screensize screensize = new Screensize(getActivity().getWindowManager());
+            Screensize screensize = new Screensize(getContext());
 
             if (screensize.isTablet()) {
                 bpmPlot.setDomainStep(StepMode.INCREMENT_BY_VAL, 25);
@@ -107,7 +107,7 @@ public class HeartratePlotFragment extends Fragment {
         bpmAutoscaleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (getActivity() == null) return;
-                Screensize screensize = new Screensize(getActivity().getWindowManager());
+                Screensize screensize = new Screensize(getContext());
                 if (isChecked) {
                     bpmPlot.setRangeStep(StepMode.INCREMENT_BY_VAL, 20);
                     bpmPlot.setRangeBoundaries(0, 200, BoundaryMode.FIXED);

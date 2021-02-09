@@ -1038,7 +1038,7 @@ public class AttysECG extends AppCompatActivity {
                 .show();
 
         ViewGroup.LayoutParams layoutParams = listview.getLayoutParams();
-        Screensize screensize = new Screensize(getWindowManager());
+        Screensize screensize = new Screensize(getBaseContext());
         layoutParams.height = screensize.getHeightInPixels() / 2;
         listview.setLayoutParams(layoutParams);
 
