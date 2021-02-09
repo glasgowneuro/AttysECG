@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import androidx.preference.PreferenceManager;
@@ -19,6 +20,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
@@ -75,6 +78,13 @@ public class AttysECG extends AppCompatActivity {
     private MenuItem menuItemshowAugmented = null;
     private MenuItem menuItemplotWindowVector = null;
     private MenuItem menuItemshowHRV = null;
+
+    MenuItem menuItemPref = null;
+    MenuItem menuItemEnterFilename = null;
+    MenuItem menuItemRec = null;
+    MenuItem menuItemBrowser = null;
+    MenuItem menuItemSource = null;
+
     private ProgressBar progress = null;
 
     private AttysComm attysComm = null;
@@ -87,11 +97,11 @@ public class AttysECG extends AppCompatActivity {
     private Highpass highpass_II = null;
     private Highpass highpass_III = null;
     private float gain = 500;
-    private float[] gain_settings = {250, 500, 1000};
+    final private float[] gain_settings = {250, 500, 1000};
     private Butterworth iirNotch_II = null;
     private Butterworth iirNotch_III = null;
-    private double notchBW = 2.5; // Hz
-    private int notchOrder = 2;
+    final private double notchBW = 2.5; // Hz
+    final private int notchOrder = 2;
     private float powerlineHz = 50;
     private boolean full2chECGrecording = true;
 
@@ -663,6 +673,13 @@ public class AttysECG extends AppCompatActivity {
         }
     }
 
+    private void setRecColour(int c) {
+        if (null == menuItemRec) return;
+        SpannableString s = new SpannableString(menuItemRec.getTitle());
+        s.setSpan(new ForegroundColorSpan(c), 0, s.length(), 0);
+        menuItemRec.setTitle(s);
+    }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -926,6 +943,7 @@ public class AttysECG extends AppCompatActivity {
                                     dataFilename = dataFilename + ".tsv";
                             }
                         }
+                        setRecColour(Color.GREEN);
                         Toast.makeText(getApplicationContext(),
                                 "Press rec to record to '" + dataFilename + "'",
                                 Toast.LENGTH_SHORT).show();
@@ -933,6 +951,7 @@ public class AttysECG extends AppCompatActivity {
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
+                        dataFilename = null;
                     }
                 })
                 .show();
@@ -1036,6 +1055,14 @@ public class AttysECG extends AppCompatActivity {
         menuItemplotWindowVector = menu.findItem(R.id.plotWindowVector);
         menuItemshowHRV = menu.findItem(R.id.showHRV);
 
+        menuItemEnterFilename = menu.findItem(R.id.enterFilename);
+        menuItemPref = menu.findItem(R.id.preferences);
+        menuItemRec = menu.findItem(R.id.toggleRec);
+        menuItemBrowser = menu.findItem(R.id.filebrowser);
+        menuItemSource = menu.findItem(R.id.sourcecode);
+
+        setRecColour(Color.GRAY);
+
         adjustMenu();
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -1044,6 +1071,13 @@ public class AttysECG extends AppCompatActivity {
         }
 
         return true;
+    }
+
+    private void enableMenuitems(boolean doit) {
+        menuItemPref.setEnabled(doit);
+        menuItemEnterFilename.setEnabled(doit);
+        menuItemSource.setEnabled(doit);
+        menuItemBrowser.setEnabled(doit);
     }
 
     private void toggleShowHRV() {
@@ -1086,8 +1120,9 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.toggleRec:
                 if (dataRecorder.isRecording()) {
-                    File file = dataRecorder.getFile();
                     dataRecorder.stopRec();
+                    setRecColour(Color.GRAY);
+                    enableMenuitems(true);
                 } else {
                     if (dataFilename != null) {
                         File file = new File(getBaseContext().getExternalFilesDir(null), dataFilename.trim());
@@ -1106,13 +1141,17 @@ public class AttysECG extends AppCompatActivity {
                             return true;
                         }
                         if (dataRecorder.isRecording()) {
+                            setRecColour(Color.RED);
+                            enableMenuitems(false);
                             if (Log.isLoggable(TAG, Log.DEBUG)) {
                                 Log.d(TAG, "Saving to " + file.getAbsolutePath());
                             }
                         }
                     } else {
+                        setRecColour(Color.GRAY);
                         Toast.makeText(getApplicationContext(),
                                 "To record enter a filename first", Toast.LENGTH_SHORT).show();
+                        enableMenuitems(true);
                     }
                 }
                 return true;

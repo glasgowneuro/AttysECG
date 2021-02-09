@@ -24,8 +24,8 @@ public class InfoView extends SurfaceView implements SurfaceHolder.Callback {
 
     static private SurfaceHolder holder = null;
     static private Canvas canvas = null;
-    static private Paint paintLarge = new Paint();
-    static private Paint paintSmall = new Paint();
+    static private final Paint paintLarge = new Paint();
+    static private final Paint paintSmall = new Paint();
 
     static private int textHeight = 0;
 
@@ -110,7 +110,7 @@ public class InfoView extends SurfaceView implements SurfaceHolder.Callback {
             if (holder == null) return;
             try {
                 holder.unlockCanvasAndPost(canvas);
-            } catch (Exception e) {}
+            } catch (Exception ignored) {}
             canvas = null;
             textHeight = y2 + yLarge;
         }

@@ -27,11 +27,11 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
     static Paint paintYCoord = new Paint();
     static Paint paintLabel = new Paint();
     static Canvas canvas = null;
-    static private int gap = 10;
-    static private int xtic = 250;
+    static private final int gap = 10;
+    static private final int xtic = 250;
     static private float[] yZero = null;
     static private float yHeight = 0;
-    static private String TAG = "RealtimePlotView";
+    static private final String TAG = "RealtimePlotView";
 
     public interface TouchEventListener {
         void touchedChannel(int chNo);
@@ -123,7 +123,7 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
             if (canvas != null) {
                 try {
                     holder.unlockCanvasAndPost(canvas);
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
                 canvas = null;
             }
