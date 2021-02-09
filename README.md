@@ -16,9 +16,10 @@ ECG app for [Attys](http://www.attys.tech)
 
 ![alt tag](screenshots/ecg-inspector-04.png)
 
-## Link to Google Play Store
+## Install from Google Play
 
 [https://play.google.com/store/apps/details?id=tech.glasgowneuro.attysecg]
+![alt tag](google_play_en_badge_web_generic.png)
 
 ## Plot and inspect the recorded ECGs
 
