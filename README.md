@@ -22,5 +22,9 @@ ECG app for [Attys](http://www.attys.tech)
 
 ## Plot and inspect the recorded ECGs
 
+Go to [https://glasgowneuro.github.io/AttysECG/] an drop a recording on it.
+
+![alt tag](plotter.png)
+ 
 See also the subdirectory `ecg-plotting` how to use Python
-to plot the ECG or simply your web browser.
+to plot the ECG.
