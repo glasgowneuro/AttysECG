@@ -1,0 +1,32 @@
+html *
+{
+   font-family: Arial
+}
+
+a {
+    text-decoration: none;
+}
+
+#drop_file_zone {
+    background-color: #EEE; 
+    border: #999 5px dashed;
+    width: 80%; 
+    height: 150px;
+    padding: 8px;
+    font-size: 18px;
+}
+#drag_upload_file {
+  width:50%;
+  margin:0 auto;
+}
+#drag_upload_file p {
+  text-align: center;
+}
+#drag_upload_file #selectfile {
+  display: none;
+}
+
+.dygraph-ylabel { font-size: 18px; }
+
+#filename { font-size: 24px;  padding: 8px;}
+
