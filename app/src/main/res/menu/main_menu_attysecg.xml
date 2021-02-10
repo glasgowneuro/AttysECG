@@ -88,7 +88,7 @@
 
     <item
         android:id="@+id/sourcecode"
-        android:title="Source code"
+        android:title="Online resources"
         app:showAsAction="never" />
 
 </menu>
