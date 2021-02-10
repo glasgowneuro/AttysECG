@@ -18,9 +18,3 @@ by simply using the print option of your web browser.
   - Drop a .tsv file into the drag/drop zone or browse for the .tsv file.
 
 Try it out with the sample ecg provided here on github.
-
-## Online version
-
-An online version is available here: https://www.attys.tech/plot-ecg/
-
-![alt tag](screenshot.png)
