@@ -13,7 +13,7 @@
         app:showAsAction="always" />
 
     <item android:title="ECG analysis"
-        app:showAsAction="collapseActionView">
+        app:showAsAction="collapseActionView|ifRoom">
         <menu>
             <item
                 app:showAsAction="never"

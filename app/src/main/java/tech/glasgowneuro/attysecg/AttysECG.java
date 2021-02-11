@@ -204,6 +204,12 @@ public class AttysECG extends AppCompatActivity {
                     messageListener.haveMessage(AttysComm.MESSAGE_STOPPED_RECORDING);
                 }
                 textdataFileStream = null;
+                if (textdataFile != null) {
+                    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    Uri contentUri = Uri.fromFile(textdataFile);
+                    mediaScanIntent.setData(contentUri);
+                    sendBroadcast(mediaScanIntent);
+                }
                 textdataFile = null;
             }
         }
@@ -950,21 +956,6 @@ public class AttysECG extends AppCompatActivity {
 
     private void shareData() {
 
-        final int REQUEST_EXTERNAL_STORAGE = 1;
-        String[] PERMISSIONS_STORAGE = {
-                Manifest.permission.READ_EXTERNAL_STORAGE
-        };
-
-        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                    this,
-                    PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
-        }
-
         final List<String> files = new ArrayList<>();
         final String[] list = getBaseContext().getExternalFilesDir(null).list();
         if (list != null) {
@@ -1009,9 +1000,7 @@ public class AttysECG extends AppCompatActivity {
                                             getApplicationContext().getPackageName() + ".fileprovider",
                                             fp);
                                     files.add(u);
-                                    if (Log.isLoggable(TAG, Log.DEBUG)) {
-                                        Log.d(TAG, "filename=" + filename);
-                                    }
+                                    Log.d(TAG, "filename=" + filename);
                                 }
                             }
                         }
