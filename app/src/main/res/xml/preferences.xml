@@ -34,12 +34,12 @@
         android:summary="Full scale range in Volts"
         android:title="ADC range" />
     <ListPreference
-        android:defaultValue="2"
+        android:defaultValue="0"
         android:entries="@array/textDataFileSeparatorOptions"
         android:entryValues="@array/textDataFileSeparatorValues"
         android:key="data_separator"
         android:summary="Separator between the values in the datafile saved to the SD card"
-        android:title="Separator (TSV, CSV or SSV)" />
+        android:title="Separator" />
     <ListPreference
         android:defaultValue="50"
         android:entries="@array/powerlineOptions"

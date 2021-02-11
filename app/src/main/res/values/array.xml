@@ -20,9 +20,9 @@
     </string-array>
 
     <string-array name="textDataFileSeparatorOptions">
-        <item>Space separated values</item>
+        <item>Tab separated values</item>
         <item>Comma separated values</item>
-        <item>Tab separated values (compatible with OCTAVE,MATLAB and GNUPLOT)</item>
+        <item>Space separated values</item>
     </string-array>
     <string-array name="textDataFileSeparatorValues">
         <item>0</item>

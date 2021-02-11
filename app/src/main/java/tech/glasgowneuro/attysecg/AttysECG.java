@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import androidx.preference.PreferenceManager;
@@ -131,7 +132,6 @@ public class AttysECG extends AppCompatActivity {
             "aVR", "aVL", "aVF"};
 
     private String dataFilename = null;
-    private final byte dataSeparator = 0;
 
     private AlertDialog alertDialog = null;
 
@@ -143,10 +143,11 @@ public class AttysECG extends AppCompatActivity {
         // saving data into a file
 
         private PrintWriter textdataFileStream;
+        private final File fullpath;
 
         // starts the recording
         private HRRecorder(String filename) throws IOException {
-            File fullpath = new File(getBaseContext().getExternalFilesDir(null), filename);
+            fullpath = new File(getBaseContext().getExternalFilesDir(null), filename);
             textdataFileStream = new PrintWriter(new FileOutputStream(fullpath, true));
         }
 
@@ -168,6 +169,15 @@ public class AttysECG extends AppCompatActivity {
             textdataFileStream.flush();
             textdataFileStream.close();
             textdataFileStream = null;
+            if (fullpath != null) {
+                MediaScannerConnection.scanFile(getBaseContext(),
+                        new String[]{fullpath.toString()}, null,
+                        new MediaScannerConnection.OnScanCompletedListener() {
+                            public void onScanCompleted(String path, Uri uri) {
+                                Log.d(TAG, "Scanned:" + path + " uri=" + uri.toString());
+                            }
+                        });
+            }
         }
     }
 
@@ -205,10 +215,13 @@ public class AttysECG extends AppCompatActivity {
                 }
                 textdataFileStream = null;
                 if (textdataFile != null) {
-                    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                    Uri contentUri = Uri.fromFile(textdataFile);
-                    mediaScanIntent.setData(contentUri);
-                    sendBroadcast(mediaScanIntent);
+                    MediaScannerConnection.scanFile(getBaseContext(),
+                            new String[] { textdataFile.toString() }, null,
+                            new MediaScannerConnection.OnScanCompletedListener() {
+                                public void onScanCompleted(String path, Uri uri) {
+                                    Log.d(TAG, "Scanned:" + path + " uri=" + uri.toString());
+                                }
+                            });
                 }
                 textdataFile = null;
             }
@@ -404,8 +417,6 @@ public class AttysECG extends AppCompatActivity {
                     for (int i = 0; ((i < n) && (attysComm != null)); i++) {
                         float[] sample = attysComm.getSampleFromBuffer();
                         if (sample != null) {
-                            // debug ECG detector
-                            // sample[AttysComm.INDEX_Analogue_channel_2] = (float)ecgDetOut;
                             timestamp++;
 
                             float II = sample[AttysComm.INDEX_Analogue_channel_1];
@@ -928,7 +939,7 @@ public class AttysECG extends AppCompatActivity {
                         dataFilename = filenameEditText.getText().toString();
                         dataFilename = dataFilename.replaceAll("[^a-zA-Z0-9.-]", "_");
                         if (!dataFilename.contains(".")) {
-                            switch (dataSeparator) {
+                            switch (dataRecorder.data_separator) {
                                 case DataRecorder.DATA_SEPARATOR_COMMA:
                                     dataFilename = dataFilename + ".csv";
                                     break;
@@ -1094,7 +1105,6 @@ public class AttysECG extends AppCompatActivity {
         } else {
             if (dataFilename != null) {
                 File file = new File(getBaseContext().getExternalFilesDir(null), dataFilename.trim());
-                dataRecorder.setDataSeparator(dataSeparator);
                 if (file.exists()) {
                     Toast.makeText(getApplicationContext(),
                             "File exists already. Enter a different one.",

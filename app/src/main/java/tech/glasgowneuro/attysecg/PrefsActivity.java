@@ -29,20 +29,5 @@ public class PrefsActivity extends AppCompatActivity {
             setPreferencesFromResource(R.xml.preferences, rootKey);
         }
 
-        private void fixPath() {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            String f = prefs.getString(HRV_KEY_FILENAME, HRV_FILENAME);
-            final int i = f.lastIndexOf('.');
-            if (i > 0) {
-                String fext = f.substring(0, i) + ".tsv";
-                prefs.edit().putString(HRV_KEY_FILENAME, fext).apply();
-            } else {
-                if (f.isEmpty()) {
-                    prefs.edit().putString(HRV_KEY_FILENAME, HRV_FILENAME).apply();
-                } else {
-                    prefs.edit().putString(HRV_KEY_FILENAME, f + ".tsv").apply();
-                }
-            }
-        }
     }
 }

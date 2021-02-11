@@ -22,19 +22,17 @@ import uk.me.berndporr.iirj.Butterworth;
 public class HRVView extends View {
     final String TAG = "HRVView";
 
-    private final int MAXSAMPLES = 400, INNERCIRCLEWIDTH = 40;
+    static private final int MAXSAMPLES = 400, INNERCIRCLEWIDTH = 40;
     private float heartRate = 60, maxHR = 100, minHR = 40;
-    private float txtSizeMult = (float) 1.4;
+    static final private float txtSizeMult = (float) 1.4;
     private ArrayList<Float> HRVValues = null;
     private int[] ringsColours;
     private float[] ringsStops;
     private int[] alphas;
     private float maxCircleRadius;
-    private final float HRVDecayConst = 1.0F;
+    static private final float HRVDecayConst = 1.0F;
 
     private Paint paintClear = null;
-    private Paint paintWhite = null;
-    private Paint paintBlack = null;
     private Paint paintTxt = null;
     private Paint paintRings = null;
 
@@ -56,9 +54,9 @@ public class HRVView extends View {
     }
 
     private void init() {
-        paintWhite = new Paint();
+        Paint paintWhite = new Paint();
         paintWhite.setColor(Color.WHITE);
-        paintBlack = new Paint();
+        Paint paintBlack = new Paint();
         paintBlack.setColor(Color.BLACK);
         paintClear = new Paint();
         paintClear.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));

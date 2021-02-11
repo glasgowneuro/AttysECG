@@ -25,4 +25,4 @@ ECG app for [Attys](http://www.attys.tech)
 
 Go to [https://glasgowneuro.github.io/AttysECG/] an drop a recording on it.
 
-![alt tag](plotter.png)
+[![alt tag](plotter.png)](https://glasgowneuro.github.io/AttysECG/)
