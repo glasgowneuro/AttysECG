@@ -992,10 +992,10 @@ public class AttysECG extends AppCompatActivity {
         });
 
         new AlertDialog.Builder(this)
-                .setTitle("Share")
-                .setMessage("Select filename(s)")
+                .setTitle("Share files")
+                .setMessage("Folder:\n"+getBaseContext().getExternalFilesDir(null).toString())
                 .setView(listview)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                .setPositiveButton("SHARE", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         SparseBooleanArray checked = listview.getCheckedItemPositions();
                         Intent sendIntent = new Intent();
@@ -1015,6 +1015,7 @@ public class AttysECG extends AppCompatActivity {
                                 }
                             }
                         }
+                        if (files.isEmpty()) return;
                         sendIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, files);
                         sendIntent.setType("text/*");
                         sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);

@@ -78,7 +78,7 @@
 
     <item
         android:id="@+id/filebrowser"
-        android:title="File browser"
+        android:title="Share files"
         app:showAsAction="never" />
 
     <item
