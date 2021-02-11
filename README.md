@@ -23,6 +23,6 @@ ECG app for [Attys](http://www.attys.tech)
 
 ## Plot and inspect the recorded ECGs
 
-Go to [https://glasgowneuro.github.io/AttysECG/] an drop a recording on it.
+Click on the screenshot to go to the ECG viewer.
 
 [![alt tag](plotter.png)](https://glasgowneuro.github.io/AttysECG/)
