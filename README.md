@@ -33,6 +33,9 @@ to the 2nd channel amplifier.
 
 ## Plot and inspect the recorded ECGs
 
+Download the ECG files from `/Android/data/tech.glasgowneuro.attysecg`
+and then drop them on the ECG viewer.
+
 Click on the screenshot to enter the ECG viewer.
 
 [![alt tag](plotter.png)](https://glasgowneuro.github.io/AttysECG/)
