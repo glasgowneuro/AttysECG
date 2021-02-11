@@ -22,7 +22,7 @@ ECG app for [Attys](http://www.attys.tech)
 
 ## Wiring
 
-  * "+" : left foot or hip
+  * "+" : left ankle or hip
   * "-" : right shoulder or wrist
   * GND : left shoulder or wrist
 
