@@ -22,8 +22,8 @@ ECG app for [Attys](http://www.attys.tech)
 
 ## Wiring
 
-  * + : left foot or hip
-  * - : right shoulder or wrist
+  * "+" : left foot or hip
+  * "-" : right shoulder or wrist
   * GND : left shoulder or wrist
 
 The two amplifiers are interally connected. No need to connect a wire
