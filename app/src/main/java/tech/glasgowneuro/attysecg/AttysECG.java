@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import androidx.preference.PreferenceManager;
 
-import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
@@ -88,7 +87,6 @@ public class AttysECG extends AppCompatActivity {
     private ProgressBar progress = null;
 
     private AttysComm attysComm = null;
-    private byte samplingRate = AttysComm.ADC_RATE_250HZ;
 
     private boolean leadsOff = false;
 
@@ -100,8 +98,8 @@ public class AttysECG extends AppCompatActivity {
     final private float[] gain_settings = {250, 500, 1000};
     private Butterworth iirNotch_II = null;
     private Butterworth iirNotch_III = null;
-    final private double notchBW = 2.5; // Hz
-    final private int notchOrder = 2;
+    static final private double notchBW = 2.5; // Hz
+    static final private int notchOrder = 2;
     private float powerlineHz = 50;
     private boolean full2chECGrecording = true;
 
@@ -133,7 +131,7 @@ public class AttysECG extends AppCompatActivity {
             "aVR", "aVL", "aVF"};
 
     private String dataFilename = null;
-    private byte dataSeparator = 0;
+    private final byte dataSeparator = 0;
 
     private AlertDialog alertDialog = null;
 
@@ -145,11 +143,10 @@ public class AttysECG extends AppCompatActivity {
         // saving data into a file
 
         private PrintWriter textdataFileStream;
-        private final File fullpath;
 
         // starts the recording
         private HRRecorder(String filename) throws IOException {
-            fullpath = new File(getBaseContext().getExternalFilesDir(null), filename);
+            File fullpath = new File(getBaseContext().getExternalFilesDir(null), filename);
             textdataFileStream = new PrintWriter(new FileOutputStream(fullpath, true));
         }
 
@@ -192,18 +189,11 @@ public class AttysECG extends AppCompatActivity {
         float bpm = 0;
 
         // starts the recording
-        private java.io.FileNotFoundException startRec(File file) {
+        private void startRec(File file) throws java.io.FileNotFoundException {
             sample = 0;
-            try {
-                textdataFileStream = new PrintWriter(file);
-                textdataFile = file;
-                messageListener.haveMessage(AttysComm.MESSAGE_STARTED_RECORDING);
-            } catch (java.io.FileNotFoundException e) {
-                textdataFileStream = null;
-                textdataFile = null;
-                return e;
-            }
-            return null;
+            textdataFileStream = new PrintWriter(file);
+            textdataFile = file;
+            messageListener.haveMessage(AttysComm.MESSAGE_STARTED_RECORDING);
         }
 
         // stops it
@@ -1107,6 +1097,44 @@ public class AttysECG extends AppCompatActivity {
         showPlotFragment();
     }
 
+    private void toggleRec() {
+        if (dataRecorder.isRecording()) {
+            dataRecorder.stopRec();
+            setRecColour(Color.GRAY);
+            enableMenuitems(true);
+        } else {
+            if (dataFilename != null) {
+                File file = new File(getBaseContext().getExternalFilesDir(null), dataFilename.trim());
+                dataRecorder.setDataSeparator(dataSeparator);
+                if (file.exists()) {
+                    Toast.makeText(getApplicationContext(),
+                            "File exists already. Enter a different one.",
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
+                try {
+                    dataRecorder.startRec(file);
+                } catch (Exception e) {
+                    Toast.makeText(getApplicationContext(),
+                            "Could not save the file.",
+                            Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "Could not open data file: " + e.getMessage());
+                    return;
+                }
+                if (dataRecorder.isRecording()) {
+                    setRecColour(Color.RED);
+                    enableMenuitems(false);
+                    Log.d(TAG, "Saving to " + file.getAbsolutePath());
+                }
+            } else {
+                setRecColour(Color.GRAY);
+                Toast.makeText(getApplicationContext(),
+                        "To record enter a filename first", Toast.LENGTH_SHORT).show();
+                enableMenuitems(true);
+            }
+        }
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -1119,41 +1147,7 @@ public class AttysECG extends AppCompatActivity {
                 return true;
 
             case R.id.toggleRec:
-                if (dataRecorder.isRecording()) {
-                    dataRecorder.stopRec();
-                    setRecColour(Color.GRAY);
-                    enableMenuitems(true);
-                } else {
-                    if (dataFilename != null) {
-                        File file = new File(getBaseContext().getExternalFilesDir(null), dataFilename.trim());
-                        dataRecorder.setDataSeparator(dataSeparator);
-                        if (file.exists()) {
-                            Toast.makeText(getApplicationContext(),
-                                    "File exists already. Enter a different one.",
-                                    Toast.LENGTH_LONG).show();
-                            return true;
-                        }
-                        java.io.FileNotFoundException e = dataRecorder.startRec(file);
-                        if (e != null) {
-                            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                                Log.d(TAG, "Could not open data file: " + e.getMessage());
-                            }
-                            return true;
-                        }
-                        if (dataRecorder.isRecording()) {
-                            setRecColour(Color.RED);
-                            enableMenuitems(false);
-                            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                                Log.d(TAG, "Saving to " + file.getAbsolutePath());
-                            }
-                        }
-                    } else {
-                        setRecColour(Color.GRAY);
-                        Toast.makeText(getApplicationContext(),
-                                "To record enter a filename first", Toast.LENGTH_SHORT).show();
-                        enableMenuitems(true);
-                    }
-                }
+                toggleRec();
                 return true;
 
             case R.id.showEinthoven:
@@ -1224,7 +1218,6 @@ public class AttysECG extends AppCompatActivity {
                                     vectorPlotFragment,
                                     "vectorPlotFragment")
                             .commit();
-
                     showPlotFragment();
                 }
                 return true;
@@ -1239,7 +1232,6 @@ public class AttysECG extends AppCompatActivity {
                                 ecgPlotFragment,
                                 "ecgPlotFragment")
                         .commit();
-
                 showPlotFragment();
                 return true;
 
@@ -1370,7 +1362,7 @@ public class AttysECG extends AppCompatActivity {
             iirNotch_III = null;
         }
 
-        samplingRate = (byte) Integer.parseInt(prefs.getString("samplingrate", "1"));
+        byte samplingRate = (byte) Integer.parseInt(prefs.getString("samplingrate", "1"));
         if ((samplingRate > AttysComm.ADC_RATE_250HZ) || (samplingRate < AttysComm.ADC_RATE_125HZ)) {
             samplingRate = AttysComm.ADC_RATE_250HZ;
             Log.e(TAG, "Illegal samplingrate in the preferences");
