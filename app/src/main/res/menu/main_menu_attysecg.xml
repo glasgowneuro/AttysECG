@@ -36,22 +36,22 @@
 
     <group android:checkableBehavior="all">
         <item
-            app:showAsAction="ifRoom"
+            app:showAsAction="never"
             android:id="@+id/showEinthoven"
             android:checked="true"
             android:title="Show Einthoven" />
         <item
-            app:showAsAction="ifRoom"
+            app:showAsAction="never"
             android:id="@+id/showAugmented"
             android:checked="true"
             android:title="Show Augmented leads" />
         <item
-            app:showAsAction="ifRoom"
+            app:showAsAction="never"
             android:id="@+id/showHRV"
             android:checked="false"
             android:title="Show HRV animation" />
         <item
-            app:showAsAction="ifRoom"
+            app:showAsAction="never"
             android:id="@+id/heartbeatsound"
             android:checked="false"
             android:title="Heartbeat sound" />
