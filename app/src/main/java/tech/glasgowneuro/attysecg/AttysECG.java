@@ -66,7 +66,7 @@ public class AttysECG extends AppCompatActivity {
 
     private Timer timer = null;
 
-    public static int audioSessionID;
+    private static int audioSessionID;
 
     private RealtimePlotView realtimePlotView = null;
     private InfoView infoView = null;
@@ -711,7 +711,7 @@ public class AttysECG extends AppCompatActivity {
             ecgPlotFragment.rDet();
         }
         if (beepGenerator != null) {
-            BeepGenerator.doBeep();
+            beepGenerator.doBeep();
         }
         this.bpm = bpm;
     }

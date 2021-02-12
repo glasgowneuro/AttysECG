@@ -12,7 +12,7 @@
         android:title="Filename"
         app:showAsAction="always" />
 
-    <item android:title="ECG analysis"
+    <item android:title="Analysis"
         app:showAsAction="collapseActionView|ifRoom">
         <menu>
             <item
@@ -31,36 +31,42 @@
                 app:showAsAction="never"
                 android:id="@+id/plotWindowECG"
                 android:title="PQRST inspector" />
+            <item
+                app:showAsAction="never"
+                android:id="@+id/heartbeatsound"
+                android:checked="false"
+                android:checkable="true"
+                android:title="Heartbeat sound" />
         </menu>
     </item>
 
-    <group android:checkableBehavior="all">
-        <item
-            app:showAsAction="never"
-            android:id="@+id/showEinthoven"
-            android:checked="true"
-            android:title="Show Einthoven" />
-        <item
-            app:showAsAction="never"
-            android:id="@+id/showAugmented"
-            android:checked="true"
-            android:title="Show Augmented leads" />
-        <item
-            app:showAsAction="never"
-            android:id="@+id/showHRV"
-            android:checked="false"
-            android:title="Show HRV animation" />
-        <item
-            app:showAsAction="never"
-            android:id="@+id/heartbeatsound"
-            android:checked="false"
-            android:title="Heartbeat sound" />
-    </group>
+    <item android:title="Display"
+        app:showAsAction="collapseActionView|ifRoom">
+        <menu>
+            <group android:checkableBehavior="all">
+                <item
+                    app:showAsAction="never"
+                    android:id="@+id/showEinthoven"
+                    android:checked="true"
+                    android:title="Show Einthoven" />
+                <item
+                    app:showAsAction="never"
+                    android:id="@+id/showAugmented"
+                    android:checked="true"
+                    android:title="Show Augmented leads" />
+                <item
+                    app:showAsAction="never"
+                    android:id="@+id/showHRV"
+                    android:checked="false"
+                    android:title="Show HRV animation" />
+            </group>
+        </menu>
+    </item>
 
     <item
         app:showAsAction="ifRoom"
         android:checked="true"
-        android:title="gain">
+        android:title="Gain">
 
         <menu>
             <item
