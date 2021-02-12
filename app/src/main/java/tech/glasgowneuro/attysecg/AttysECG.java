@@ -2,12 +2,14 @@ package tech.glasgowneuro.attysecg;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
@@ -62,9 +64,9 @@ public class AttysECG extends AppCompatActivity {
     // screen refresh rate
     private static final int REFRESH_IN_MS = 50;
 
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
-
     private Timer timer = null;
+
+    public static int audioSessionID;
 
     private RealtimePlotView realtimePlotView = null;
     private InfoView infoView = null;
@@ -640,6 +642,9 @@ public class AttysECG extends AppCompatActivity {
         Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
+        AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        audioSessionID = audioManager.generateAudioSessionId();
+
         progress = findViewById(R.id.indeterminateBar);
         hrvView = findViewById(R.id.hrvview);
         hrvView.setVisibility(View.INVISIBLE);
@@ -1172,7 +1177,7 @@ public class AttysECG extends AppCompatActivity {
                     beepGenerator.closeAudio();
                 }
                 if (b) {
-                    beepGenerator = new BeepGenerator();
+                    beepGenerator = new BeepGenerator(audioSessionID);
                 } else {
                     beepGenerator = null;
                 }

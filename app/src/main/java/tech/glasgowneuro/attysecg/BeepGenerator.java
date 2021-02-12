@@ -1,5 +1,6 @@
 package tech.glasgowneuro.attysecg;
 
+import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
@@ -16,13 +17,23 @@ public class BeepGenerator {
     public static final int nAudioSamples = audioSamplingRate / 20; // 50ms
     public static double f = 1000; // Hz
 
-    public BeepGenerator() {
-        sound = new AudioTrack(AudioManager.STREAM_MUSIC,
-                audioSamplingRate,
-                AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_8BIT,
+    public BeepGenerator(int sessionID) {
+        final int frontPair =
+                AudioFormat.CHANNEL_OUT_FRONT_LEFT | AudioFormat.CHANNEL_OUT_FRONT_RIGHT;
+        AudioFormat audioFormat = new AudioFormat.Builder()
+                .setEncoding(AudioFormat.ENCODING_PCM_8BIT)
+                .setSampleRate(audioSamplingRate)
+                .setChannelMask(frontPair)
+                .build();
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_INSTANT)
+                .build();
+        sound = new AudioTrack(audioAttributes,
+                audioFormat,
                 nAudioSamples,
-                AudioTrack.MODE_STATIC);
+                AudioTrack.MODE_STATIC,
+                sessionID);
         byte[] rawAudio = new byte[nAudioSamples];
         for (int i = 0; i < nAudioSamples; i++) {
             double s = Math.sin(i*2.0*Math.PI*f/((double)audioSamplingRate));
