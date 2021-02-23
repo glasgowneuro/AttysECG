@@ -20,7 +20,7 @@ ECG app for [Attys](http://www.attys.tech)
 
 [![alt tag](google_play_en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=tech.glasgowneuro.attysecg)
 
-## Wiring
+## Electrode placement
 
   * "+" : left ankle or hip
   * "-" : right shoulder or wrist
