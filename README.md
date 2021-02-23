@@ -35,8 +35,9 @@ to the 2nd channel amplifier.
 
 Download the ECG files from `/Android/data/tech.glasgowneuro.attysecg`
 or use the "share" option in the app
-and then drop them on the ECG viewer.
+and then drop them on the ECG viewer:
+https://glasgowneuro.github.io/AttysECG
 
-Click on the screenshot to enter the ECG viewer.
+Or click on the screenshot to enter the ECG viewer:
 
 [![alt tag](plotter.png)](https://glasgowneuro.github.io/AttysECG/)
