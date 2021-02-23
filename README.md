@@ -11,7 +11,7 @@ ECG app for [Attys](http://www.attys.tech)
 * Heartrate variability animation for biofeedback / breathing exercises
 * PQRST inspector: zoom into one PQRST complex and measure precisely the timings
 * Vector ECG to assess in detail the electrical heart axis of P,QRS and T
-* Save the data in OCTAVE/MATLAB(tm)/PYTHON compatible format
+* Save the data in PYTHON/MATLAB compatible format
 * Long term heartrate logging with epoch timestamp
 
 ![alt tag](screenshots/ecg-inspector-04.png)
@@ -34,6 +34,7 @@ to the 2nd channel amplifier.
 ## Plot and inspect the recorded ECGs
 
 Download the ECG files from `/Android/data/tech.glasgowneuro.attysecg`
+or use the "share" option in the app
 and then drop them on the ECG viewer.
 
 Click on the screenshot to enter the ECG viewer.
