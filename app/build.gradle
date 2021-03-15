@@ -10,8 +10,8 @@ android {
         applicationId "tech.glasgowneuro.attysecg"
         minSdkVersion 24
         targetSdkVersion 30
-        versionCode 58
-        versionName "1.6.5"
+        versionCode 59
+        versionName "1.6.6"
     }
     buildTypes {
         debug {

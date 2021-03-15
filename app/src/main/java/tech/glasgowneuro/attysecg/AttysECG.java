@@ -221,7 +221,9 @@ public class AttysECG extends AppCompatActivity {
                             new String[] { textdataFile.toString() }, null,
                             new MediaScannerConnection.OnScanCompletedListener() {
                                 public void onScanCompleted(String path, Uri uri) {
-                                    Log.d(TAG, "Scanned:" + path + " uri=" + uri.toString());
+                                    if (null != path) {
+                                        Log.d(TAG, "Scanned:" + path);
+                                    }
                                 }
                             });
                 }
