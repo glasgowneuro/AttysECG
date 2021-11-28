@@ -4,12 +4,12 @@ apply plugin: 'com.google.firebase.crashlytics'
 
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
 
     defaultConfig {
         applicationId "tech.glasgowneuro.attysecg"
         minSdkVersion 26
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 59
         versionName "1.6.6"
     }
