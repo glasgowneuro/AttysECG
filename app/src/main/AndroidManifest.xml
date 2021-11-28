@@ -14,7 +14,8 @@
         tools:ignore="GoogleAppIndexingWarning"
         android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
 
-        <activity android:name="tech.glasgowneuro.attysecg.AttysECG">
+        <activity android:name="tech.glasgowneuro.attysecg.AttysECG"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
