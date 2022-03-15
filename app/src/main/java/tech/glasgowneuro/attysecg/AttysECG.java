@@ -12,7 +12,13 @@ import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.RequiresApi;
+import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
 import androidx.core.app.ActivityCompat;
@@ -628,6 +634,43 @@ public class AttysECG extends AppCompatActivity {
         }
     }
 
+    private final ActivityResultLauncher<String[]> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), isGranted -> {
+                // isGranted is a map of the permissions (Strings) to boolean values.
+                if (isGranted.containsValue(false)) {
+                    finish();
+                }
+                if (AttysComm.findAttysBtDevice() == null) {
+                    noAttysFoundAlert();
+                }
+            });
+
+    @RequiresApi(api = Build.VERSION_CODES.S)
+    private void requestPermissionsAndroid12() {
+        final String[] ANDROID_12_PERMISSIONS = new String[]{
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT
+        };
+        for(String p:ANDROID_12_PERMISSIONS) {
+            if (!(ContextCompat.checkSelfPermission(getBaseContext(), p) ==
+                    PackageManager.PERMISSION_GRANTED)) {
+                requestPermissionLauncher.launch(ANDROID_12_PERMISSIONS);
+                return;
+            }
+        }
+    }
+
+
+    private void requestBTpermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            requestPermissionsAndroid12();
+        } else {
+            if (AttysComm.findAttysBtDevice() == null) {
+                noAttysFoundAlert();
+            }
+        }
+    }
+
 
 
     /**
@@ -652,12 +695,15 @@ public class AttysECG extends AppCompatActivity {
         hrvView.setVisibility(View.INVISIBLE);
         leadsView = findViewById(R.id.leadsview);
 
+        requestBTpermissions();
+
         iirNotch_II = new Butterworth();
         iirNotch_III = new Butterworth();
         highpass_II = new Highpass();
         highpass_III = new Highpass();
         iirNotch_II = null;
         iirNotch_III = null;
+
         startRRrec();
     }
 
