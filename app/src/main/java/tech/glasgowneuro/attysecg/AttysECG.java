@@ -2,9 +2,12 @@ package tech.glasgowneuro.attysecg;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -28,6 +31,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.os.IBinder;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
@@ -55,10 +59,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import tech.glasgowneuro.attyscomm.AttysComm;
+import tech.glasgowneuro.attyscomm.AttysService;
 import uk.me.berndporr.iirj.Butterworth;
 
 import static java.lang.String.format;
@@ -66,6 +72,8 @@ import static java.lang.String.format;
 public class AttysECG extends AppCompatActivity {
 
     private static final String TAG = AttysECG.class.getSimpleName();
+
+    private AttysService attysService = null;
 
     // screen refresh rate
     private static final int REFRESH_IN_MS = 50;
@@ -94,8 +102,6 @@ public class AttysECG extends AppCompatActivity {
     MenuItem menuItemSource = null;
 
     private ProgressBar progress = null;
-
-    private AttysComm attysComm = null;
 
     private boolean leadsOff = false;
 
@@ -144,6 +150,52 @@ public class AttysECG extends AppCompatActivity {
     private AlertDialog alertDialog = null;
 
     private BeepGenerator beepGenerator = null;
+
+
+    private ServiceConnection serviceConnection = null;
+
+    private void startAttysService() {
+        final Intent intent = new Intent(getBaseContext(), AttysService.class);
+        serviceConnection = new ServiceConnection() {
+            public void onServiceConnected(ComponentName className, IBinder service) {
+                Log.d(TAG, "Attys service connected. Starting now.");
+                startService(intent);
+                AttysService.AttysBinder binder = (AttysService.AttysBinder) service;
+                attysService = binder.getService();
+                if (null == attysService) {
+                    Log.e(TAG, "attysService=null in onServiceConnected");
+                    return;
+                }
+                attysService.createAttysComm();
+                if (null == attysService) return;
+                if (attysService.getAttysComm() != null) {
+                    startDAQ();
+                }
+            }
+
+            public void onServiceDisconnected(ComponentName className) {
+                if (attysService != null) {
+                    attysService.stopAttysComm();
+                }
+                attysService = null;
+            }
+        };
+        Log.d(TAG, "Binding Player service");
+        bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+    }
+
+
+    private void stopAttysService() {
+        dataRecorder.stopRec();
+        if (serviceConnection == null) return;
+        if (attysService != null) {
+            attysService.stopAttysComm();
+        }
+        unbindService(serviceConnection);
+        stopService(new Intent(getBaseContext(), AttysService.class));
+    }
+
+
 
 
     private class HRRecorder {
@@ -275,7 +327,7 @@ public class AttysECG extends AppCompatActivity {
                     s = 9;
                     break;
             }
-            double t = (double) sample / attysComm.getSamplingRateInHz();
+            double t = (double) sample / attysService.getAttysComm().getSamplingRateInHz();
             String tmp = format(Locale.US, "%f%c", t, s);
             if (full2chECGrecording) {
                 tmp = tmp + format(Locale.US, "%f%c", I, s);
@@ -308,9 +360,7 @@ public class AttysECG extends AppCompatActivity {
                     case AttysComm.MESSAGE_ERROR:
                         Toast.makeText(getApplicationContext(),
                                 "Bluetooth connection problem", Toast.LENGTH_SHORT).show();
-                        if (attysComm != null) {
-                            attysComm.stop();
-                        }
+                        attysService.getAttysComm().stop();
                         progress.setVisibility(View.GONE);
                         finish();
                         break;
@@ -363,9 +413,7 @@ public class AttysECG extends AppCompatActivity {
                 small = small + " !!RECORDING to:" + dataFilename;
             }
             if (infoView != null) {
-                if (attysComm != null) {
-                    infoView.drawText(small);
-                }
+                infoView.drawText(small);
             }
             if ((leadsView != null) && leadsOff) {
                 final boolean r = (IIok == 0);
@@ -386,7 +434,7 @@ public class AttysECG extends AppCompatActivity {
                         } else {
                             leadsView.setVisibility(View.INVISIBLE);
                         }
-                        leadsView.setLeadStatus(r,l,f);
+                        leadsView.setLeadStatus(r, l, f);
                     }
                 });
             }
@@ -394,195 +442,172 @@ public class AttysECG extends AppCompatActivity {
 
         public synchronized void run() {
 
-            if (attysComm != null) {
-                if (attysComm.hasFatalError()) {
-                    // Log.d(TAG,String.format("No bluetooth connection"));
-                    handleMessage(AttysComm.MESSAGE_ERROR);
-                    return;
-                }
+            if (attysService.getAttysComm().hasFatalError()) {
+                // Log.d(TAG,String.format("No bluetooth connection"));
+                handleMessage(AttysComm.MESSAGE_ERROR);
+                return;
             }
-            if (attysComm != null) {
-                if (!attysComm.hasActiveConnection()) return;
-            }
+            if (!attysService.getAttysComm().hasActiveConnection()) return;
 
             int nCh = 0;
-            if (attysComm != null) nCh = AttysComm.NCHANNELS;
-            if (attysComm != null) {
-                float[] tmpSample = new float[nCh];
-                float[] tmpMin = new float[nCh];
-                float[] tmpMax = new float[nCh];
-                float[] tmpTick = new float[nCh];
-                String[] tmpLabels = new String[nCh];
+            nCh = AttysComm.NCHANNELS;
+            float[] tmpSample = new float[nCh];
+            float[] tmpMin = new float[nCh];
+            float[] tmpMax = new float[nCh];
+            float[] tmpTick = new float[nCh];
+            String[] tmpLabels = new String[nCh];
 
-                float max = attysComm.getADCFullScaleRange(0) / gain;
-                ytick = 1.0F / gain / 10;
-                annotatePlot();
+            float max = attysService.getAttysComm().getADCFullScaleRange(0) / gain;
+            ytick = 1.0F / gain / 10;
+            annotatePlot();
 
-                int n = 0;
-                if (attysComm != null) {
-                    n = attysComm.getNumSamplesAvilable();
+            int n = 0;
+            n = attysService.getAttysComm().getNumSamplesAvilable();
+            if (realtimePlotView != null) {
+                if (!realtimePlotView.startAddSamples(n)) return;
+                for (int i = 0; (i < n); i++) {
+                    float[] sample = attysService.getAttysComm().getSampleFromBuffer();
+                    if (sample != null) {
+                        timestamp++;
+
+                        float II = sample[AttysComm.INDEX_Analogue_channel_1];
+                        float thres = attysService.getAttysComm().getADCFullScaleRange(0) * 0.9F;
+                        if (Math.abs(II) > thres) {
+                            IIok = attysService.getAttysComm().getSamplingRateInHz();
+                        } else {
+                            if (IIok > 0) IIok--;
+                        }
+
+                        II = highpass_II.filter(II);
+
+                        if (iirNotch_II != null) {
+                            II = (float) iirNotch_II.filter((double) II);
+                        }
+
+                        float III = sample[AttysComm.INDEX_Analogue_channel_2];
+                        thres = attysService.getAttysComm().getADCFullScaleRange(1) * 0.9F;
+                        if (Math.abs(III) > thres) {
+                            IIIok = attysService.getAttysComm().getSamplingRateInHz();
+                        } else {
+                            if (IIIok > 0) IIIok--;
+                        }
+
+                        III = highpass_III.filter(III);
+
+                        if (iirNotch_III != null) {
+                            III = (float) iirNotch_III.filter((double) III);
+                        }
+
+                        // https://pdfs.semanticscholar.org/8160/8b62b6efb007d112b438655dd2c897759fb1.pdf
+                        // Corrected Formula for the Calculation of the Electrical Heart Axis
+                        // Dragutin Novosel, Georg Noll1, Thomas F. Lüscher1
+
+                        // I-II+III = 0
+                        float I = II - III;
+
+                        if (ecg_rr_det_ch1 != null) {
+                            ecg_rr_det_ch1.detect(II, (IIok > 0) || (IIIok > 0));
+                        }
+
+                        if (ecg_rr_det_ch2 != null) {
+                            ecg_rr_det_ch2.detect(I, (IIok > 0) || (IIIok > 0));
+                        }
+
+                        float aVR = III / 2 - II;
+                        float aVL = II / 2 - III;
+                        float aVF = II / 2 + III / 2;
+
+                        if (vectorPlotFragment != null) {
+                            vectorPlotFragment.addValue(I, aVF);
+                        }
+
+                        if (ecgPlotFragment != null) {
+                            ecgPlotFragment.addValue(I, II, III, aVR, aVL, aVF);
+                        }
+
+                        dataRecorder.saveData(I, II, III, aVR, aVL, aVF);
+
+                        int nRealChN = 0;
+
+                        if (full2chECGrecording) {
+                            if (showEinthoven) {
+                                tmpMin[nRealChN] = -max;
+                                tmpMax[nRealChN] = max;
+                                tmpTick[nRealChN] = ytick;
+                                tmpLabels[nRealChN] = labels[0];
+                                tmpSample[nRealChN++] = I;
+                                tmpMin[nRealChN] = -max;
+                                tmpMax[nRealChN] = max;
+                                tmpTick[nRealChN] = ytick;
+                                tmpLabels[nRealChN] = labels[1];
+                                tmpSample[nRealChN++] = II;
+                                tmpMin[nRealChN] = -max;
+                                tmpMax[nRealChN] = max;
+                                tmpTick[nRealChN] = ytick;
+                                tmpLabels[nRealChN] = labels[2];
+                                tmpSample[nRealChN++] = III;
+                            }
+                            if (showAugmented) {
+                                tmpMin[nRealChN] = -max;
+                                tmpMax[nRealChN] = max;
+                                tmpTick[nRealChN] = ytick;
+                                tmpLabels[nRealChN] = labels[3];
+                                tmpSample[nRealChN++] = aVR;
+                                tmpMin[nRealChN] = -max;
+                                tmpMax[nRealChN] = max;
+                                tmpTick[nRealChN] = ytick;
+                                tmpLabels[nRealChN] = labels[4];
+                                tmpSample[nRealChN++] = aVL;
+                                tmpMin[nRealChN] = -max;
+                                tmpMax[nRealChN] = max;
+                                tmpTick[nRealChN] = ytick;
+                                tmpLabels[nRealChN] = labels[5];
+                                tmpSample[nRealChN++] = aVF;
+                            }
+                        } else {
+                            tmpMin[nRealChN] = -max;
+                            tmpMax[nRealChN] = max;
+                            tmpTick[nRealChN] = ytick;
+                            tmpLabels[nRealChN] = "Ch1";
+                            tmpSample[nRealChN++] = II;
+                        }
+
+                        if (infoView != null) {
+                            if (ygapForInfo == 0) {
+                                ygapForInfo = infoView.getInfoHeight();
+                                if ((Log.isLoggable(TAG, Log.DEBUG)) && (ygapForInfo > 0)) {
+                                    Log.d(TAG, "ygap=" + ygapForInfo);
+                                }
+                            }
+                        }
+
+                        if (realtimePlotView != null) {
+                            realtimePlotView.addSamples(Arrays.copyOfRange(tmpSample, 0, nRealChN),
+                                    Arrays.copyOfRange(tmpMin, 0, nRealChN),
+                                    Arrays.copyOfRange(tmpMax, 0, nRealChN),
+                                    Arrays.copyOfRange(tmpTick, 0, nRealChN),
+                                    Arrays.copyOfRange(tmpLabels, 0, nRealChN),
+                                    ygapForInfo);
+                        }
+                    }
                 }
                 if (realtimePlotView != null) {
-                    if (!realtimePlotView.startAddSamples(n)) return;
-                    for (int i = 0; ((i < n) && (attysComm != null)); i++) {
-                        float[] sample = attysComm.getSampleFromBuffer();
-                        if (sample != null) {
-                            timestamp++;
-
-                            float II = sample[AttysComm.INDEX_Analogue_channel_1];
-                            float thres = attysComm.getADCFullScaleRange(0) * 0.9F;
-                            if (Math.abs(II) > thres) {
-                                IIok = attysComm.getSamplingRateInHz();
-                            } else {
-                                if (IIok > 0) IIok--;
+                    realtimePlotView.stopAddSamples();
+                }
+                if (hrvView != null) {
+                    if (hrvView.getVisibility() == View.VISIBLE) {
+                        final float _bpm = bpm;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                hrvView.animate(_bpm,
+                                        (float) (attysService.getAttysComm().getSamplingRateInHz() / 2.0));
                             }
-
-                            II = highpass_II.filter(II);
-
-                            if (iirNotch_II != null) {
-                                II = (float) iirNotch_II.filter((double) II);
-                            }
-
-                            float III = sample[AttysComm.INDEX_Analogue_channel_2];
-                            thres = attysComm.getADCFullScaleRange(1) * 0.9F;
-                            if (Math.abs(III) > thres) {
-                                IIIok = attysComm.getSamplingRateInHz();
-                            } else {
-                                if (IIIok > 0) IIIok--;
-                            }
-
-                            III = highpass_III.filter(III);
-
-                            if (iirNotch_III != null) {
-                                III = (float) iirNotch_III.filter((double) III);
-                            }
-
-                            // https://pdfs.semanticscholar.org/8160/8b62b6efb007d112b438655dd2c897759fb1.pdf
-                            // Corrected Formula for the Calculation of the Electrical Heart Axis
-                            // Dragutin Novosel, Georg Noll1, Thomas F. Lüscher1
-
-                            // I-II+III = 0
-                            float I = II - III;
-
-                            if (ecg_rr_det_ch1 != null) {
-                                ecg_rr_det_ch1.detect(II,(IIok > 0) || (IIIok > 0));
-                            }
-
-                            if (ecg_rr_det_ch2 != null) {
-                                ecg_rr_det_ch2.detect(I,(IIok > 0) || (IIIok > 0));
-                            }
-
-                            float aVR = III / 2 - II;
-                            float aVL = II / 2 - III;
-                            float aVF = II / 2 + III / 2;
-
-                            if (vectorPlotFragment != null) {
-                                vectorPlotFragment.addValue(I, aVF);
-                            }
-
-                            if (ecgPlotFragment != null) {
-                                ecgPlotFragment.addValue(I, II, III, aVR, aVL, aVF);
-                            }
-
-                            dataRecorder.saveData(I, II, III, aVR, aVL, aVF);
-
-                            int nRealChN = 0;
-
-                            if (full2chECGrecording) {
-
-                                if (showEinthoven) {
-                                    if (attysComm != null) {
-                                        tmpMin[nRealChN] = -max;
-                                        tmpMax[nRealChN] = max;
-                                        tmpTick[nRealChN] = ytick;
-                                        tmpLabels[nRealChN] = labels[0];
-                                        tmpSample[nRealChN++] = I;
-                                    }
-                                    if (attysComm != null) {
-                                        tmpMin[nRealChN] = -max;
-                                        tmpMax[nRealChN] = max;
-                                        tmpTick[nRealChN] = ytick;
-                                        tmpLabels[nRealChN] = labels[1];
-                                        tmpSample[nRealChN++] = II;
-                                    }
-                                    if (attysComm != null) {
-                                        tmpMin[nRealChN] = -max;
-                                        tmpMax[nRealChN] = max;
-                                        tmpTick[nRealChN] = ytick;
-                                        tmpLabels[nRealChN] = labels[2];
-                                        tmpSample[nRealChN++] = III;
-                                    }
-                                }
-                                if (showAugmented) {
-                                    if (attysComm != null) {
-                                        tmpMin[nRealChN] = -max;
-                                        tmpMax[nRealChN] = max;
-                                        tmpTick[nRealChN] = ytick;
-                                        tmpLabels[nRealChN] = labels[3];
-                                        tmpSample[nRealChN++] = aVR;
-                                    }
-                                    if (attysComm != null) {
-                                        tmpMin[nRealChN] = -max;
-                                        tmpMax[nRealChN] = max;
-                                        tmpTick[nRealChN] = ytick;
-                                        tmpLabels[nRealChN] = labels[4];
-                                        tmpSample[nRealChN++] = aVL;
-                                    }
-                                    if (attysComm != null) {
-                                        tmpMin[nRealChN] = -max;
-                                        tmpMax[nRealChN] = max;
-                                        tmpTick[nRealChN] = ytick;
-                                        tmpLabels[nRealChN] = labels[5];
-                                        tmpSample[nRealChN++] = aVF;
-                                    }
-                                }
-                            } else {
-                                if (attysComm != null) {
-                                    tmpMin[nRealChN] = -max;
-                                    tmpMax[nRealChN] = max;
-                                    tmpTick[nRealChN] = ytick;
-                                    tmpLabels[nRealChN] = "Ch1";
-                                    tmpSample[nRealChN++] = II;
-                                }
-                            }
-
-                            if (infoView != null) {
-                                if (ygapForInfo == 0) {
-                                    ygapForInfo = infoView.getInfoHeight();
-                                    if ((Log.isLoggable(TAG, Log.DEBUG)) && (ygapForInfo > 0)) {
-                                        Log.d(TAG, "ygap=" + ygapForInfo);
-                                    }
-                                }
-                            }
-
-                            if (realtimePlotView != null) {
-                                realtimePlotView.addSamples(Arrays.copyOfRange(tmpSample, 0, nRealChN),
-                                        Arrays.copyOfRange(tmpMin, 0, nRealChN),
-                                        Arrays.copyOfRange(tmpMax, 0, nRealChN),
-                                        Arrays.copyOfRange(tmpTick, 0, nRealChN),
-                                        Arrays.copyOfRange(tmpLabels, 0, nRealChN),
-                                        ygapForInfo);
-                            }
-                        }
+                        });
                     }
-                    if (realtimePlotView != null) {
-                        realtimePlotView.stopAddSamples();
-                    }
-                    if (hrvView != null) {
-                        if (hrvView.getVisibility() == View.VISIBLE) {
-                            final float _bpm = bpm;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    hrvView.animate(_bpm,
-                                            (float) (attysComm.getSamplingRateInHz() / 2.0));
-                                }
-                            });
-                        }
-                    }
-                    if (vectorPlotFragment != null) {
-                        vectorPlotFragment.redraw();
-                    }
+                }
+                if (vectorPlotFragment != null) {
+                    vectorPlotFragment.redraw();
                 }
             }
         }
@@ -672,6 +697,16 @@ public class AttysECG extends AppCompatActivity {
     }
 
 
+    public static class BootReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Objects.equals(intent.getAction(), Intent.ACTION_BOOT_COMPLETED)) {
+                Log.d(TAG,"Boot receiver event.");
+                // Register your reporting alarms here.
+            }
+        }
+    }
+
 
     /**
      * Called when the activity is first created.
@@ -704,19 +739,10 @@ public class AttysECG extends AppCompatActivity {
         iirNotch_II = null;
         iirNotch_III = null;
 
+        startAttysService();
+
         startRRrec();
     }
-
-    // this is called whenever the app is starting or re-starting
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        startDAQ();
-        adjustMenu();
-        startRRrec();
-    }
-
 
     private void adjustMenu() {
         if (menuItemplotWindowVector != null) {
@@ -743,8 +769,14 @@ public class AttysECG extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
+        if (null == updatePlotTask) {
+            Log.e(TAG,"updatePlotTask == null in onResume().");
+            return;
+        }
         updatePlotTask.resetAnalysis();
-
+        startDAQ();
+        adjustMenu();
+        startRRrec();
     }
 
     private void r_peak_detected(float bpm) {
@@ -798,19 +830,12 @@ public class AttysECG extends AppCompatActivity {
 
 
     public void startDAQ() {
-
-        BluetoothDevice btAttysDevice = AttysComm.findAttysBtDevice();
-        if (btAttysDevice == null) {
-            noAttysFoundAlert();
-        }
-
-        attysComm = new AttysComm();
-        attysComm.registerMessageListener(messageListener);
+        attysService.getAttysComm().registerMessageListener(messageListener);
 
         getsetAttysPrefs();
 
-        highpass_II.setAlpha(1.0F / attysComm.getSamplingRateInHz());
-        highpass_III.setAlpha(1.0F / attysComm.getSamplingRateInHz());
+        highpass_II.setAlpha(1.0F / attysService.getAttysComm().getSamplingRateInHz());
+        highpass_III.setAlpha(1.0F / attysService.getAttysComm().getSamplingRateInHz());
 
         realtimePlotView = findViewById(R.id.realtimeplotview);
         realtimePlotView.setMaxChannels(15);
@@ -835,9 +860,7 @@ public class AttysECG extends AppCompatActivity {
         infoView.setZOrderOnTop(true);
         infoView.setZOrderMediaOverlay(true);
 
-        attysComm.start();
-
-        ecg_rr_det_ch1 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz);
+        ecg_rr_det_ch1 = new ECG_rr_det(attysService.getAttysComm().getSamplingRateInHz(), powerlineHz);
 
         ecg_rr_det_ch1.setRrListener(new ECG_rr_det.RRlistener() {
             @Override
@@ -858,7 +881,7 @@ public class AttysECG extends AppCompatActivity {
             }
         });
 
-        ecg_rr_det_ch2 = new ECG_rr_det(attysComm.getSamplingRateInHz(), powerlineHz);
+        ecg_rr_det_ch2 = new ECG_rr_det(attysService.getAttysComm().getSamplingRateInHz(), powerlineHz);
 
         ecg_rr_det_ch2.setRrListener(new ECG_rr_det.RRlistener() {
             @Override
@@ -880,6 +903,7 @@ public class AttysECG extends AppCompatActivity {
         updatePlotTask = new UpdatePlotTask();
         updatePlotTask.resetAnalysis();
         timer.schedule(updatePlotTask, 0, REFRESH_IN_MS);
+        attysService.startAttysComm();
     }
 
     private void killAttysComm() {
@@ -901,12 +925,9 @@ public class AttysECG extends AppCompatActivity {
             }
         }
 
-        if (attysComm != null) {
-            attysComm.stop();
-            attysComm = null;
-            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Log.d(TAG, "Killed AttysComm");
-            }
+        attysService.stopAttysComm();
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "Killed AttysComm");
         }
     }
 
@@ -933,6 +954,7 @@ public class AttysECG extends AppCompatActivity {
             }
             alertDialog = null;
         }
+        stopAttysService();
     }
 
     @Override
@@ -942,8 +964,8 @@ public class AttysECG extends AppCompatActivity {
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Restarting");
         }
-        killAttysComm();
 
+        startDAQ();
     }
 
 
@@ -952,6 +974,8 @@ public class AttysECG extends AppCompatActivity {
         super.onPause();
 
         stopRRRec();
+
+        killAttysComm();
 
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Paused");
@@ -1264,7 +1288,7 @@ public class AttysECG extends AppCompatActivity {
                 if (full2chECGrecording) {
                     deletePlotWindow();
                     vectorPlotFragment = new VectorPlotFragment();
-                    vectorPlotFragment.setHistorySize(attysComm.getSamplingRateInHz() / 2);
+                    vectorPlotFragment.setHistorySize(attysService.getAttysComm().getSamplingRateInHz() / 2);
                     vectorPlotFragment.setGain(gain);
                     getSupportFragmentManager().beginTransaction()
                             .add(R.id.fragment_plot_container,
@@ -1279,7 +1303,7 @@ public class AttysECG extends AppCompatActivity {
 
                 deletePlotWindow();
                 ecgPlotFragment = new ECGPlotFragment();
-                ecgPlotFragment.setSamplingRate(attysComm.getSamplingRateInHz());
+                ecgPlotFragment.setSamplingRate(attysService.getAttysComm().getSamplingRateInHz());
                 getSupportFragmentManager().beginTransaction()
                         .add(R.id.fragment_plot_container,
                                 ecgPlotFragment,
@@ -1384,10 +1408,10 @@ public class AttysECG extends AppCompatActivity {
 
         mux = AttysComm.ADC_MUX_ECG_EINTHOVEN;
         byte adcgain = (byte) (Integer.parseInt(prefs.getString("gainpref", "0")));
-        attysComm.setAdc1_gain_index(adcgain);
-        attysComm.setAdc0_mux_index(mux);
-        attysComm.setAdc2_gain_index(adcgain);
-        attysComm.setAdc1_mux_index(mux);
+        attysService.getAttysComm().setAdc1_gain_index(adcgain);
+        attysService.getAttysComm().setAdc0_mux_index(mux);
+        attysService.getAttysComm().setAdc2_gain_index(adcgain);
+        attysService.getAttysComm().setAdc1_mux_index(mux);
 
         byte data_separator = (byte) (Integer.parseInt(prefs.getString("data_separator", "0")));
         dataRecorder.setDataSeparator(data_separator);
@@ -1407,9 +1431,9 @@ public class AttysECG extends AppCompatActivity {
             iirNotch_II = new Butterworth();
             iirNotch_III = new Butterworth();
             iirNotch_II.bandStop(notchOrder,
-                    attysComm.getSamplingRateInHz(), powerlineHz, notchBW);
+                    attysService.getAttysComm().getSamplingRateInHz(), powerlineHz, notchBW);
             iirNotch_III.bandStop(notchOrder,
-                    attysComm.getSamplingRateInHz(), powerlineHz, notchBW);
+                    attysService.getAttysComm().getSamplingRateInHz(), powerlineHz, notchBW);
         } else {
             iirNotch_II = null;
             iirNotch_III = null;
@@ -1421,13 +1445,13 @@ public class AttysECG extends AppCompatActivity {
             Log.e(TAG, "Illegal samplingrate in the preferences");
         }
 
-        attysComm.setAdc_samplingrate_index(samplingRate);
+        attysService.getAttysComm().setAdc_samplingrate_index(samplingRate);
 
         leadsOff = prefs.getBoolean("leadsoff", true);
 
         if (leadsOff) {
-            attysComm.setBiasCurrent(AttysComm.ADC_CURRENT_22NA);
-            attysComm.enableCurrents(false,true,true);
+            attysService.getAttysComm().setBiasCurrent(AttysComm.ADC_CURRENT_22NA);
+            attysService.getAttysComm().enableCurrents(false,true,true);
             leadsView.setVisibility(View.VISIBLE);
         } else {
             leadsView.setVisibility(View.INVISIBLE);

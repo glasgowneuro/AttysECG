@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:allowBackup="false"
@@ -18,6 +19,11 @@
         android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
         android:dataExtractionRules="@xml/data_extraction_rules"
         tools:targetApi="s">
+
+        <service
+            android:name="tech.glasgowneuro.attyscomm.AttysService"
+            android:enabled="true"
+            android:exported="false" />
 
         <activity android:name="tech.glasgowneuro.attysecg.AttysECG"
             android:exported="true">
@@ -54,6 +60,7 @@
         <meta-data
             android:name="android.max_aspect"
             android:value="2.1" />
+
     </application>
 
 </manifest>
