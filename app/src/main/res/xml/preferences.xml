@@ -21,11 +21,6 @@
         android:key="hrv_logging"
         android:summary="Heartrate logging to the SD-card"
         android:title="HR logging" />
-    <EditTextPreference
-        android:defaultValue="hr.tsv"
-        android:dialogTitle="HR filename"
-        android:key="hrv_filename"
-        android:title="Filename for heartrate logging" />
     <ListPreference
         android:defaultValue="0"
         android:entries="@array/gainOptions"

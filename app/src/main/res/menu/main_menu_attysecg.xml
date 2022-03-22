@@ -5,12 +5,7 @@
     <item
         android:id="@+id/toggleRec"
         android:title="REC"
-        app:showAsAction="always" />
-
-    <item
-        android:id="@+id/enterFilename"
-        android:title="Filename"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
 
     <item android:title="Analysis"
         app:showAsAction="collapseActionView|ifRoom">
@@ -85,12 +80,12 @@
     <item
         android:id="@+id/filebrowser"
         android:title="Share files"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/preferences"
         android:title="Preferences"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sourcecode"

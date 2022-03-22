@@ -55,8 +55,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -78,6 +80,8 @@ public class AttysECG extends AppCompatActivity {
     // screen refresh rate
     private static final int REFRESH_IN_MS = 50;
 
+    private static final String HR_FILENAME = "hr.tsv";
+
     private Timer timer = null;
 
     private static int audioSessionID;
@@ -96,7 +100,6 @@ public class AttysECG extends AppCompatActivity {
     private MenuItem menuItemshowHRV = null;
 
     MenuItem menuItemPref = null;
-    MenuItem menuItemEnterFilename = null;
     MenuItem menuItemRec = null;
     MenuItem menuItemBrowser = null;
     MenuItem menuItemSource = null;
@@ -105,7 +108,7 @@ public class AttysECG extends AppCompatActivity {
 
     private boolean leadsOff = false;
 
-    private UpdatePlotTask updatePlotTask = null;
+    private UpdatePlotTask updatePlotTask = new UpdatePlotTask();
 
     private Highpass highpass_II = null;
     private Highpass highpass_III = null;
@@ -136,9 +139,6 @@ public class AttysECG extends AppCompatActivity {
 
     private int ygapForInfo = 0;
 
-    // debugging the ECG detector, commented out for production
-    //double ecgDetOut;
-
     private int timestamp = 0;
 
     private static final String[] labels = {
@@ -150,7 +150,6 @@ public class AttysECG extends AppCompatActivity {
     private AlertDialog alertDialog = null;
 
     private BeepGenerator beepGenerator = null;
-
 
     private ServiceConnection serviceConnection = null;
 
@@ -166,13 +165,8 @@ public class AttysECG extends AppCompatActivity {
                     Log.e(TAG, "attysService=null in onServiceConnected");
                     return;
                 }
-                attysService.createAttysComm();
-                if (null == attysService) return;
-                if (attysService.getAttysComm() != null) {
-                    startDAQ();
-                }
+                startDAQ();
             }
-
             public void onServiceDisconnected(ComponentName className) {
                 if (attysService != null) {
                     attysService.stopAttysComm();
@@ -194,8 +188,6 @@ public class AttysECG extends AppCompatActivity {
         unbindService(serviceConnection);
         stopService(new Intent(getBaseContext(), AttysService.class));
     }
-
-
 
 
     private class HRRecorder {
@@ -232,11 +224,7 @@ public class AttysECG extends AppCompatActivity {
             if (fullpath != null) {
                 MediaScannerConnection.scanFile(getBaseContext(),
                         new String[]{fullpath.toString()}, null,
-                        new MediaScannerConnection.OnScanCompletedListener() {
-                            public void onScanCompleted(String path, Uri uri) {
-                                Log.d(TAG, "Scanned:" + path + " uri=" + uri.toString());
-                            }
-                        });
+                        (path, uri) -> Log.d(TAG, "Scanned:" + path));
             }
         }
     }
@@ -448,6 +436,7 @@ public class AttysECG extends AppCompatActivity {
                 return;
             }
             if (!attysService.getAttysComm().hasActiveConnection()) return;
+            Log.d(TAG,"Task!!");
 
             int nCh = 0;
             nCh = AttysComm.NCHANNELS;
@@ -613,33 +602,38 @@ public class AttysECG extends AppCompatActivity {
         }
     }
 
+    private void toBackground() {
+        killTimer();
+        if (dataRecorder.isRecording()) return;
+        attysService.stopAttysComm();
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "Killed AttysComm");
+        }
+    }
 
     @Override
     public void onBackPressed() {
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Back button pressed");
         }
-        killAttysComm();
+        toBackground();
         Intent startMain = new Intent(Intent.ACTION_MAIN);
         startMain.addCategory(Intent.CATEGORY_HOME);
         startActivity(startMain);
     }
 
+
     private void startRRrec() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (prefs.getBoolean("hrv_logging", false)) {
             if (null == hrRecorder) {
-                final String filename = prefs.getString(
-                        PrefsActivity.HRV_KEY_FILENAME,
-                        PrefsActivity.HRV_FILENAME);
                 try {
-                    hrRecorder =
-                            new HRRecorder(filename);
+                    hrRecorder = new HRRecorder(HR_FILENAME);
                 } catch (Exception e) {
                     hrRecorder = null;
-                    Log.d(TAG,"Could not save the hr file: "+filename,e);
+                    Log.d(TAG,"Could not save the hr file: "+HR_FILENAME,e);
                     Toast.makeText(getApplicationContext(),
-                            "Could not create the heartrate file: "+filename,
+                            "Could not create the heartrate file: "+HR_FILENAME,
                             Toast.LENGTH_LONG).show();
                 }
             }
@@ -715,6 +709,8 @@ public class AttysECG extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        startAttysService();
+
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
 
         setContentView(R.layout.main_activity_layout);
@@ -730,6 +726,29 @@ public class AttysECG extends AppCompatActivity {
         hrvView.setVisibility(View.INVISIBLE);
         leadsView = findViewById(R.id.leadsview);
 
+        realtimePlotView = findViewById(R.id.realtimeplotview);
+        realtimePlotView.setMaxChannels(15);
+        realtimePlotView.init();
+
+        realtimePlotView.registerTouchEventListener(
+                new RealtimePlotView.TouchEventListener() {
+                    @Override
+                    public void touchedChannel(int chNo) {
+                        try {
+                            // theChannelWeDoAnalysis = actualChannelIdx[chNo];
+                            updatePlotTask.resetAnalysis();
+                        } catch (Exception e) {
+                            if (Log.isLoggable(TAG, Log.ERROR)) {
+                                Log.e(TAG, "Exception in the TouchEventListener (BUG!):", e);
+                            }
+                        }
+                    }
+                });
+
+        infoView = findViewById(R.id.infoview);
+        infoView.setZOrderOnTop(true);
+        infoView.setZOrderMediaOverlay(true);
+
         requestBTpermissions();
 
         iirNotch_II = new Butterworth();
@@ -738,8 +757,6 @@ public class AttysECG extends AppCompatActivity {
         highpass_III = new Highpass();
         iirNotch_II = null;
         iirNotch_III = null;
-
-        startAttysService();
 
         startRRrec();
     }
@@ -764,19 +781,6 @@ public class AttysECG extends AppCompatActivity {
         SpannableString s = new SpannableString(menuItemRec.getTitle());
         s.setSpan(new ForegroundColorSpan(c), 0, s.length(), 0);
         menuItemRec.setTitle(s);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (null == updatePlotTask) {
-            Log.e(TAG,"updatePlotTask == null in onResume().");
-            return;
-        }
-        updatePlotTask.resetAnalysis();
-        startDAQ();
-        adjustMenu();
-        startRRrec();
     }
 
     private void r_peak_detected(float bpm) {
@@ -830,35 +834,16 @@ public class AttysECG extends AppCompatActivity {
 
 
     public void startDAQ() {
+        if (null == attysService) {
+            Log.d(TAG,"attys service is still null.");
+            return;
+        }
         attysService.getAttysComm().registerMessageListener(messageListener);
 
         getsetAttysPrefs();
 
         highpass_II.setAlpha(1.0F / attysService.getAttysComm().getSamplingRateInHz());
         highpass_III.setAlpha(1.0F / attysService.getAttysComm().getSamplingRateInHz());
-
-        realtimePlotView = findViewById(R.id.realtimeplotview);
-        realtimePlotView.setMaxChannels(15);
-        realtimePlotView.init();
-
-        realtimePlotView.registerTouchEventListener(
-                new RealtimePlotView.TouchEventListener() {
-                    @Override
-                    public void touchedChannel(int chNo) {
-                        try {
-                            // theChannelWeDoAnalysis = actualChannelIdx[chNo];
-                            updatePlotTask.resetAnalysis();
-                        } catch (Exception e) {
-                            if (Log.isLoggable(TAG, Log.ERROR)) {
-                                Log.e(TAG, "Exception in the TouchEventListener (BUG!):", e);
-                            }
-                        }
-                    }
-                });
-
-        infoView = findViewById(R.id.infoview);
-        infoView.setZOrderOnTop(true);
-        infoView.setZOrderMediaOverlay(true);
 
         ecg_rr_det_ch1 = new ECG_rr_det(attysService.getAttysComm().getSamplingRateInHz(), powerlineHz);
 
@@ -906,7 +891,7 @@ public class AttysECG extends AppCompatActivity {
         attysService.startAttysComm();
     }
 
-    private void killAttysComm() {
+    private void killTimer() {
 
         if (timer != null) {
             timer.cancel();
@@ -917,18 +902,11 @@ public class AttysECG extends AppCompatActivity {
             }
         }
 
-        if (updatePlotTask != null) {
-            updatePlotTask.cancel();
-            updatePlotTask = null;
-            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Log.d(TAG, "Killed update Plot Task");
-            }
+        updatePlotTask.cancel();
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "Killed update Plot Task");
         }
 
-        attysService.stopAttysComm();
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Log.d(TAG, "Killed AttysComm");
-        }
     }
 
     @Override
@@ -936,8 +914,8 @@ public class AttysECG extends AppCompatActivity {
         super.onDestroy();
 
         stopRRRec();
-
-        killAttysComm();
+        toBackground();
+        attysService.stopAttysComm();
 
         if (dataRecorder != null) {
             dataRecorder.stopRec();
@@ -970,82 +948,21 @@ public class AttysECG extends AppCompatActivity {
 
 
     @Override
-    public void onPause() {
-        super.onPause();
-
-        stopRRRec();
-
-        killAttysComm();
-
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Log.d(TAG, "Paused");
-        }
-
-    }
-
-
-    @Override
     public void onStop() {
         super.onStop();
 
-        stopRRRec();
+        toBackground();
 
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Stopped");
         }
-
-        killAttysComm();
-
-    }
-
-
-    private void enterFilename() {
-
-        final EditText filenameEditText = new EditText(this);
-        filenameEditText.setSingleLine(true);
-
-        filenameEditText.setHint("");
-        filenameEditText.setText(dataFilename);
-
-        new AlertDialog.Builder(this)
-                .setTitle("Enter filename")
-                .setMessage("Enter the filename of the data textfile")
-                .setView(filenameEditText)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        dataFilename = filenameEditText.getText().toString();
-                        dataFilename = dataFilename.replaceAll("[^a-zA-Z0-9.-]", "_");
-                        if (!dataFilename.contains(".")) {
-                            switch (dataRecorder.data_separator) {
-                                case DataRecorder.DATA_SEPARATOR_COMMA:
-                                    dataFilename = dataFilename + ".csv";
-                                    break;
-                                case DataRecorder.DATA_SEPARATOR_SPACE:
-                                    dataFilename = dataFilename + ".dat";
-                                    break;
-                                case DataRecorder.DATA_SEPARATOR_TAB:
-                                    dataFilename = dataFilename + ".tsv";
-                            }
-                        }
-                        setRecColour(Color.GREEN);
-                        Toast.makeText(getApplicationContext(),
-                                "Press rec to record to '" + dataFilename + "'",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        dataFilename = null;
-                    }
-                })
-                .show();
     }
 
 
     private void shareData() {
 
         final List<String> files = new ArrayList<>();
-        final String[] list = getBaseContext().getExternalFilesDir(null).list();
+        final String[] list = Objects.requireNonNull(getBaseContext().getExternalFilesDir(null)).list();
         if (list != null) {
             for (String file : list) {
                 if (file != null) {
@@ -1070,7 +987,7 @@ public class AttysECG extends AppCompatActivity {
 
         new AlertDialog.Builder(this)
                 .setTitle("Share files")
-                .setMessage("Folder:\n"+getBaseContext().getExternalFilesDir(null).toString())
+                .setMessage("Folder:\n"+ Objects.requireNonNull(getBaseContext().getExternalFilesDir(null)).toString())
                 .setView(listview)
                 .setPositiveButton("SHARE", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
@@ -1123,7 +1040,6 @@ public class AttysECG extends AppCompatActivity {
         menuItemplotWindowVector = menu.findItem(R.id.plotWindowVector);
         menuItemshowHRV = menu.findItem(R.id.showHRV);
 
-        menuItemEnterFilename = menu.findItem(R.id.enterFilename);
         menuItemPref = menu.findItem(R.id.preferences);
         menuItemRec = menu.findItem(R.id.toggleRec);
         menuItemBrowser = menu.findItem(R.id.filebrowser);
@@ -1143,7 +1059,6 @@ public class AttysECG extends AppCompatActivity {
 
     private void enableMenuitems(boolean doit) {
         menuItemPref.setEnabled(doit);
-        menuItemEnterFilename.setEnabled(doit);
         menuItemSource.setEnabled(doit);
         menuItemBrowser.setEnabled(doit);
     }
@@ -1181,33 +1096,24 @@ public class AttysECG extends AppCompatActivity {
             setRecColour(Color.GRAY);
             enableMenuitems(true);
         } else {
-            if (dataFilename != null) {
-                File file = new File(getBaseContext().getExternalFilesDir(null), dataFilename.trim());
-                if (file.exists()) {
-                    Toast.makeText(getApplicationContext(),
-                            "File exists already. Enter a different one.",
-                            Toast.LENGTH_LONG).show();
-                    return;
-                }
-                try {
-                    dataRecorder.startRec(file);
-                } catch (Exception e) {
-                    Toast.makeText(getApplicationContext(),
-                            "Could not save the file.",
-                            Toast.LENGTH_LONG).show();
-                    Log.d(TAG, "Could not open data file: " + e.getMessage());
-                    return;
-                }
-                if (dataRecorder.isRecording()) {
-                    setRecColour(Color.RED);
-                    enableMenuitems(false);
-                    Log.d(TAG, "Saving to " + file.getAbsolutePath());
-                }
-            } else {
-                setRecColour(Color.GRAY);
+            Date date = new Date();
+            SimpleDateFormat dateFormat =
+                    new SimpleDateFormat("yyyy-dd-MM-HH-mm-ss",Locale.US);
+            dataFilename = "attysecg-" + dateFormat.format(date) + ".tsv";
+            File file = new File(getBaseContext().getExternalFilesDir(null),dataFilename);
+            try {
+                dataRecorder.startRec(file);
+            } catch (Exception e) {
                 Toast.makeText(getApplicationContext(),
-                        "To record enter a filename first", Toast.LENGTH_SHORT).show();
-                enableMenuitems(true);
+                        "Could not save the file.",
+                        Toast.LENGTH_LONG).show();
+                Log.d(TAG, "Could not open data file: " + e.getMessage());
+                return;
+            }
+            if (dataRecorder.isRecording()) {
+                setRecColour(Color.RED);
+                enableMenuitems(false);
+                Log.d(TAG, "Saving to " + file.getAbsolutePath());
             }
         }
     }
@@ -1273,10 +1179,6 @@ public class AttysECG extends AppCompatActivity {
                 if (vectorPlotFragment != null) {
                     vectorPlotFragment.setGain(gain);
                 }
-                return true;
-
-            case R.id.enterFilename:
-                enterFilename();
                 return true;
 
             case R.id.plotWindowBPM:

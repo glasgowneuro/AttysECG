@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -111,7 +112,12 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
         }
         Rect rect = new Rect(xpos, 0, xr, getHeight());
         if (holder != null) {
-            canvas = holder.lockCanvas(rect);
+            try {
+                canvas = holder.lockCanvas(rect);
+            } catch (java.lang.IllegalStateException e) {
+                Log.d(TAG,"Surface couldn't be locked",e);
+                canvas = null;
+            }
         } else {
             canvas = null;
         }
