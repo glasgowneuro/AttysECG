@@ -1,7 +1,6 @@
 package tech.glasgowneuro.attysecg;
 
 import android.Manifest;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -24,7 +23,6 @@ import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AlertDialog;
@@ -80,7 +78,7 @@ public class AttysECG extends AppCompatActivity {
     // screen refresh rate
     private static final int REFRESH_IN_MS = 50;
 
-    private static final String HR_FILENAME = "hr.tsv";
+    public static final String HR_FILENAME = "hr.tsv";
 
     private Timer timer = null;
 
@@ -1227,6 +1225,11 @@ public class AttysECG extends AppCompatActivity {
                 String url = "https://github.com/glasgowneuro/AttysECG";
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setData(Uri.parse(url));
+                startActivity(i);
+                return true;
+
+            case R.id.hrExplorer:
+                i = new Intent(AttysECG.this,HRexplorer.class);
                 startActivity(i);
                 return true;
 

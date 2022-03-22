@@ -78,6 +78,11 @@
     </item>
 
     <item
+        android:id="@+id/hrExplorer"
+        android:title="Heartrate explorer"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/filebrowser"
         android:title="Share files"
         app:showAsAction="ifRoom" />

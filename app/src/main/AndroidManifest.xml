@@ -7,34 +7,37 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher_attysecg"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        tools:ignore="GoogleAppIndexingWarning"
         android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-        android:dataExtractionRules="@xml/data_extraction_rules"
+        tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="s">
+        <activity
+            android:name=".HRexplorer"
+            android:exported="false" />
 
         <service
             android:name="tech.glasgowneuro.attyscomm.AttysService"
             android:enabled="true"
             android:exported="false" />
 
-        <activity android:name="tech.glasgowneuro.attysecg.AttysECG"
+        <activity
+            android:name=".AttysECG"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name="tech.glasgowneuro.attysecg.PrefsActivity"/>
+        <activity android:name=".PrefsActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -48,8 +51,7 @@
 
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"
-            android:value="${crashlyticsCollection}"/>
-
+            android:value="${crashlyticsCollection}" />
         <!--
      ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -60,7 +62,6 @@
         <meta-data
             android:name="android.max_aspect"
             android:value="2.1" />
-
     </application>
 
 </manifest>
