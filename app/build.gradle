@@ -10,8 +10,8 @@ android {
         applicationId "tech.glasgowneuro.attysecg"
         minSdkVersion 26
         targetSdkVersion 31
-        versionCode 61
-        versionName "1.8.0"
+        versionCode 62
+        versionName "1.8.1"
     }
     buildTypes {
         debug {
@@ -56,9 +56,6 @@ dependencies {
     implementation project(':firj-release')
     implementation 'com.google.firebase:firebase-core:20.1.1'
     implementation 'com.google.firebase:firebase-analytics:20.1.1'
-    implementation 'com.google.firebase:firebase-firestore:24.0.2'
     implementation 'com.google.firebase:firebase-crashlytics:18.2.9'
-    implementation 'com.google.firebase:firebase-auth:21.0.2'
-    implementation 'org.apache.commons:commons-lang3:3.8.1'
 }
 
