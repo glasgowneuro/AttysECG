@@ -151,6 +151,8 @@ public class AttysECG extends AppCompatActivity {
 
     private ServiceConnection serviceConnection = null;
 
+    private final DataRecorder dataRecorder = new DataRecorder();
+
     private void startAttysService() {
         final Intent intent = new Intent(getBaseContext(), AttysService.class);
         serviceConnection = new ServiceConnection() {
@@ -178,7 +180,6 @@ public class AttysECG extends AppCompatActivity {
 
 
     private void stopAttysService() {
-        dataRecorder.stopRec();
         if (serviceConnection == null) return;
         if (attysService != null) {
             attysService.stopAttysComm();
@@ -336,8 +337,6 @@ public class AttysECG extends AppCompatActivity {
         }
     }
 
-    DataRecorder dataRecorder = new DataRecorder();
-
     public void handleMessage(final int msg) {
         runOnUiThread(new Runnable() {
             @Override
@@ -434,7 +433,6 @@ public class AttysECG extends AppCompatActivity {
                 return;
             }
             if (!attysService.getAttysComm().hasActiveConnection()) return;
-            Log.d(TAG,"Task!!");
 
             int nCh = 0;
             nCh = AttysComm.NCHANNELS;
@@ -911,14 +909,10 @@ public class AttysECG extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
+        dataRecorder.stopRec();
         stopRRRec();
         toBackground();
         attysService.stopAttysComm();
-
-        if (dataRecorder != null) {
-            dataRecorder.stopRec();
-            dataRecorder = null;
-        }
 
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Destroy!");
