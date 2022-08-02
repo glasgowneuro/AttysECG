@@ -1,0 +1,19 @@
+# ninja log v5
+0	3	0	clean	862e7f49b9a2f944
+0	2	0	clean	862e7f49b9a2f944
+0	294	1656527510	CMakeFiles/attysecg.dir/attysecg.c.o	c8f869287ef9a615
+0	3	0	clean	862e7f49b9a2f944
+0	4	0	clean	862e7f49b9a2f944
+1	2129	1659438212	CMakeFiles/attysecg.dir/attysecg.c.o	c8f869287ef9a615
+0	51	1659439153	/home/bp1/sandbox/AttysECG/app/build/intermediates/cxx/Debug/s6e695y3/obj/arm64-v8a/libattysecg.so	e2a9f6b3afef75e8
+0	3	0	clean	862e7f49b9a2f944
+0	269	1659440006	CMakeFiles/attysecg.dir/attysecg.c.o	c8f869287ef9a615
+269	292	1659440006	/home/bp1/sandbox/AttysECG/app/build/intermediates/cxx/Debug/s6e695y3/obj/arm64-v8a/libattysecg.so	e2a9f6b3afef75e8
+0	3	0	clean	862e7f49b9a2f944
+1	296	1659440412	CMakeFiles/attysecg.dir/attysecg.c.o	c8f869287ef9a615
+296	318	1659440412	/home/bp1/sandbox/AttysECG/app/build/intermediates/cxx/Debug/s6e695y3/obj/arm64-v8a/libattysecg.so	e2a9f6b3afef75e8
+0	313	1659441860	CMakeFiles/attysecg.dir/attysecg.c.o	c8f869287ef9a615
+313	342	1659441860	/home/bp1/sandbox/AttysECG/app/build/intermediates/cxx/Debug/s6e695y3/obj/arm64-v8a/libattysecg.so	e2a9f6b3afef75e8
+0	3	0	clean	862e7f49b9a2f944
+1	397	1659442422	CMakeFiles/attysecg.dir/attysecg.c.o	c8f869287ef9a615
+398	418	1659442423	/home/bp1/sandbox/AttysECG/app/build/intermediates/cxx/Debug/s6e695y3/obj/arm64-v8a/libattysecg.so	e2a9f6b3afef75e8

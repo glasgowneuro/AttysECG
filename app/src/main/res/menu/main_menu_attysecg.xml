@@ -54,6 +54,11 @@
                     android:id="@+id/showHRV"
                     android:checked="false"
                     android:title="Show HRV animation" />
+                <item
+                    app:showAsAction="never"
+                    android:id="@+id/showOCULUSHRV"
+                    android:checked="false"
+                    android:title="Show Oculus animation" />
             </group>
         </menu>
     </item>
@@ -80,17 +85,17 @@
     <item
         android:id="@+id/hrExplorer"
         android:title="Heartrate explorer"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/filebrowser"
         android:title="Share files"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/preferences"
         android:title="Preferences"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/sourcecode"

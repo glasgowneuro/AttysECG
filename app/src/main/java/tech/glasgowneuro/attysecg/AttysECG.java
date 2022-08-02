@@ -91,11 +91,14 @@ public class AttysECG extends AppCompatActivity {
     private VectorPlotFragment vectorPlotFragment = null;
     private ECGPlotFragment ecgPlotFragment = null;
     private LeadsView leadsView = null;
+    private HRVOculus hrvOculus = null;
+    private long oculusHandle = 0;
 
     private MenuItem menuItemshowEinthoven = null;
     private MenuItem menuItemshowAugmented = null;
     private MenuItem menuItemplotWindowVector = null;
     private MenuItem menuItemshowHRV = null;
+    private MenuItem menuItemshowOculus = null;
 
     MenuItem menuItemPref = null;
     MenuItem menuItemRec = null;
@@ -1031,6 +1034,7 @@ public class AttysECG extends AppCompatActivity {
         menuItemshowAugmented = menu.findItem(R.id.showAugmented);
         menuItemplotWindowVector = menu.findItem(R.id.plotWindowVector);
         menuItemshowHRV = menu.findItem(R.id.showHRV);
+        menuItemshowOculus = menu.findItem(R.id.showOCULUSHRV);
 
         menuItemPref = menu.findItem(R.id.preferences);
         menuItemRec = menu.findItem(R.id.toggleRec);
@@ -1064,6 +1068,19 @@ public class AttysECG extends AppCompatActivity {
             hrvView.setVisibility(View.INVISIBLE);
         }
         menuItemshowHRV.setChecked(showHRV);
+    }
+
+    private void toggleOculus() {
+        if (null == hrvOculus) {
+            hrvOculus = new HRVOculus();
+            oculusHandle = HRVOculus.onCreate(this);
+            menuItemshowOculus.setChecked(true);
+        } else {
+            HRVOculus.onDestroy(oculusHandle);
+            hrvOculus = null;
+            oculusHandle = 0;
+            menuItemshowOculus.setChecked(false);
+        }
     }
 
     private void openWindowBPM() {
@@ -1137,6 +1154,10 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.showHRV:
                 toggleShowHRV();
+                return true;
+
+            case R.id.showOCULUSHRV:
+                toggleOculus();
                 return true;
 
             case R.id.heartbeatsound:

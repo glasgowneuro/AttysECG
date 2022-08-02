@@ -1,0 +1,40 @@
+{
+  "buildFiles": [
+    "/home/bp1/sandbox/AttysECG/app/src/main/cpp/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/home/bp1/Android/Sdk/cmake/3.18.1/bin/ninja",
+      "-C",
+      "/home/bp1/sandbox/AttysECG/app/.cxx/Debug/s6e695y3/arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/home/bp1/Android/Sdk/cmake/3.18.1/bin/ninja",
+    "-C",
+    "/home/bp1/sandbox/AttysECG/app/.cxx/Debug/s6e695y3/arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "attysecg::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "attysecg",
+      "output": "/home/bp1/sandbox/AttysECG/app/build/intermediates/cxx/Debug/s6e695y3/obj/arm64-v8a/libattysecg.so",
+      "runtimeFiles": [
+        "/home/bp1/oculus/VrApi/Libs/Android/arm64-v8a/Debug/libvrapi.so"
+      ]
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "/home/bp1/Android/Sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/bin/clang",
+      "cppCompilerExecutable": "/home/bp1/Android/Sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"
+    }
+  },
+  "cFileExtensions": [
+    "c"
+  ],
+  "cppFileExtensions": []
+}

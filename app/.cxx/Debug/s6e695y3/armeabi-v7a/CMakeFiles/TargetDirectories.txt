@@ -1,0 +1,3 @@
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/s6e695y3/armeabi-v7a/CMakeFiles/rebuild_cache.dir
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/s6e695y3/armeabi-v7a/CMakeFiles/edit_cache.dir
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/s6e695y3/armeabi-v7a/CMakeFiles/attysecg.dir

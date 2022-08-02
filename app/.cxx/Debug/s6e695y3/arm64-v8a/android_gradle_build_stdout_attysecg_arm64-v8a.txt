@@ -1,0 +1,2 @@
+ninja: Entering directory `/home/bp1/sandbox/AttysECG/app/.cxx/Debug/s6e695y3/arm64-v8a'
+ninja: no work to do.

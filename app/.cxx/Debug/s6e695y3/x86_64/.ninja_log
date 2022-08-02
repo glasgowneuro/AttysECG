@@ -1,0 +1,13 @@
+# ninja log v5
+0	17	1656527009	CMakeFiles/attysecg.dir/attysecg.c.o	7014d69f870e5492
+17	88	1656527009	/home/bp1/sandbox/AttysECG/app/build/intermediates/cxx/Debug/s6e695y3/obj/x86_64/libattysecg.so	b3038ea5f3303817
+0	242	1656527375	CMakeFiles/attysecg.dir/attysecg.c.o	8d18cbfc3684044e
+0	3	0	clean	862e7f49b9a2f944
+0	2	0	clean	862e7f49b9a2f944
+0	75	1659438202	build.ninja	95f5c47224edf0b2
+0	2	0	clean	862e7f49b9a2f944
+0	4	0	clean	862e7f49b9a2f944
+1	37	1659440004	build.ninja	95f5c47224edf0b2
+0	3	0	clean	862e7f49b9a2f944
+0	2	0	clean	862e7f49b9a2f944
+0	3	0	clean	862e7f49b9a2f944

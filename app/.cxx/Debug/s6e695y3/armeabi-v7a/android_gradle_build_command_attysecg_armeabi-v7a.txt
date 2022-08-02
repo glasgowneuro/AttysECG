@@ -1,0 +1,7 @@
+Executable : /home/bp1/Android/Sdk/cmake/3.18.1/bin/ninja
+arguments : 
+-C
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/s6e695y3/armeabi-v7a
+attysecg
+jvmArgs : 
+

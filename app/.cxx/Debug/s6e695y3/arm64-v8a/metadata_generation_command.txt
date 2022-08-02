@@ -1,0 +1,23 @@
+                    Executable : /home/bp1/Android/Sdk/cmake/3.18.1/bin/cmake
+arguments : 
+-H/home/bp1/sandbox/AttysECG/app/src/main/cpp
+-DCMAKE_SYSTEM_NAME=Android
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DCMAKE_SYSTEM_VERSION=26
+-DANDROID_PLATFORM=android-26
+-DANDROID_ABI=arm64-v8a
+-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a
+-DANDROID_NDK=/home/bp1/Android/Sdk/ndk/21.4.7075529
+-DCMAKE_ANDROID_NDK=/home/bp1/Android/Sdk/ndk/21.4.7075529
+-DCMAKE_TOOLCHAIN_FILE=/home/bp1/Android/Sdk/ndk/21.4.7075529/build/cmake/android.toolchain.cmake
+-DCMAKE_MAKE_PROGRAM=/home/bp1/Android/Sdk/cmake/3.18.1/bin/ninja
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/bp1/sandbox/AttysECG/app/build/intermediates/cxx/Debug/s6e695y3/obj/arm64-v8a
+-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/bp1/sandbox/AttysECG/app/build/intermediates/cxx/Debug/s6e695y3/obj/arm64-v8a
+-DCMAKE_BUILD_TYPE=Debug
+-B/home/bp1/sandbox/AttysECG/app/.cxx/Debug/s6e695y3/arm64-v8a
+-GNinja
+jvmArgs : 
+
+
+                    Build command args: []
+                    Version: 2

@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/bp1/sandbox/AttysECG/app/.cxx/Debug/s6e695y3/arm64-v8a",
+  "command": "/home/bp1/Android/Sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android26 --gcc-toolchain=/home/bp1/Android/Sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64 --sysroot=/home/bp1/Android/Sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dattysecg_EXPORTS -I/home/bp1/oculus/VrApi/Include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O0 -fno-limit-debug-info  -fPIC -o CMakeFiles/attysecg.dir/attysecg.c.o -c /home/bp1/sandbox/AttysECG/app/src/main/cpp/attysecg.c",
+  "file": "/home/bp1/sandbox/AttysECG/app/src/main/cpp/attysecg.c"
+}
+]
