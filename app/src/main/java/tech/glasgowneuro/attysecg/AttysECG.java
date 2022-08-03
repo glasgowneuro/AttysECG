@@ -20,6 +20,7 @@ import android.os.Bundle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.RequiresApi;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
@@ -86,18 +87,15 @@ public class AttysECG extends AppCompatActivity {
 
     private RealtimePlotView realtimePlotView = null;
     private InfoView infoView = null;
-    private HRVView hrvView = null;
     private HeartratePlotFragment heartratePlotFragment = null;
     private VectorPlotFragment vectorPlotFragment = null;
     private ECGPlotFragment ecgPlotFragment = null;
     private LeadsView leadsView = null;
     private HRVOculus hrvOculus = null;
-    private long oculusHandle = 0;
 
     private MenuItem menuItemshowEinthoven = null;
     private MenuItem menuItemshowAugmented = null;
     private MenuItem menuItemplotWindowVector = null;
-    private MenuItem menuItemshowHRV = null;
     private MenuItem menuItemshowOculus = null;
 
     MenuItem menuItemPref = null;
@@ -124,7 +122,6 @@ public class AttysECG extends AppCompatActivity {
 
     private boolean showEinthoven = true;
     private boolean showAugmented = true;
-    private boolean showHRV = false;
     private float bpm = 0;
     private String bpmFromEinthovenLeadNo = "II";
 
@@ -582,18 +579,6 @@ public class AttysECG extends AppCompatActivity {
                 if (realtimePlotView != null) {
                     realtimePlotView.stopAddSamples();
                 }
-                if (hrvView != null) {
-                    if (hrvView.getVisibility() == View.VISIBLE) {
-                        final float _bpm = bpm;
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                hrvView.animate(_bpm,
-                                        (float) (attysService.getAttysComm().getSamplingRateInHz() / 2.0));
-                            }
-                        });
-                    }
-                }
                 if (vectorPlotFragment != null) {
                     vectorPlotFragment.redraw();
                 }
@@ -721,13 +706,17 @@ public class AttysECG extends AppCompatActivity {
         audioSessionID = audioManager.generateAudioSessionId();
 
         progress = findViewById(R.id.indeterminateBar);
-        hrvView = findViewById(R.id.hrvview);
-        hrvView.setVisibility(View.INVISIBLE);
         leadsView = findViewById(R.id.leadsview);
 
         realtimePlotView = findViewById(R.id.realtimeplotview);
         realtimePlotView.setMaxChannels(15);
         realtimePlotView.init();
+
+        hrvOculus = new HRVOculus(this);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT);
+        addContentView(hrvOculus,params);
+        hrvOculus.init(this);
 
         realtimePlotView.registerTouchEventListener(
                 new RealtimePlotView.TouchEventListener() {
@@ -1033,7 +1022,6 @@ public class AttysECG extends AppCompatActivity {
         menuItemshowEinthoven = menu.findItem(R.id.showEinthoven);
         menuItemshowAugmented = menu.findItem(R.id.showAugmented);
         menuItemplotWindowVector = menu.findItem(R.id.plotWindowVector);
-        menuItemshowHRV = menu.findItem(R.id.showHRV);
         menuItemshowOculus = menu.findItem(R.id.showOCULUSHRV);
 
         menuItemPref = menu.findItem(R.id.preferences);
@@ -1060,26 +1048,16 @@ public class AttysECG extends AppCompatActivity {
     }
 
     private void toggleShowHRV() {
-        showHRV = !showHRV;
-        if (showHRV) {
-            hrvView.reset();
-            hrvView.setVisibility(View.VISIBLE);
-        } else {
-            hrvView.setVisibility(View.INVISIBLE);
-        }
-        menuItemshowHRV.setChecked(showHRV);
     }
 
     private void toggleOculus() {
-        if (null == hrvOculus) {
-            hrvOculus = new HRVOculus();
-            oculusHandle = HRVOculus.onCreate(this);
-            menuItemshowOculus.setChecked(true);
-        } else {
-            HRVOculus.onDestroy(oculusHandle);
-            hrvOculus = null;
-            oculusHandle = 0;
+        if (menuItemshowOculus.isChecked()) {
+            hrvOculus.stop();
             menuItemshowOculus.setChecked(false);
+        } else {
+            hrvOculus.start();
+            hrvOculus.setVisibility(View.VISIBLE);
+            menuItemshowOculus.setChecked(true);
         }
     }
 

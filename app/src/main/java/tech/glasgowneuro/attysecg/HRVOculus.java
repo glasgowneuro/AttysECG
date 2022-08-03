@@ -1,19 +1,52 @@
 package tech.glasgowneuro.attysecg;
 
+import android.content.Context;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.app.Activity;
 import android.view.Surface;
+import android.view.SurfaceView;
 
-public class HRVOculus implements SurfaceHolder.Callback {
+public class HRVOculus extends SurfaceView implements SurfaceHolder.Callback {
+
+    private long mNativeHandle = 0;
+    private SurfaceHolder mSurfaceHolder;
+    private static final String TAG = HRVOculus.class.getSimpleName();
 
     static {
         System.loadLibrary("attysecg");
     }
 
-    private long mNativeHandle;
-    private SurfaceHolder mSurfaceHolder;
-    private static final String TAG = HRVOculus.class.getSimpleName();
+    public void init(Activity a) {
+        Log.d(TAG,"HRVinit");
+        getHolder().addCallback(this);
+        mNativeHandle = onCreate(a);
+    }
+
+    public void destroy() {
+        onDestroy(mNativeHandle);
+    }
+
+    public void start() {
+        onResume(mNativeHandle);
+    }
+
+    public void stop() {
+        onPause(mNativeHandle);
+    }
+
+    public HRVOculus(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
+
+    public HRVOculus(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public HRVOculus(Context context) {
+        super(context);
+    }
 
     public static native long onCreate(Activity obj);
 

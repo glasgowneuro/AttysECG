@@ -48,17 +48,6 @@
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="10dp" />
 
-            <tech.glasgowneuro.attysecg.HRVView
-                android:layout_gravity="bottom|end"
-                android:id="@+id/hrvview"
-                android:background="@android:color/transparent"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_marginBottom="10dp"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:layout_marginTop="10dp" />
-
             <tech.glasgowneuro.attysecg.LeadsView
                 android:id="@+id/leadsview"
                 android:layout_width="match_parent"

@@ -105,11 +105,11 @@ typedef void(GL_APIENTRY* PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)(
 #include "VrApi_Input.h"
 
 #define DEBUG 1
-#define OVR_LOG_TAG "VrCubeWorld"
+#define OVR_LOG_TAG "HRVOculus"
 
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, OVR_LOG_TAG, __VA_ARGS__)
 #if DEBUG
-#define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, OVR_LOG_TAG, __VA_ARGS__)
+#define ALOGV(...) __android_log_print(ANDROID_LOG_DEBUG, OVR_LOG_TAG, __VA_ARGS__)
 #else
 #define ALOGV(...)
 #endif
@@ -2423,7 +2423,7 @@ Input
 ================================================================================
 */
 
-JNIEXPORT void JNICALL Java_com_oculus_sdk_attysecg_GLES3JNILib_onKeyEvent(
+JNIEXPORT void JNICALL Java_tech_glasgowneuro_attysecg_HRVOculus_onKeyEvent(
     JNIEnv* env,
     jobject obj,
     jlong handle,
@@ -2439,5 +2439,3 @@ JNIEXPORT void JNICALL Java_com_oculus_sdk_attysecg_GLES3JNILib_onKeyEvent(
     ovrMessage_SetIntegerParm(&message, 1, action);
     ovrMessageQueue_PostMessage(&appThread->MessageQueue, &message);
 }
-
-
