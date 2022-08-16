@@ -1276,7 +1276,7 @@ static ovrLayerProjection2 ovrRenderer_RenderFrame(
             scene->Rotations[i].z * simulation->CurrentRotation.z);
     }
 
-    ALOGD("Rendering frame");
+    // ALOGD("Rendering frame");
 
     // Update the instance transform attributes.
     GL(glBindBuffer(GL_ARRAY_BUFFER, scene->InstanceTransformBuffer));
@@ -2222,7 +2222,7 @@ void* AppThreadFunction(void* parm) {
         frameDesc.Layers = layers;
 
         // Hand over the eye images to the time warp.
-        ALOGD("Handing over frame # = %lld",appState.FrameIndex);
+        // ALOGD("Handing over frame # = %lld",appState.FrameIndex);
         vrapi_SubmitFrame2(appState.Ovr, &frameDesc);
 #endif
     }
