@@ -715,7 +715,7 @@ public class AttysECG extends AppCompatActivity {
         progress = findViewById(R.id.indeterminateBar);
         leadsView = findViewById(R.id.leadsview);
 
-        realtimePlotView = findViewById(R.id.realtimeplotview);
+        realtimePlotView = new RealtimePlotView(surfaceTexture);
         realtimePlotView.setMaxChannels(15);
         realtimePlotView.init();
 

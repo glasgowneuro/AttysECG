@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -15,11 +16,10 @@ import android.view.SurfaceView;
 /**
  * Plots the data on a surface view. Optimised for speed.
  */
-public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callback {
+public class RealtimePlotView extends Surface {
 
     static private int xpos = 0;
     static private int nLeft = 0;
-    static private SurfaceHolder holder = null;
     static private int nMaxChannels = 0;
     static private float[][] ypos = null;
     static Paint paint = new Paint();
@@ -34,19 +34,27 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
     static private float yHeight = 0;
     static private final String TAG = "RealtimePlotView";
 
+    int getWidth() {
+        return 500;
+    }
+
+    int getHeight() {
+        return 500;
+    }
+
+    public RealtimePlotView(SurfaceTexture surfaceTexture) {
+        super(surfaceTexture);
+    }
+
     public interface TouchEventListener {
         void touchedChannel(int chNo);
     }
 
-    static private TouchEventListener touchEventListener = null;
-
     public void registerTouchEventListener(TouchEventListener t) {
-        touchEventListener = t;
     }
 
     public void init() {
         xpos = 0;
-        holder = getHolder();
         paint.setColor(Color.WHITE);
         paintBlack.setColor(Color.BLACK);
         paintXCoord.setColor(Color.argb(128, 0, 255, 0));
@@ -56,21 +64,6 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
 
     public void resetX() {
         xpos = 0;
-    }
-
-    public RealtimePlotView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        init();
-    }
-
-    public RealtimePlotView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
-
-    public RealtimePlotView(Context context) {
-        super(context);
-        init();
     }
 
     public void setMaxChannels(int n) {
@@ -86,19 +79,6 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
         xpos = 0;
     }
 
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        //Log.d(TAG,"Surface destroyed");
-    }
-
-    public void surfaceCreated(SurfaceHolder holder) {
-        setWillNotDraw(false);
-        initYpos(getWidth());
-    }
-
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        initYpos(width);
-    }
-
     public synchronized boolean startAddSamples(int n) {
         if (canvas != null) {
             //Log.d(TAG,"Canvas still locked.");
@@ -111,77 +91,45 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
             xr = width - 1;
         }
         Rect rect = new Rect(xpos, 0, xr, getHeight());
-        if (holder != null) {
-            try {
-                canvas = holder.lockCanvas(rect);
-            } catch (java.lang.IllegalStateException e) {
-                Log.d(TAG,"Surface couldn't be locked",e);
-                canvas = null;
-            }
-        } else {
+        try {
+            canvas = lockCanvas(rect);
+        } catch (java.lang.IllegalStateException e) {
+            Log.d(TAG, "Surface couldn't be locked", e);
             canvas = null;
         }
         return true;
     }
 
     public synchronized void stopAddSamples() {
-        if (holder != null) {
-            if (canvas != null) {
-                try {
-                    holder.unlockCanvasAndPost(canvas);
-                } catch (Exception ignored) {
-                }
-                canvas = null;
+        if (canvas != null) {
+            try {
+                unlockCanvasAndPost(canvas);
+            } catch (Exception ignored) {
             }
+            canvas = null;
         }
     }
-
-
-    public int getChannelIdFromY(int y) {
-        for (int i = 0; i < nMaxChannels; i++) {
-            if ((Math.abs(y - yZero[i])) < yHeight) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-
-        float y = event.getY();
-        int idx = getChannelIdFromY((int) y);
-        if (idx != -1) {
-            if (touchEventListener != null) {
-                touchEventListener.touchedChannel(idx);
-            }
-        }
-        return super.onTouchEvent(event);
-    }
-
 
     public synchronized void addSamples(float[] newData,
                                         float[] minV, float[] maxV, float[] ytick,
                                         String[] label,
                                         int ygap) {
         int width = getWidth();
-        int height = getHeight()-ygap;
+        int height = getHeight() - ygap;
 
         int nCh = newData.length;
         if (nCh == 0) return;
 
-        float base = (float)height / nCh;
+        float base = (float) height / nCh;
         yHeight = base / 2;
 
         if (ypos == null) initYpos(width);
 
         if (nMaxChannels == 0) return;
-        Surface surface = holder.getSurface();
-        if (surface.isValid()) {
-            Rect rect = new Rect(xpos, 0, xpos + gap, height+ygap);
+        if (isValid()) {
+            Rect rect = new Rect(xpos, 0, xpos + gap, height + ygap);
             if (canvas != null) {
-                paintLabel.setTextSize((float)canvas.getHeight() / 30);
+                paintLabel.setTextSize((float) canvas.getHeight() / 30);
                 canvas.drawRect(rect, paintBlack);
                 for (int i = 0; i < nCh; i++) {
                     float dy = base / (maxV[i] - minV[i]);
@@ -200,16 +148,16 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
                             yTmpTicNeg = base * (i + 1) - ((-ytick[i] * ticCtr - minV[i]) * dy);
                             doCoord = yTmpTicPos > yTmpTicTicPosBorder;
                             if (doCoord) {
-                                canvas.drawPoint(xpos, yTmpTicPos+ygap, paintXCoord);
-                                canvas.drawPoint(xpos, yTmpTicNeg+ygap, paintXCoord);
+                                canvas.drawPoint(xpos, yTmpTicPos + ygap, paintXCoord);
+                                canvas.drawPoint(xpos, yTmpTicNeg + ygap, paintXCoord);
                             }
                             ticCtr++;
                         } while (doCoord);
                     }
                     if ((xpos % xtic) == 0) {
-                        canvas.drawLine(xpos, ygap, xpos, height+ygap, paintYCoord);
+                        canvas.drawLine(xpos, ygap, xpos, height + ygap, paintYCoord);
                     }
-                    canvas.drawLine(xpos, ypos[i][xpos]+ygap, xpos + 1, ypos[i][xpos + 1]+ygap, paint);
+                    canvas.drawLine(xpos, ypos[i][xpos] + ygap, xpos + 1, ypos[i][xpos + 1] + ygap, paint);
                     canvas.drawText(label[i], 0F, yZero[i] - 1, paintLabel);
                 }
             }
@@ -217,25 +165,14 @@ public class RealtimePlotView extends SurfaceView implements SurfaceHolder.Callb
             nLeft--;
             if (xpos >= (width - 1)) {
                 xpos = 0;
-                if (holder != null) {
-                    if (canvas != null) {
-                        holder.unlockCanvasAndPost(canvas);
-                        canvas = null;
-                    }
-                }
-                rect = new Rect(xpos, 0, nLeft + gap, getHeight());
-                if (holder != null) {
-                    canvas = holder.lockCanvas(rect);
-                } else {
+                if (canvas != null) {
+                    unlockCanvasAndPost(canvas);
                     canvas = null;
                 }
+                rect = new Rect(xpos, 0, nLeft + gap, getHeight());
+                canvas = lockCanvas(rect);
             }
         }
-    }
-
-
-    @Override
-    protected void onDraw(Canvas canvas) {
     }
 
 }
