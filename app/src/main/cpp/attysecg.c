@@ -118,8 +118,6 @@ static const int CPU_LEVEL = 2;
 static const int GPU_LEVEL = 3;
 static const int NUM_MULTI_SAMPLES = 4;
 
-#define MULTI_THREADED 0
-
 /*
 ================================================================================
 
@@ -1177,15 +1175,11 @@ static void ovrScene_Create(ovrScene* scene, bool useMultiview) {
 
     scene->CreatedScene = true;
 
-#if !MULTI_THREADED
     ovrScene_CreateVAOs(scene);
-#endif
 }
 
 static void ovrScene_Destroy(ovrScene* scene) {
-#if !MULTI_THREADED
     ovrScene_DestroyVAOs(scene);
-#endif
 
     ovrProgram_Destroy(&scene->Program);
     ovrGeometry_Destroy(&scene->Cube);
@@ -1398,256 +1392,6 @@ static ovrLayerProjection2 ovrRenderer_RenderFrame(
 /*
 ================================================================================
 
-ovrRenderThread
-
-================================================================================
-*/
-
-#if MULTI_THREADED
-
-typedef enum { RENDER_FRAME, RENDER_LOADING_ICON } ovrRenderType;
-
-typedef struct {
-    JavaVM* JavaVm;
-    jobject ActivityObject;
-    const ovrEgl* ShareEgl;
-    pthread_t Thread;
-    int Tid;
-    bool UseMultiview;
-    // Synchronization
-    bool Exit;
-    bool WorkAvailableFlag;
-    bool WorkDoneFlag;
-    pthread_cond_t WorkAvailableCondition;
-    pthread_cond_t WorkDoneCondition;
-    pthread_mutex_t Mutex;
-    // Latched data for rendering.
-    ovrMobile* Ovr;
-    ovrRenderType RenderType;
-    long long FrameIndex;
-    double DisplayTime;
-    int SwapInterval;
-    ovrScene* Scene;
-    ovrSimulation Simulation;
-    ovrTracking2 Tracking;
-} ovrRenderThread;
-
-void* RenderThreadFunction(void* parm) {
-    ovrRenderThread* renderThread = (ovrRenderThread*)parm;
-    renderThread->Tid = gettid();
-
-    ovrJava java;
-    java.Vm = renderThread->JavaVm;
-    (*java.Vm)->AttachCurrentThread(java.Vm, &java.Env, NULL);
-    java.ActivityObject = renderThread->ActivityObject;
-
-    // Note that AttachCurrentThread will reset the thread name.
-    prctl(PR_SET_NAME, (long)"OVR::Renderer", 0, 0, 0);
-
-    ovrEgl egl;
-    ovrEgl_CreateContext(&egl, renderThread->ShareEgl);
-
-    ovrRenderer renderer;
-    ovrRenderer_Create(&renderer, &java, renderThread->UseMultiview);
-
-    ovrScene* lastScene = NULL;
-
-    for (;;) {
-        // Signal work completed.
-        pthread_mutex_lock(&renderThread->Mutex);
-        renderThread->WorkDoneFlag = true;
-        pthread_cond_signal(&renderThread->WorkDoneCondition);
-        pthread_mutex_unlock(&renderThread->Mutex);
-
-        // Wait for work.
-        pthread_mutex_lock(&renderThread->Mutex);
-        while (!renderThread->WorkAvailableFlag) {
-            pthread_cond_wait(&renderThread->WorkAvailableCondition, &renderThread->Mutex);
-        }
-        renderThread->WorkAvailableFlag = false;
-        pthread_mutex_unlock(&renderThread->Mutex);
-
-        // Check for exit.
-        if (renderThread->Exit) {
-            break;
-        }
-
-        // Make sure the scene has VAOs created for this context.
-        if (renderThread->Scene != NULL && renderThread->Scene != lastScene) {
-            if (lastScene != NULL) {
-                ovrScene_DestroyVAOs(lastScene);
-            }
-            ovrScene_CreateVAOs(renderThread->Scene);
-            lastScene = renderThread->Scene;
-        }
-
-        // Render.
-        ovrLayer_Union2 layers[ovrMaxLayerCount] = {0};
-        int layerCount = 0;
-        int frameFlags = 0;
-
-        if (renderThread->RenderType == RENDER_FRAME) {
-            ovrLayerProjection2 layer;
-            layer = ovrRenderer_RenderFrame(
-                &renderer,
-                &java,
-                renderThread->Scene,
-                &renderThread->Simulation,
-                &renderThread->Tracking,
-                renderThread->Ovr);
-
-            layers[layerCount++].Projection = layer;
-        } else if (renderThread->RenderType == RENDER_LOADING_ICON) {
-            ovrLayerProjection2 blackLayer = vrapi_DefaultLayerBlackProjection2();
-            blackLayer.Header.Flags |= VRAPI_FRAME_LAYER_FLAG_INHIBIT_SRGB_FRAMEBUFFER;
-            layers[layerCount++].Projection = blackLayer;
-
-            ovrLayerLoadingIcon2 iconLayer = vrapi_DefaultLayerLoadingIcon2();
-            iconLayer.Header.Flags |= VRAPI_FRAME_LAYER_FLAG_INHIBIT_SRGB_FRAMEBUFFER;
-            layers[layerCount++].LoadingIcon = iconLayer;
-
-            frameFlags |= VRAPI_FRAME_FLAG_FLUSH;
-        }
-
-        const ovrLayerHeader2* layerList[ovrMaxLayerCount] = {0};
-        for (int i = 0; i < layerCount; i++) {
-            layerList[i] = &layers[i].Header;
-        }
-
-        ovrSubmitFrameDescription2 frameDesc = {0};
-        frameDesc.Flags = frameFlags;
-        frameDesc.SwapInterval = renderThread->SwapInterval;
-        frameDesc.FrameIndex = renderThread->FrameIndex;
-        frameDesc.DisplayTime = renderThread->DisplayTime;
-        frameDesc.LayerCount = layerCount;
-        frameDesc.Layers = layerList;
-
-        vrapi_SubmitFrame2(renderThread->Ovr, &frameDesc);
-    }
-
-    if (lastScene != NULL) {
-        ovrScene_DestroyVAOs(lastScene);
-    }
-
-    ovrRenderer_Destroy(&renderer);
-    ovrEgl_DestroyContext(&egl);
-
-    (*java.Vm)->DetachCurrentThread(java.Vm);
-
-    return NULL;
-}
-
-static void ovrRenderThread_Clear(ovrRenderThread* renderThread) {
-    renderThread->JavaVm = NULL;
-    renderThread->ActivityObject = NULL;
-    renderThread->ShareEgl = NULL;
-    renderThread->Thread = 0;
-    renderThread->Tid = 0;
-    renderThread->UseMultiview = false;
-    renderThread->Exit = false;
-    renderThread->WorkAvailableFlag = false;
-    renderThread->WorkDoneFlag = false;
-    renderThread->Ovr = NULL;
-    renderThread->RenderType = RENDER_FRAME;
-    renderThread->FrameIndex = 1;
-    renderThread->DisplayTime = 0;
-    renderThread->SwapInterval = 1;
-    renderThread->Scene = NULL;
-    ovrSimulation_Clear(&renderThread->Simulation);
-}
-
-static void ovrRenderThread_Create(
-    ovrRenderThread* renderThread,
-    const ovrJava* java,
-    const ovrEgl* shareEgl,
-    const bool useMultiview) {
-    renderThread->JavaVm = java->Vm;
-    renderThread->ActivityObject = java->ActivityObject;
-    renderThread->ShareEgl = shareEgl;
-    renderThread->Thread = 0;
-    renderThread->Tid = 0;
-    renderThread->UseMultiview = useMultiview;
-    renderThread->Exit = false;
-    renderThread->WorkAvailableFlag = false;
-    renderThread->WorkDoneFlag = false;
-    pthread_cond_init(&renderThread->WorkAvailableCondition, NULL);
-    pthread_cond_init(&renderThread->WorkDoneCondition, NULL);
-    pthread_mutex_init(&renderThread->Mutex, NULL);
-
-    const int createErr =
-        pthread_create(&renderThread->Thread, NULL, RenderThreadFunction, renderThread);
-    if (createErr != 0) {
-        ALOGE("pthread_create returned %i", createErr);
-    }
-}
-
-static void ovrRenderThread_Destroy(ovrRenderThread* renderThread) {
-    pthread_mutex_lock(&renderThread->Mutex);
-    renderThread->Exit = true;
-    renderThread->WorkAvailableFlag = true;
-    pthread_cond_signal(&renderThread->WorkAvailableCondition);
-    pthread_mutex_unlock(&renderThread->Mutex);
-
-    pthread_join(renderThread->Thread, NULL);
-    pthread_cond_destroy(&renderThread->WorkAvailableCondition);
-    pthread_cond_destroy(&renderThread->WorkDoneCondition);
-    pthread_mutex_destroy(&renderThread->Mutex);
-}
-
-static void ovrRenderThread_Submit(
-    ovrRenderThread* renderThread,
-    ovrMobile* ovr,
-    ovrRenderType type,
-    long long frameIndex,
-    double displayTime,
-    int swapInterval,
-    ovrScene* scene,
-    const ovrSimulation* simulation,
-    const ovrTracking2* tracking) {
-    // Wait for the renderer thread to finish the last frame.
-    pthread_mutex_lock(&renderThread->Mutex);
-    while (!renderThread->WorkDoneFlag) {
-        pthread_cond_wait(&renderThread->WorkDoneCondition, &renderThread->Mutex);
-    }
-    renderThread->WorkDoneFlag = false;
-    // Latch the render data.
-    renderThread->Ovr = ovr;
-    renderThread->RenderType = type;
-    renderThread->FrameIndex = frameIndex;
-    renderThread->DisplayTime = displayTime;
-    renderThread->SwapInterval = swapInterval;
-    renderThread->Scene = scene;
-    if (simulation != NULL) {
-        renderThread->Simulation = *simulation;
-    }
-    if (tracking != NULL) {
-        renderThread->Tracking = *tracking;
-    }
-    // Signal work is available.
-    renderThread->WorkAvailableFlag = true;
-    pthread_cond_signal(&renderThread->WorkAvailableCondition);
-    pthread_mutex_unlock(&renderThread->Mutex);
-}
-
-static void ovrRenderThread_Wait(ovrRenderThread* renderThread) {
-    // Wait for the renderer thread to finish the last frame.
-    pthread_mutex_lock(&renderThread->Mutex);
-    while (!renderThread->WorkDoneFlag) {
-        pthread_cond_wait(&renderThread->WorkDoneCondition, &renderThread->Mutex);
-    }
-    pthread_mutex_unlock(&renderThread->Mutex);
-}
-
-static int ovrRenderThread_GetTid(ovrRenderThread* renderThread) {
-    ovrRenderThread_Wait(renderThread);
-    return renderThread->Tid;
-}
-
-#endif // MULTI_THREADED
-
-/*
-================================================================================
-
 ovrApp
 
 ================================================================================
@@ -1669,11 +1413,7 @@ typedef struct {
     int MainThreadTid;
     int RenderThreadTid;
     bool GamePadBackButtonDown;
-#if MULTI_THREADED
-    ovrRenderThread RenderThread;
-#else
     ovrRenderer Renderer;
-#endif
     bool UseMultiview;
 } ovrApp;
 
@@ -1697,11 +1437,7 @@ static void ovrApp_Clear(ovrApp* app) {
     ovrEgl_Clear(&app->Egl);
     ovrScene_Clear(&app->Scene);
     ovrSimulation_Clear(&app->Simulation);
-#if MULTI_THREADED
-    ovrRenderThread_Clear(&app->RenderThread);
-#else
     ovrRenderer_Clear(&app->Renderer);
-#endif
 }
 
 static void ovrApp_HandleVrModeChanges(ovrApp* app) {
@@ -1748,10 +1484,6 @@ static void ovrApp_HandleVrModeChanges(ovrApp* app) {
         }
     } else {
         if (app->Ovr != NULL) {
-#if MULTI_THREADED
-            // Make sure the renderer thread is no longer using the ovrMobile.
-            ovrRenderThread_Wait(&app->RenderThread);
-#endif
             ALOGD("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
 
             ALOGD("        vrapi_LeaveVrMode()");
@@ -2050,14 +1782,7 @@ void* AppThreadFunction(void* parm) {
     appState.GpuLevel = GPU_LEVEL;
     appState.MainThreadTid = gettid();
 
-#if MULTI_THREADED
-    ovrRenderThread_Create(
-        &appState.RenderThread, &appState.Java, &appState.Egl, appState.UseMultiview);
-    // Also set the renderer thread to SCHED_FIFO.
-    appState.RenderThreadTid = ovrRenderThread_GetTid(&appState.RenderThread);
-#else
     ovrRenderer_Create(&appState.Renderer, &java, appState.UseMultiview);
-#endif
 
     const double startTime = GetTimeInSeconds();
 
@@ -2125,19 +1850,6 @@ void* AppThreadFunction(void* parm) {
         // Create the scene if not yet created.
         // The scene is created here to be able to show a loading icon.
         if (!ovrScene_IsCreated(&appState.Scene)) {
-#if MULTI_THREADED
-            // Show a loading icon.
-            ovrRenderThread_Submit(
-                &appState.RenderThread,
-                appState.Ovr,
-                RENDER_LOADING_ICON,
-                appState.FrameIndex,
-                appState.DisplayTime,
-                appState.SwapInterval,
-                NULL,
-                NULL,
-                NULL);
-#else
             // Show a loading icon.
             int frameFlags = 0;
             frameFlags |= VRAPI_FRAME_FLAG_FLUSH;
@@ -2162,8 +1874,6 @@ void* AppThreadFunction(void* parm) {
             frameDesc.Layers = layers;
 
             vrapi_SubmitFrame2(appState.Ovr, &frameDesc);
-#endif
-
             // Create the scene.
             ovrScene_Create(&appState.Scene, appState.UseMultiview);
             ALOGD("Scene created");
@@ -2189,19 +1899,6 @@ void* AppThreadFunction(void* parm) {
         // display time.
         ovrSimulation_Advance(&appState.Simulation, predictedDisplayTime - startTime);
 
-#if MULTI_THREADED
-        // Render the eye images on a separate thread.
-        ovrRenderThread_Submit(
-            &appState.RenderThread,
-            appState.Ovr,
-            RENDER_FRAME,
-            appState.FrameIndex,
-            appState.DisplayTime,
-            appState.SwapInterval,
-            &appState.Scene,
-            &appState.Simulation,
-            &tracking);
-#else
         // Render eye images and setup the primary layer using ovrTracking2.
         const ovrLayerProjection2 worldLayer = ovrRenderer_RenderFrame(
             &appState.Renderer,
@@ -2224,15 +1921,9 @@ void* AppThreadFunction(void* parm) {
         // Hand over the eye images to the time warp.
         // ALOGD("Handing over frame # = %lld",appState.FrameIndex);
         vrapi_SubmitFrame2(appState.Ovr, &frameDesc);
-#endif
     }
 
-#if MULTI_THREADED
-    ovrRenderThread_Destroy(&appState.RenderThread);
-#else
     ovrRenderer_Destroy(&appState.Renderer);
-#endif
-
     ovrScene_Destroy(&appState.Scene);
     ovrEgl_DestroyContext(&appState.Egl);
 

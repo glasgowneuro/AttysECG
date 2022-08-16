@@ -11,9 +11,11 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.SurfaceTexture;
 import android.media.AudioManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -35,6 +37,7 @@ import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.util.SparseBooleanArray;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -82,6 +85,8 @@ public class AttysECG extends AppCompatActivity {
     public static final String HR_FILENAME = "hr.tsv";
 
     private Timer timer = null;
+
+    private SurfaceTexture surfaceTexture = null;
 
     private static int audioSessionID;
 
@@ -685,7 +690,6 @@ public class AttysECG extends AppCompatActivity {
         }
     }
 
-
     /**
      * Called when the activity is first created.
      */
@@ -697,7 +701,10 @@ public class AttysECG extends AppCompatActivity {
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
 
-        setContentView(R.layout.main_activity_layout);
+        hrvOculus = new HRVOculus(this);
+        setContentView(hrvOculus);
+        hrvOculus.init(this);
+        surfaceTexture = HRVOculus.getSurfaceTexture();
 
         Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
@@ -711,12 +718,6 @@ public class AttysECG extends AppCompatActivity {
         realtimePlotView = findViewById(R.id.realtimeplotview);
         realtimePlotView.setMaxChannels(15);
         realtimePlotView.init();
-
-        hrvOculus = new HRVOculus(this);
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT);
-        addContentView(hrvOculus,params);
-        hrvOculus.init(this);
 
         realtimePlotView.registerTouchEventListener(
                 new RealtimePlotView.TouchEventListener() {

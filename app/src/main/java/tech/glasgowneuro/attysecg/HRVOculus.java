@@ -1,6 +1,10 @@
 package tech.glasgowneuro.attysecg;
 
 import android.content.Context;
+import android.graphics.PixelFormat;
+import android.graphics.SurfaceTexture;
+import android.opengl.GLES11Ext;
+import android.opengl.GLES20;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -18,10 +22,28 @@ public class HRVOculus extends SurfaceView implements SurfaceHolder.Callback {
         System.loadLibrary("attysecg");
     }
 
+    static public int createTexture()
+    {
+        int[] texture = new int[1];
+        GLES20.glGenTextures(1,texture, 0);
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture[0]);
+        return texture[0];
+    }
+
+    static public SurfaceTexture getSurfaceTexture() {
+        final int t = createTexture();
+        final SurfaceTexture st = new SurfaceTexture(t);
+        st.setDefaultBufferSize(500,500);
+        return st;
+    }
+
     public void init(Activity a) {
         Log.d(TAG,"HRVinit");
         getHolder().addCallback(this);
         mNativeHandle = onCreate(a);
+
+        getHolder().setFormat(PixelFormat.TRANSLUCENT);
+        setZOrderOnTop(false);
     }
 
     public void destroy() {
