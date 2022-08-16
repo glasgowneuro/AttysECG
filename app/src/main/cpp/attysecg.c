@@ -1276,6 +1276,8 @@ static ovrLayerProjection2 ovrRenderer_RenderFrame(
             scene->Rotations[i].z * simulation->CurrentRotation.z);
     }
 
+    ALOGD("Rendering frame");
+
     // Update the instance transform attributes.
     GL(glBindBuffer(GL_ARRAY_BUFFER, scene->InstanceTransformBuffer));
     GL(ovrMatrix4f* cubeTransforms = (ovrMatrix4f*)glMapBufferRange(
@@ -2167,7 +2169,6 @@ void* AppThreadFunction(void* parm) {
             ALOGD("Scene created");
         }
 
-        // ALOGD("fame # = %lld",appState.FrameIndex);
 
         // This is the only place the frame index is incremented, right before
         // calling vrapi_GetPredictedDisplayTime().
@@ -2221,6 +2222,7 @@ void* AppThreadFunction(void* parm) {
         frameDesc.Layers = layers;
 
         // Hand over the eye images to the time warp.
+        ALOGD("Handing over frame # = %lld",appState.FrameIndex);
         vrapi_SubmitFrame2(appState.Ovr, &frameDesc);
 #endif
     }
