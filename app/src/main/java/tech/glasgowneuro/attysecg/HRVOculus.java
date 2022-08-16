@@ -75,6 +75,9 @@ public class HRVOculus extends SurfaceView implements SurfaceHolder.Callback {
         if (mNativeHandle != 0) {
             onSurfaceCreated(mNativeHandle, holder.getSurface());
             mSurfaceHolder = holder;
+            Log.d(TAG,"surfaceCreated. Have holder.");
+        } else {
+            Log.e(TAG,"Could not create surface. handle = null");
         }
     }
 
@@ -84,6 +87,9 @@ public class HRVOculus extends SurfaceView implements SurfaceHolder.Callback {
         if (mNativeHandle != 0) {
             onSurfaceChanged(mNativeHandle, holder.getSurface());
             mSurfaceHolder = holder;
+            Log.d(TAG, "surfaceChanged. New holder.");
+        } else {
+            Log.e(TAG, "Could not updated surface in surfaceChanged. handle = null");
         }
     }
 

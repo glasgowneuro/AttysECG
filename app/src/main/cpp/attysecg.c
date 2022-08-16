@@ -109,9 +109,9 @@ typedef void(GL_APIENTRY* PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)(
 
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, OVR_LOG_TAG, __VA_ARGS__)
 #if DEBUG
-#define ALOGV(...) __android_log_print(ANDROID_LOG_DEBUG, OVR_LOG_TAG, __VA_ARGS__)
+#define ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG, OVR_LOG_TAG, __VA_ARGS__)
 #else
-#define ALOGV(...)
+#define ALOGD(...)
 #endif
 
 static const int CPU_LEVEL = 2;
@@ -290,7 +290,7 @@ static void ovrEgl_CreateContext(ovrEgl* egl, const ovrEgl* shareEgl) {
     }
 
     egl->Display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    ALOGV("        eglInitialize( Display, &MajorVersion, &MinorVersion )");
+    ALOGD("        eglInitialize( Display, &MajorVersion, &MinorVersion )");
     eglInitialize(egl->Display, &egl->MajorVersion, &egl->MinorVersion);
     // Do NOT use eglChooseConfig, because the Android EGL code pushes in multisample
     // flags in eglChooseConfig if the user has selected the "force 4x MSAA" option in
@@ -351,7 +351,7 @@ static void ovrEgl_CreateContext(ovrEgl* egl, const ovrEgl* shareEgl) {
         return;
     }
     EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
-    ALOGV("        Context = eglCreateContext( Display, Config, EGL_NO_CONTEXT, contextAttribs )");
+    ALOGD("        Context = eglCreateContext( Display, Config, EGL_NO_CONTEXT, contextAttribs )");
     egl->Context = eglCreateContext(
         egl->Display,
         egl->Config,
@@ -362,7 +362,7 @@ static void ovrEgl_CreateContext(ovrEgl* egl, const ovrEgl* shareEgl) {
         return;
     }
     const EGLint surfaceAttribs[] = {EGL_WIDTH, 16, EGL_HEIGHT, 16, EGL_NONE};
-    ALOGV("        TinySurface = eglCreatePbufferSurface( Display, Config, surfaceAttribs )");
+    ALOGD("        TinySurface = eglCreatePbufferSurface( Display, Config, surfaceAttribs )");
     egl->TinySurface = eglCreatePbufferSurface(egl->Display, egl->Config, surfaceAttribs);
     if (egl->TinySurface == EGL_NO_SURFACE) {
         ALOGE("        eglCreatePbufferSurface() failed: %s", EglErrorString(eglGetError()));
@@ -370,7 +370,7 @@ static void ovrEgl_CreateContext(ovrEgl* egl, const ovrEgl* shareEgl) {
         egl->Context = EGL_NO_CONTEXT;
         return;
     }
-    ALOGV("        eglMakeCurrent( Display, TinySurface, TinySurface, Context )");
+    ALOGD("        eglMakeCurrent( Display, TinySurface, TinySurface, Context )");
     if (eglMakeCurrent(egl->Display, egl->TinySurface, egl->TinySurface, egl->Context) ==
         EGL_FALSE) {
         ALOGE("        eglMakeCurrent() failed: %s", EglErrorString(eglGetError()));
@@ -843,7 +843,7 @@ static bool ovrFramebuffer_Create(
     frameBuffer->FrameBuffers =
         (GLuint*)malloc(frameBuffer->TextureSwapChainLength * sizeof(GLuint));
 
-    ALOGV("        frameBuffer->UseMultiview = %d", frameBuffer->UseMultiview);
+    ALOGD("        frameBuffer->UseMultiview = %d", frameBuffer->UseMultiview);
 
     for (int i = 0; i < frameBuffer->TextureSwapChainLength; i++) {
         // Create the color buffer texture.
@@ -1714,13 +1714,13 @@ static void ovrApp_HandleVrModeChanges(ovrApp* app) {
             parms.WindowSurface = (size_t)app->NativeWindow;
             parms.ShareContext = (size_t)app->Egl.Context;
 
-            ALOGV("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
+            ALOGD("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
 
-            ALOGV("        vrapi_EnterVrMode()");
+            ALOGD("        vrapi_EnterVrMode()");
 
             app->Ovr = vrapi_EnterVrMode(&parms);
 
-            ALOGV("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
+            ALOGD("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
 
             // If entering VR mode failed then the ANativeWindow was not valid.
             if (app->Ovr == NULL) {
@@ -1732,16 +1732,16 @@ static void ovrApp_HandleVrModeChanges(ovrApp* app) {
             if (app->Ovr != NULL) {
                 vrapi_SetClockLevels(app->Ovr, app->CpuLevel, app->GpuLevel);
 
-                ALOGV("		vrapi_SetClockLevels( %d, %d )", app->CpuLevel, app->GpuLevel);
+                ALOGD("		vrapi_SetClockLevels( %d, %d )", app->CpuLevel, app->GpuLevel);
 
                 vrapi_SetPerfThread(app->Ovr, VRAPI_PERF_THREAD_TYPE_MAIN, app->MainThreadTid);
 
-                ALOGV("		vrapi_SetPerfThread( MAIN, %d )", app->MainThreadTid);
+                ALOGD("		vrapi_SetPerfThread( MAIN, %d )", app->MainThreadTid);
 
                 vrapi_SetPerfThread(
                     app->Ovr, VRAPI_PERF_THREAD_TYPE_RENDERER, app->RenderThreadTid);
 
-                ALOGV("		vrapi_SetPerfThread( RENDERER, %d )", app->RenderThreadTid);
+                ALOGD("		vrapi_SetPerfThread( RENDERER, %d )", app->RenderThreadTid);
             }
         }
     } else {
@@ -1750,14 +1750,14 @@ static void ovrApp_HandleVrModeChanges(ovrApp* app) {
             // Make sure the renderer thread is no longer using the ovrMobile.
             ovrRenderThread_Wait(&app->RenderThread);
 #endif
-            ALOGV("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
+            ALOGD("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
 
-            ALOGV("        vrapi_LeaveVrMode()");
+            ALOGD("        vrapi_LeaveVrMode()");
 
             vrapi_LeaveVrMode(app->Ovr);
             app->Ovr = NULL;
 
-            ALOGV("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
+            ALOGD("        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface(EGL_DRAW));
         }
     }
 }
@@ -1790,29 +1790,29 @@ static void ovrApp_HandleVrApiEvents(ovrApp* app) {
 
         switch (eventHeader->EventType) {
             case VRAPI_EVENT_DATA_LOST:
-                ALOGV("vrapi_PollEvent: Received VRAPI_EVENT_DATA_LOST");
+                ALOGD("vrapi_PollEvent: Received VRAPI_EVENT_DATA_LOST");
                 break;
             case VRAPI_EVENT_VISIBILITY_GAINED:
-                ALOGV("vrapi_PollEvent: Received VRAPI_EVENT_VISIBILITY_GAINED");
+                ALOGD("vrapi_PollEvent: Received VRAPI_EVENT_VISIBILITY_GAINED");
                 break;
             case VRAPI_EVENT_VISIBILITY_LOST:
-                ALOGV("vrapi_PollEvent: Received VRAPI_EVENT_VISIBILITY_LOST");
+                ALOGD("vrapi_PollEvent: Received VRAPI_EVENT_VISIBILITY_LOST");
                 break;
             case VRAPI_EVENT_FOCUS_GAINED:
                 // FOCUS_GAINED is sent when the application is in the foreground and has
                 // input focus. This may be due to a system overlay relinquishing focus
                 // back to the application.
-                ALOGV("vrapi_PollEvent: Received VRAPI_EVENT_FOCUS_GAINED");
+                ALOGD("vrapi_PollEvent: Received VRAPI_EVENT_FOCUS_GAINED");
                 break;
             case VRAPI_EVENT_FOCUS_LOST:
                 // FOCUS_LOST is sent when the application is no longer in the foreground and
                 // therefore does not have input focus. This may be due to a system overlay taking
                 // focus from the application. The application should take appropriate action when
                 // this occurs.
-                ALOGV("vrapi_PollEvent: Received VRAPI_EVENT_FOCUS_LOST");
+                ALOGD("vrapi_PollEvent: Received VRAPI_EVENT_FOCUS_LOST");
                 break;
             default:
-                ALOGV("vrapi_PollEvent: Unknown event");
+                ALOGD("vrapi_PollEvent: Unknown event");
                 break;
         }
     }
@@ -2042,7 +2042,7 @@ void* AppThreadFunction(void* parm) {
 
     appState.UseMultiview &= glExtensions.multi_view;
 
-    ALOGV("AppState UseMultiview : %d", appState.UseMultiview);
+    ALOGD("AppState UseMultiview : %d", appState.UseMultiview);
 
     appState.CpuLevel = CPU_LEVEL;
     appState.GpuLevel = GPU_LEVEL;
@@ -2164,7 +2164,10 @@ void* AppThreadFunction(void* parm) {
 
             // Create the scene.
             ovrScene_Create(&appState.Scene, appState.UseMultiview);
+            ALOGD("Scene created");
         }
+
+        // ALOGD("fame # = %lld",appState.FrameIndex);
 
         // This is the only place the frame index is incremented, right before
         // calling vrapi_GetPredictedDisplayTime().
@@ -2249,6 +2252,7 @@ static void ovrAppThread_Create(ovrAppThread* appThread, JNIEnv* env, jobject ac
     if (createErr != 0) {
         ALOGE("pthread_create returned %i", createErr);
     }
+    ALOGD("thread created");
 }
 
 static void ovrAppThread_Destroy(ovrAppThread* appThread, JNIEnv* env) {
@@ -2267,7 +2271,7 @@ Activity lifecycle
 
 JNIEXPORT jlong JNICALL
 Java_tech_glasgowneuro_attysecg_HRVOculus_onCreate(JNIEnv *env, jclass clazz, jobject activity) {
-    ALOGV("    GLES3JNILib::onCreate()");
+    ALOGD("    GLES3JNILib::onCreate()");
 
     ovrAppThread* appThread = (ovrAppThread*)malloc(sizeof(ovrAppThread));
     ovrAppThread_Create(appThread, env, activity);
@@ -2282,7 +2286,7 @@ Java_tech_glasgowneuro_attysecg_HRVOculus_onCreate(JNIEnv *env, jclass clazz, jo
 
 JNIEXPORT void JNICALL
 Java_tech_glasgowneuro_attysecg_HRVOculus_onStart(JNIEnv *env, jclass clazz, jlong handle) {
-    ALOGV("    GLES3JNILib::onStart()");
+    ALOGD("    GLES3JNILib::onStart()");
     ovrAppThread* appThread = (ovrAppThread*)((size_t)handle);
     ovrMessage message;
     ovrMessage_Init(&message, MESSAGE_ON_START, MQ_WAIT_PROCESSED);
@@ -2291,7 +2295,7 @@ Java_tech_glasgowneuro_attysecg_HRVOculus_onStart(JNIEnv *env, jclass clazz, jlo
 
 JNIEXPORT void JNICALL
 Java_tech_glasgowneuro_attysecg_HRVOculus_onResume(JNIEnv* env, jobject obj, jlong handle) {
-    ALOGV("    GLES3JNILib::onResume()");
+    ALOGD("    GLES3JNILib::onResume()");
     ovrAppThread* appThread = (ovrAppThread*)((size_t)handle);
     ovrMessage message;
     ovrMessage_Init(&message, MESSAGE_ON_RESUME, MQ_WAIT_PROCESSED);
@@ -2300,7 +2304,7 @@ Java_tech_glasgowneuro_attysecg_HRVOculus_onResume(JNIEnv* env, jobject obj, jlo
 
 JNIEXPORT void JNICALL
 Java_tech_glasgowneuro_attysecg_HRVOculus_onPause(JNIEnv* env, jobject obj, jlong handle) {
-    ALOGV("    GLES3JNILib::onPause()");
+    ALOGD("    GLES3JNILib::onPause()");
     ovrAppThread* appThread = (ovrAppThread*)((size_t)handle);
     ovrMessage message;
     ovrMessage_Init(&message, MESSAGE_ON_PAUSE, MQ_WAIT_PROCESSED);
@@ -2309,7 +2313,7 @@ Java_tech_glasgowneuro_attysecg_HRVOculus_onPause(JNIEnv* env, jobject obj, jlon
 
 JNIEXPORT void JNICALL
 Java_tech_glasgowneuro_attysecg_HRVOculus_onStop(JNIEnv* env, jobject obj, jlong handle) {
-    ALOGV("    GLES3JNILib::onStop()");
+    ALOGD("    GLES3JNILib::onStop()");
     ovrAppThread* appThread = (ovrAppThread*)((size_t)handle);
     ovrMessage message;
     ovrMessage_Init(&message, MESSAGE_ON_STOP, MQ_WAIT_PROCESSED);
@@ -2318,7 +2322,7 @@ Java_tech_glasgowneuro_attysecg_HRVOculus_onStop(JNIEnv* env, jobject obj, jlong
 
 JNIEXPORT void JNICALL
 Java_tech_glasgowneuro_attysecg_HRVOculus_onDestroy(JNIEnv* env, jobject obj, jlong handle) {
-    ALOGV("    GLES3JNILib::onDestroy()");
+    ALOGD("    GLES3JNILib::onDestroy()");
     ovrAppThread* appThread = (ovrAppThread*)((size_t)handle);
     ovrMessage message;
     ovrMessage_Init(&message, MESSAGE_ON_DESTROY, MQ_WAIT_PROCESSED);
@@ -2342,7 +2346,7 @@ JNIEXPORT void JNICALL Java_tech_glasgowneuro_attysecg_HRVOculus_onSurfaceCreate
     jobject obj,
     jlong handle,
     jobject surface) {
-    ALOGV("    GLES3JNILib::onSurfaceCreated()");
+    ALOGD("    GLES3JNILib::onSurfaceCreated()");
     ovrAppThread* appThread = (ovrAppThread*)((size_t)handle);
 
     ANativeWindow* newNativeWindow = ANativeWindow_fromSurface(env, surface);
@@ -2354,7 +2358,7 @@ JNIEXPORT void JNICALL Java_tech_glasgowneuro_attysecg_HRVOculus_onSurfaceCreate
         ALOGE("        Surface not in landscape mode!");
     }
 
-    ALOGV("        NativeWindow = ANativeWindow_fromSurface( env, surface )");
+    ALOGD("        NativeWindow = ANativeWindow_fromSurface( env, surface )");
     appThread->NativeWindow = newNativeWindow;
     ovrMessage message;
     ovrMessage_Init(&message, MESSAGE_ON_SURFACE_CREATED, MQ_WAIT_PROCESSED);
@@ -2367,7 +2371,7 @@ JNIEXPORT void JNICALL Java_tech_glasgowneuro_attysecg_HRVOculus_onSurfaceChange
     jobject obj,
     jlong handle,
     jobject surface) {
-    ALOGV("    GLES3JNILib::onSurfaceChanged()");
+    ALOGD("    GLES3JNILib::onSurfaceChanged()");
     ovrAppThread* appThread = (ovrAppThread*)((size_t)handle);
 
     ANativeWindow* newNativeWindow = ANativeWindow_fromSurface(env, surface);
@@ -2384,12 +2388,12 @@ JNIEXPORT void JNICALL Java_tech_glasgowneuro_attysecg_HRVOculus_onSurfaceChange
             ovrMessage message;
             ovrMessage_Init(&message, MESSAGE_ON_SURFACE_DESTROYED, MQ_WAIT_PROCESSED);
             ovrMessageQueue_PostMessage(&appThread->MessageQueue, &message);
-            ALOGV("        ANativeWindow_release( NativeWindow )");
+            ALOGD("        ANativeWindow_release( NativeWindow )");
             ANativeWindow_release(appThread->NativeWindow);
             appThread->NativeWindow = NULL;
         }
         if (newNativeWindow != NULL) {
-            ALOGV("        NativeWindow = ANativeWindow_fromSurface( env, surface )");
+            ALOGD("        NativeWindow = ANativeWindow_fromSurface( env, surface )");
             appThread->NativeWindow = newNativeWindow;
             ovrMessage message;
             ovrMessage_Init(&message, MESSAGE_ON_SURFACE_CREATED, MQ_WAIT_PROCESSED);
@@ -2405,12 +2409,12 @@ JNIEXPORT void JNICALL Java_tech_glasgowneuro_attysecg_HRVOculus_onSurfaceDestro
     JNIEnv* env,
     jobject obj,
     jlong handle) {
-    ALOGV("    GLES3JNILib::onSurfaceDestroyed()");
+    ALOGD("    GLES3JNILib::onSurfaceDestroyed()");
     ovrAppThread* appThread = (ovrAppThread*)((size_t)handle);
     ovrMessage message;
     ovrMessage_Init(&message, MESSAGE_ON_SURFACE_DESTROYED, MQ_WAIT_PROCESSED);
     ovrMessageQueue_PostMessage(&appThread->MessageQueue, &message);
-    ALOGV("        ANativeWindow_release( NativeWindow )");
+    ALOGD("        ANativeWindow_release( NativeWindow )");
     ANativeWindow_release(appThread->NativeWindow);
     appThread->NativeWindow = NULL;
 }
@@ -2430,7 +2434,7 @@ JNIEXPORT void JNICALL Java_tech_glasgowneuro_attysecg_HRVOculus_onKeyEvent(
     int keyCode,
     int action) {
     if (action == AKEY_EVENT_ACTION_UP) {
-        ALOGV("    GLES3JNILib::onKeyEvent( %d, %d )", keyCode, action);
+        ALOGD("    GLES3JNILib::onKeyEvent( %d, %d )", keyCode, action);
     }
     ovrAppThread* appThread = (ovrAppThread*)((size_t)handle);
     ovrMessage message;

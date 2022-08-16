@@ -930,6 +930,19 @@ public class AttysECG extends AppCompatActivity {
         startDAQ();
     }
 
+    @Override
+    protected void onResume() {
+        Log.v(TAG, "onResume()");
+        super.onResume();
+        hrvOculus.start();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.v(TAG, "onPause()");
+        hrvOculus.stop();
+        super.onPause();
+    }
 
     @Override
     public void onStop() {
