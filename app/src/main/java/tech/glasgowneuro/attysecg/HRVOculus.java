@@ -27,13 +27,14 @@ public class HRVOculus extends SurfaceView implements SurfaceHolder.Callback {
         int[] texture = new int[1];
         GLES20.glGenTextures(1,texture, 0);
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture[0]);
+        Log.d(TAG,"Texture="+texture[0]);
         return texture[0];
     }
 
     static public SurfaceTexture getSurfaceTexture() {
         final int t = createTexture();
         final SurfaceTexture st = new SurfaceTexture(t);
-        st.setDefaultBufferSize(500,500);
+        st.setDefaultBufferSize(500*4,500*4);
         return st;
     }
 

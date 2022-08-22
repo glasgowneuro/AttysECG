@@ -6,11 +6,20 @@
 
 cmake_minimum_required(VERSION 3.18.1)
 
-# Declares and names the project.
-
 project("attysecg")
 
-include_directories(/home/bp1/oculus/VrApi/Include)
+set(OCULUS_MOBILE_SDK /home/bp1/oculus)
+
+include_directories(
+        ${OCULUS_MOBILE_SDK}/VrApi/Include
+        ${OCULUS_MOBILE_SDK}/1stParty/utilities/include/
+        ${OCULUS_MOBILE_SDK}/1stParty/OVR/Include
+        ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src
+        ${OCULUS_MOBILE_SDK}/3rdParty/stb/src
+        ${OCULUS_MOBILE_SDK}/SampleFramework/Src
+        ${OCULUS_MOBILE_SDK}/SampleCommon/Src
+        ${ANDROID_NDK}/sources/android/native_app_glue
+)
 
 option(BUILD_LOADER "Build loader" OFF)
 
@@ -21,13 +30,99 @@ set_property(
         vrapi
         PROPERTY
         IMPORTED_LOCATION
-        /home/bp1/oculus/VrApi/Libs/Android/${ANDROID_ABI}/${CMAKE_BUILD_TYPE}/libvrapi.so
+        ${OCULUS_MOBILE_SDK}/VrApi/Libs/Android/${ANDROID_ABI}/${CMAKE_BUILD_TYPE}/libvrapi.so
 )
 
-# Creates and names a library, sets it as either STATIC
-# or SHARED, and provides the relative paths to its source code.
-# You can define multiple libraries, and CMake builds them for you.
-# Gradle automatically packages shared libraries with your APK.
+add_library(minizip STATIC
+        ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/ioapi.c
+        ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/mztools.c
+        ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/iowin32.c
+        ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/unzip.c
+        ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/miniunz.c
+        ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/zip.c
+        ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/minizip.c
+        )
+
+add_library(stb STATIC
+        ${OCULUS_MOBILE_SDK}/3rdParty/stb/src/stb_image.c
+        ${OCULUS_MOBILE_SDK}/3rdParty/stb/src/stb_image_write.c
+        ${OCULUS_MOBILE_SDK}/3rdParty/stb/src/stb_vorbis.c
+        )
+
+add_library(sampleframework STATIC
+        ${OCULUS_MOBILE_SDK}/SampleFramework/Src/Appl.cpp
+        ${OCULUS_MOBILE_SDK}/SampleFramework/Src/Input/HandMaskRenderer.cpp
+        ${OCULUS_MOBILE_SDK}/SampleFramework/Src/Input/HandModel.cpp
+        ${OCULUS_MOBILE_SDK}/SampleFramework/Src/Input/HandRenderer.cpp
+        ${OCULUS_MOBILE_SDK}/SampleFramework/Src/Platform/Android/Android.cpp
+        ${OCULUS_MOBILE_SDK}/SampleFramework/Src/Render/Framebuffer.c
+        ${OCULUS_MOBILE_SDK}/SampleFramework/Src/SurfaceRenderApp.cpp
+        )
+
+add_library(samplecommon STATIC
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/ActionComponents.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/AnimComponents.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/CollisionPrimitive.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/DefaultComponent.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/Fader.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/GazeCursor.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/GuiSys.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/MetaDataManager.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/Reflection.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/ReflectionData.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/SoundLimiter.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/VRMenu.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/VRMenuComponent.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/VRMenuEvent.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/VRMenuEventHandler.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/VRMenuMgr.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/GUI/VRMenuObject.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Input/ArmModel.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Input/AxisRenderer.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Input/ControllerRenderer.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Input/Skeleton.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Input/SkeletonRenderer.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Input/TinyUI.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Locale/OVR_Locale.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Locale/tinyxml2.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Misc/Log.c
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Model/ModelCollision.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Model/ModelFile_glTF.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Model/ModelFile_OvrScene.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Model/ModelFile.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Model/ModelRender.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Model/ModelTrace.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Model/SceneView.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/OVR_BinaryFile2.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/OVR_FileSys.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/OVR_Lexer2.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/OVR_MappedFile.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/OVR_Stream.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/OVR_Uri.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/OVR_UTF8Util.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/PackageFiles.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/BeamRenderer.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/BitmapFont.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/DebugLines.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/EaseFunctions.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/Egl.c
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/GeometryBuilder.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/GeometryRenderer.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/GlBuffer.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/GlGeometry.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/GlProgram.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/GlSetup.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/GlTexture.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/PanelRenderer.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/ParticleSystem.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/PointList.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/Ribbon.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/SurfaceRender.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/SurfaceTexture.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/TextureAtlas.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/Render/TextureManager.cpp
+${OCULUS_MOBILE_SDK}/SampleCommon/Src/System.cpp
+        )
 
 add_library( # Sets the name of the library.
              attysecg
@@ -36,7 +131,7 @@ add_library( # Sets the name of the library.
              SHARED
 
              # Provides a relative path to your source file(s).
-             attysecg.c)
+             VrAttsECG_Framework.cpp)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -56,14 +151,14 @@ find_library( # Sets the name of the path variable.
 # build script, prebuilt third-party libraries, or system libraries.
 
 target_link_libraries( # Specifies the target library.
-                       attysecg
+        attysecg
 
-                       vrapi
-
-                       # Links the target library to the log library
-                       # included in the NDK.
-                       ${log-lib}
-                       nativewindow
-                       android
-                       GLESv3 EGL
+        stb
+        vrapi
+        samplecommon
+        sampleframework
+        ${log-lib}
+        nativewindow
+        android
+        GLESv3 EGL
         )

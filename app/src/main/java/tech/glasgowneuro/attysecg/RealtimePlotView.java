@@ -163,6 +163,7 @@ public class RealtimePlotView extends Surface {
             }
             xpos++;
             nLeft--;
+            //Log.d(TAG,"xpos="+xpos);
             if (xpos >= (width - 1)) {
                 xpos = 0;
                 if (canvas != null) {

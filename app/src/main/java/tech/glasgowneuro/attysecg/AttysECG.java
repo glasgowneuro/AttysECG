@@ -351,11 +351,15 @@ public class AttysECG extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(),
                                 "Bluetooth connection problem", Toast.LENGTH_SHORT).show();
                         attysService.getAttysComm().stop();
-                        progress.setVisibility(View.GONE);
+                        if (null != progress) {
+                            progress.setVisibility(View.GONE);
+                        }
                         finish();
                         break;
                     case AttysComm.MESSAGE_CONNECTED:
-                        progress.setVisibility(View.GONE);
+                        if (null != progress) {
+                            progress.setVisibility(View.GONE);
+                        }
                         break;
                     case AttysComm.MESSAGE_RETRY:
                         Toast.makeText(getApplicationContext(),
@@ -373,7 +377,9 @@ public class AttysECG extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                         break;
                     case AttysComm.MESSAGE_CONNECTING:
-                        progress.setVisibility(View.VISIBLE);
+                        if (null != progress) {
+                            progress.setVisibility(View.VISIBLE);
+                        }
                 }
             }
         });
@@ -594,7 +600,9 @@ public class AttysECG extends AppCompatActivity {
     private void toBackground() {
         killTimer();
         if (dataRecorder.isRecording()) return;
-        attysService.stopAttysComm();
+        if (attysService != null) {
+            attysService.stopAttysComm();
+        }
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Killed AttysComm");
         }
@@ -704,7 +712,6 @@ public class AttysECG extends AppCompatActivity {
         hrvOculus = new HRVOculus(this);
         setContentView(hrvOculus);
         hrvOculus.init(this);
-        surfaceTexture = HRVOculus.getSurfaceTexture();
 
         Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
@@ -715,28 +722,7 @@ public class AttysECG extends AppCompatActivity {
         progress = findViewById(R.id.indeterminateBar);
         leadsView = findViewById(R.id.leadsview);
 
-        realtimePlotView = new RealtimePlotView(surfaceTexture);
-        realtimePlotView.setMaxChannels(15);
-        realtimePlotView.init();
-
-        realtimePlotView.registerTouchEventListener(
-                new RealtimePlotView.TouchEventListener() {
-                    @Override
-                    public void touchedChannel(int chNo) {
-                        try {
-                            // theChannelWeDoAnalysis = actualChannelIdx[chNo];
-                            updatePlotTask.resetAnalysis();
-                        } catch (Exception e) {
-                            if (Log.isLoggable(TAG, Log.ERROR)) {
-                                Log.e(TAG, "Exception in the TouchEventListener (BUG!):", e);
-                            }
-                        }
-                    }
-                });
-
-        infoView = findViewById(R.id.infoview);
-        infoView.setZOrderOnTop(true);
-        infoView.setZOrderMediaOverlay(true);
+//        infoView = findViewById(R.id.infoview);
 
         requestBTpermissions();
 
@@ -935,6 +921,12 @@ public class AttysECG extends AppCompatActivity {
     protected void onResume() {
         Log.v(TAG, "onResume()");
         super.onResume();
+        if (null == surfaceTexture) {
+            surfaceTexture = HRVOculus.getSurfaceTexture();
+            realtimePlotView = new RealtimePlotView(surfaceTexture);
+            realtimePlotView.setMaxChannels(15);
+            realtimePlotView.init();
+        }
         hrvOculus.start();
     }
 
@@ -1361,12 +1353,14 @@ public class AttysECG extends AppCompatActivity {
 
         leadsOff = prefs.getBoolean("leadsoff", true);
 
-        if (leadsOff) {
-            attysService.getAttysComm().setBiasCurrent(AttysComm.ADC_CURRENT_22NA);
-            attysService.getAttysComm().enableCurrents(false,true,true);
-            leadsView.setVisibility(View.VISIBLE);
-        } else {
-            leadsView.setVisibility(View.INVISIBLE);
+        if (null != leadsView) {
+            if (leadsOff) {
+                attysService.getAttysComm().setBiasCurrent(AttysComm.ADC_CURRENT_22NA);
+                attysService.getAttysComm().enableCurrents(false, true, true);
+                leadsView.setVisibility(View.VISIBLE);
+            } else {
+                leadsView.setVisibility(View.INVISIBLE);
+            }
         }
     }
 
