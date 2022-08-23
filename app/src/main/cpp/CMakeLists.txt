@@ -21,7 +21,12 @@ include_directories(
         ${ANDROID_NDK}/sources/android/native_app_glue
 )
 
+add_library(native_app_glue STATIC
+        ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
+
 option(BUILD_LOADER "Build loader" OFF)
+
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
 
 add_library(vrapi SHARED IMPORTED)
 
@@ -36,11 +41,8 @@ set_property(
 add_library(minizip STATIC
         ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/ioapi.c
         ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/mztools.c
-        ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/iowin32.c
         ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/unzip.c
-        ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/miniunz.c
         ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/zip.c
-        ${OCULUS_MOBILE_SDK}/3rdParty/minizip/src/minizip.c
         )
 
 add_library(stb STATIC
@@ -153,12 +155,15 @@ find_library( # Sets the name of the path variable.
 target_link_libraries( # Specifies the target library.
         attysecg
 
-        stb
         vrapi
         samplecommon
         sampleframework
         ${log-lib}
         nativewindow
         android
+        native_app_glue
         GLESv3 EGL
+        minizip
+        stb
+        z
         )
