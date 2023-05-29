@@ -1,0 +1,104 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "attysecg",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "attysecg::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-attysecg-Debug-35cbfb5109250439ba61.json",
+					"name" : "attysecg",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "minizip::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-minizip-Debug-1b62a5e0d3b73c8bd465.json",
+					"name" : "minizip",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "native_app_glue::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-native_app_glue-Debug-a78d0473b5dd96c14674.json",
+					"name" : "native_app_glue",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "samplecommon::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-samplecommon-Debug-b968017def9a68f27882.json",
+					"name" : "samplecommon",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "sampleframework::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-sampleframework-Debug-8760a6f17a3085d11b4c.json",
+					"name" : "sampleframework",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "stb::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-stb-Debug-7d34d0e24fc57c7eb3cf.json",
+					"name" : "stb",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/bp1/sandbox/AttysECG/app/.cxx/Debug/5d716c1x/arm64-v8a",
+		"source" : "/home/bp1/sandbox/AttysECG/app/src/main/cpp"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 1
+	}
+}

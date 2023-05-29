@@ -1,0 +1,8 @@
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/5d716c1x/arm64-v8a/CMakeFiles/rebuild_cache.dir
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/5d716c1x/arm64-v8a/CMakeFiles/edit_cache.dir
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/5d716c1x/arm64-v8a/CMakeFiles/attysecg.dir
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/5d716c1x/arm64-v8a/CMakeFiles/samplecommon.dir
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/5d716c1x/arm64-v8a/CMakeFiles/sampleframework.dir
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/5d716c1x/arm64-v8a/CMakeFiles/stb.dir
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/5d716c1x/arm64-v8a/CMakeFiles/minizip.dir
+/home/bp1/sandbox/AttysECG/app/.cxx/Debug/5d716c1x/arm64-v8a/CMakeFiles/native_app_glue.dir

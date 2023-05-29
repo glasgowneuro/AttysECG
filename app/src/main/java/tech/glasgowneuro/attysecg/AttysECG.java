@@ -726,21 +726,6 @@ public class AttysECG extends AppCompatActivity {
         realtimePlotView.setMaxChannels(15);
         realtimePlotView.init();
 
-        realtimePlotView.registerTouchEventListener(
-                new RealtimePlotView.TouchEventListener() {
-                    @Override
-                    public void touchedChannel(int chNo) {
-                        try {
-                            // theChannelWeDoAnalysis = actualChannelIdx[chNo];
-                            updatePlotTask.resetAnalysis();
-                        } catch (Exception e) {
-                            if (Log.isLoggable(TAG, Log.ERROR)) {
-                                Log.e(TAG, "Exception in the TouchEventListener (BUG!):", e);
-                            }
-                        }
-                    }
-                });
-
         infoView = findViewById(R.id.infoview);
         infoView.setZOrderOnTop(true);
         infoView.setZOrderMediaOverlay(true);

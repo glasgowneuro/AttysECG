@@ -4,6 +4,9 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AttysECG.iml" filepath="$PROJECT_DIR$/AttysECG.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AttysECG.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AttysECG.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AttysECG.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AttysECG.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AttysECG.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AttysECG.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AttysECG.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AttysECG.app.unitTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/firj-release/AttysECG.firj-release.iml" filepath="$PROJECT_DIR$/.idea/modules/firj-release/AttysECG.firj-release.iml" />
     </modules>
   </component>
