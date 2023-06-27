@@ -4,7 +4,7 @@
 import numpy as np
 import pylab as pl
 #
-data = np.loadtxt('../sample-ecg.tsv');
+data = np.loadtxt('sample-ecg.tsv');
 #
 fig = pl.figure(1)
 #
