@@ -1,6 +1,5 @@
 package tech.glasgowneuro.attysecg;
 
-import uk.me.berndporr.firj.Fir1;
 import uk.me.berndporr.iirj.Butterworth;
 
 /**
@@ -23,45 +22,6 @@ import uk.me.berndporr.iirj.Butterworth;
 public class ECG_rr_det {
 
     String TAG = "ECG_rr_det";
-
-    private static final double[] waveletDB3 = {
-            1.10265752e-02,
-            2.67449277e-02,
-            4.19878574e-02,
-            6.03947231e-02,
-            7.61275365e-02,
-            9.21548684e-02,
-            1.11568926e-01,
-            1.32278887e-01,
-            6.45829680e-02,
-            -3.97635130e-02,
-            -1.38929884e-01,
-            -2.62428322e-01,
-            -3.62246804e-01,
-            -4.62843343e-01,
-            -5.89607507e-01,
-            -7.25363076e-01,
-            -3.36865858e-01,
-            2.67715108e-01,
-            8.40176767e-01,
-            1.55574430e+00,
-            1.18688954e+00,
-            4.20276324e-01,
-            -1.51697311e-01,
-            -9.42076108e-01,
-            -7.93172332e-01,
-            -3.26343710e-01,
-            -1.24552779e-01,
-            2.12909254e-01,
-            1.75770320e-01,
-            1.47523075e-02,
-            8.22192707e-03,
-            -3.02920592e-02,
-            -2.21119497e-02,
-            7.30703025e-03,
-            2.83200488e-03,
-            -1.16759765e-03
-    };
 
     // how fast the adaptive threshold follows changes in ECG
     // amplitude. Realisic values: 0.1 .. 1.0
@@ -106,10 +66,10 @@ public class ECG_rr_det {
     private int ignoreRRvalue = 3;
 
     // the R preak detector. This is a matched filter implemented as an FIR.
-    private Fir1 ecgDetector = new Fir1(waveletDB3);
+    private final Butterworth highPass = new Butterworth();
 
     // mains filter
-    private Butterworth ecgDetNotch = new Butterworth();
+    private final Butterworth bandPass = new Butterworth();
 
     // sampling rate in Hz
     private float samplingRateInHz;
@@ -126,8 +86,8 @@ public class ECG_rr_det {
     private void init(float _samplingrateInHz, float _powerlineHz) {
         samplingRateInHz = _samplingrateInHz;
         powerlineHz = _powerlineHz;
-        // this fakes an R peak so we have a matched filter!
-        ecgDetNotch.bandStop(notchOrder, samplingRateInHz, powerlineHz, notchBW);
+        bandPass.bandPass(2,samplingRateInHz,20,15);
+        highPass.highPass(2,samplingRateInHz,5);
         reset();
     }
 
@@ -163,8 +123,8 @@ public class ECG_rr_det {
         if (ignore) {
             doNotDetect = 2;
         }
-        double h = ecgDetNotch.filter(v * 1000);
-        h = ecgDetector.filter(h);
+        double h = highPass.filter(v * 1000);
+        h = bandPass.filter(h);
         if (ignoreECGdetector > 0) {
             ignoreECGdetector--;
             return;

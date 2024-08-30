@@ -10,8 +10,8 @@ android {
         applicationId "tech.glasgowneuro.attysecg"
         minSdkVersion 30
         targetSdkVersion 34
-        versionCode 69
-        versionName "1.8.8"
+        versionCode 70
+        versionName "1.8.9"
     }
     buildTypes {
         debug {
@@ -54,9 +54,8 @@ dependencies {
     implementation 'com.androidplot:androidplot-core:1.5.9'
     implementation 'com.google.android.gms:play-services-base:18.5.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation project(':firj-release')
     implementation 'com.google.firebase:firebase-core:21.1.1'
-    implementation 'com.google.firebase:firebase-analytics:22.0.2'
+    implementation 'com.google.firebase:firebase-analytics:22.1.0'
     implementation 'com.google.firebase:firebase-crashlytics:19.0.3'
 }
 
