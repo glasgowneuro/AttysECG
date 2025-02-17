@@ -87,8 +87,6 @@ public class AttysECG extends AppCompatActivity {
     private InfoView infoView = null;
     private HRVView hrvView = null;
     private HeartratePlotFragment heartratePlotFragment = null;
-    private VectorPlotFragment vectorPlotFragment = null;
-    private ECGPlotFragment ecgPlotFragment = null;
     private LeadsView leadsView = null;
 
     private MenuItem menuItemshowEinthoven = null;
@@ -501,14 +499,6 @@ public class AttysECG extends AppCompatActivity {
                         float aVL = II / 2 - III;
                         float aVF = II / 2 + III / 2;
 
-                        if (vectorPlotFragment != null) {
-                            vectorPlotFragment.addValue(I, aVF);
-                        }
-
-                        if (ecgPlotFragment != null) {
-                            ecgPlotFragment.addValue(I, II, III, aVR, aVL, aVF);
-                        }
-
                         dataRecorder.saveData(I, II, III, aVR, aVL, aVF);
 
                         int nRealChN = 0;
@@ -589,9 +579,6 @@ public class AttysECG extends AppCompatActivity {
                             }
                         });
                     }
-                }
-                if (vectorPlotFragment != null) {
-                    vectorPlotFragment.redraw();
                 }
             }
         }
@@ -751,9 +738,6 @@ public class AttysECG extends AppCompatActivity {
         if (menuItemshowEinthoven != null) {
             menuItemshowEinthoven.setEnabled(full2chECGrecording);
         }
-        if (ecgPlotFragment != null) {
-            ecgPlotFragment.setOfferAllChannels(full2chECGrecording);
-        }
     }
 
     private void setRecColour(int c) {
@@ -770,9 +754,6 @@ public class AttysECG extends AppCompatActivity {
         }
         if (heartratePlotFragment != null) {
             heartratePlotFragment.addValue(bpm);
-        }
-        if (ecgPlotFragment != null) {
-            ecgPlotFragment.rDet();
         }
         if (beepGenerator != null) {
             beepGenerator.doBeep();
@@ -1013,7 +994,6 @@ public class AttysECG extends AppCompatActivity {
 
         menuItemshowEinthoven = menu.findItem(R.id.showEinthoven);
         menuItemshowAugmented = menu.findItem(R.id.showAugmented);
-        menuItemplotWindowVector = menu.findItem(R.id.plotWindowVector);
         menuItemshowHRV = menu.findItem(R.id.showHRV);
 
         menuItemPref = menu.findItem(R.id.preferences);
@@ -1138,61 +1118,14 @@ public class AttysECG extends AppCompatActivity {
 
             case R.id.Ch1gain200:
                 gain = gain_settings[0];
-                if (vectorPlotFragment != null) {
-                    vectorPlotFragment.setGain(gain);
-                }
                 return true;
 
             case R.id.Ch1gain500:
                 gain = gain_settings[1];
-                if (vectorPlotFragment != null) {
-                    vectorPlotFragment.setGain(gain);
-                }
                 return true;
 
             case R.id.Ch1gain1000:
                 gain = gain_settings[2];
-                if (vectorPlotFragment != null) {
-                    vectorPlotFragment.setGain(gain);
-                }
-                return true;
-
-            case R.id.plotWindowBPM:
-                openWindowBPM();
-                return true;
-
-            case R.id.plotWindowVector:
-
-                if (full2chECGrecording) {
-                    deletePlotWindow();
-                    vectorPlotFragment = new VectorPlotFragment();
-                    vectorPlotFragment.setHistorySize(attysService.getAttysComm().getSamplingRateInHz() / 2);
-                    vectorPlotFragment.setGain(gain);
-                    getSupportFragmentManager().beginTransaction()
-                            .add(R.id.fragment_plot_container,
-                                    vectorPlotFragment,
-                                    "vectorPlotFragment")
-                            .commit();
-                    showPlotFragment();
-                }
-                return true;
-
-            case R.id.plotWindowECG:
-
-                deletePlotWindow();
-                ecgPlotFragment = new ECGPlotFragment();
-                ecgPlotFragment.setSamplingRate(attysService.getAttysComm().getSamplingRateInHz());
-                getSupportFragmentManager().beginTransaction()
-                        .add(R.id.fragment_plot_container,
-                                ecgPlotFragment,
-                                "ecgPlotFragment")
-                        .commit();
-                showPlotFragment();
-                return true;
-
-            case R.id.plotWindowOff:
-                hidePlotFragment();
-                deletePlotWindow();
                 return true;
 
             case R.id.filebrowser:
@@ -1251,13 +1184,15 @@ public class AttysECG extends AppCompatActivity {
                     }
                 }
                 if (fragment != null) {
-                    getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+                    try {
+                        getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+                    } catch(java.lang.IllegalStateException e) {
+                        Log.d(TAG,"Could not remove fragment",e);
+                    }
                 }
             }
         }
         heartratePlotFragment = null;
-        vectorPlotFragment = null;
-        ecgPlotFragment = null;
     }
 
 
