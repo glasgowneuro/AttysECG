@@ -4,14 +4,19 @@ apply plugin: 'com.google.firebase.crashlytics'
 
 
 android {
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "tech.glasgowneuro.attysecg"
         minSdk 33
-        targetSdk 34
+        targetSdk 36
         versionCode 72
         versionName "1.9.1"
+    }
+
+    compileOptions {
+        // Flag to enable support for the new language APIs
+        coreLibraryDesugaringEnabled true
     }
 
     buildTypes {
@@ -47,16 +52,17 @@ dependencies {
     }
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.13.2'
-    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'uk.me.berndporr:iirj:1.6'
+    implementation 'uk.me.berndporr:iirj:1.7'
     implementation 'org.apache.commons:commons-math3:3.6.1'
-    implementation 'com.androidplot:androidplot-core:1.5.9'
-    implementation 'com.google.android.gms:play-services-base:18.5.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
+    implementation 'com.androidplot:androidplot-core:1.5.11'
+    implementation 'com.google.android.gms:play-services-base:18.7.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'com.google.firebase:firebase-core:21.1.1'
-    implementation 'com.google.firebase:firebase-analytics:22.2.0'
-    implementation 'com.google.firebase:firebase-crashlytics:19.4.0'
+    implementation 'com.google.firebase:firebase-analytics:22.5.0'
+    implementation 'com.google.firebase:firebase-crashlytics:19.4.4'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }
 
